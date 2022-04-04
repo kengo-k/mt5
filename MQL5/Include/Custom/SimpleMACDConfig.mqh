@@ -2,6 +2,9 @@
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
 
+/**
+ * カスタマイズ用のパラメータ構造体
+ */
 struct SimpleMACDConfig {
    // 動作させているEAの名前
    string eaName;
