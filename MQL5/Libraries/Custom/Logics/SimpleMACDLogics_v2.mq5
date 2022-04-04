@@ -44,7 +44,7 @@ bool isOmenNotified;
 //bool isProfitFixed;
 
 /**
- * パラメータ等の情報を設定する処理
+ * パラメータ等の情報を設定する処理!
  */
 void SimpleMACD_Configure(
    SimpleMACDConfig &CONFIG
