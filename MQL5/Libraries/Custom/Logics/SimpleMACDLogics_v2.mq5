@@ -15,6 +15,7 @@
 #property version   "1.00"
 
 #include <Custom/SlackLib.mqh>
+#include <Custom/SimpleMACDConfig.mqh>
 #include <Custom/SimpleMACDContext.mqh>
 
 #import "Custom/Apis/NotifySlack.ex5"
@@ -32,14 +33,7 @@
 #define GET_SL_PRICE(sl) PositionGetDouble(POSITION_SL, sl);
 #define GET_TP_PRICE(tp) PositionGetDouble(POSITION_TP, tp);
 
-// このEAの名前
-string _EA_NAME;
-// 通貨シンボル
-string _TARGET_SYMBOL;
-// ストップ幅(トレール幅としても使う)
-double _TARGET_STOP;
-// 取引量 ※ロット(0.1 = 10000);
-double _TARGET_VOLUME;
+SimpleMACDConfig _CONFIG;
 
 // 予兆の通知済みフラグ
 bool isOmenNotified;
@@ -53,16 +47,10 @@ bool isOmenNotified;
  * パラメータ等の情報を設定する処理
  */
 void SimpleMACD_Configure(
-   string EA_NAME,
-   string TARGET_SYMBOL,
-   double TARGET_STOP,
-   double TARGET_VOLUME
+   SimpleMACDConfig &CONFIG
 ) export {
-   _EA_NAME = EA_NAME;
-   _TARGET_SYMBOL = TARGET_SYMBOL;
-   _TARGET_STOP = TARGET_STOP;
-   _TARGET_VOLUME = TARGET_VOLUME;
-   NOTIFY_MESSAGE(_EA_NAME, StringFormat("start %s", _EA_NAME));
+   _CONFIG = CONFIG;
+   NOTIFY_MESSAGE(_CONFIG.eaName, StringFormat("start %s", _CONFIG.eaName));
 }
 
 /**
@@ -71,9 +59,9 @@ void SimpleMACD_Configure(
  * インディケーターや各種変数の初期化等の処理を行う。
  */
 void SimpleMACD_Init(SimpleMACDContext &contextM5, SimpleMACDContext &contextH1) export {
-   contextM5.macdHandle = iMACD(_TARGET_SYMBOL, PERIOD_M5, 12, 26, 9, PRICE_CLOSE);
+   contextM5.macdHandle = iMACD(_CONFIG.symbol, PERIOD_M5, 12, 26, 9, PRICE_CLOSE);
    contextM5.barCount = -1;
-   contextH1.macdHandle = iMACD(_TARGET_SYMBOL, PERIOD_H1, 12, 26, 9, PRICE_CLOSE);
+   contextH1.macdHandle = iMACD(_CONFIG.symbol, PERIOD_H1, 12, 26, 9, PRICE_CLOSE);
 
    //hasPosition = false;
    //isProfitFixed = false;
@@ -103,7 +91,7 @@ void SimpleMACD_OnTick(SimpleMACDContext &contextM5, SimpleMACDContext &contextH
    //printf("[ontick] ask: %s, bid: %s", DoubleToString(ask, digits), DoubleToString(bid, digits));
    
    // ローソク足が新しく生成されているか数を確認
-   int newM5BarCount = Bars(_TARGET_SYMBOL, PERIOD_M5);
+   int newM5BarCount = Bars(_CONFIG.symbol, PERIOD_M5);
    if (contextM5.barCount == -1) {
       contextM5.barCount = newM5BarCount;
    }
@@ -211,13 +199,13 @@ void onNewBarCreated(SimpleMACDContext &contextM5, SimpleMACDContext &contextH1)
 
    // 元から正規化されてるから多分Normalizeしなくてもよさそう
    // 取得した値になんらかの加工した場合にすればよさそう
-   double ask = NormalizeDouble(SymbolInfoDouble(_TARGET_SYMBOL, SYMBOL_ASK), digits);
-   double bid = NormalizeDouble(SymbolInfoDouble(_TARGET_SYMBOL, SYMBOL_BID), digits);
+   double ask = NormalizeDouble(SymbolInfoDouble(_CONFIG.symbol, SYMBOL_ASK), digits);
+   double bid = NormalizeDouble(SymbolInfoDouble(_CONFIG.symbol, SYMBOL_BID), digits);
    double spread = MathAbs(NormalizeDouble(ask - bid, digits));
 
    // 新しい足が生成されたログを表示
    POST_MESSAGE(
-      _EA_NAME
+      _CONFIG.eaName
       , StringFormat(
          "[INFO] new bar was created, macd: %f, signal: %f, h1dir: %f, bid: %s, ask: %s, spread: %f"
          , macd_latest
@@ -288,12 +276,12 @@ void onNewBarCreated(SimpleMACDContext &contextM5, SimpleMACDContext &contextH1)
       // MACDがシグナルを上方にブレイク
       if (checkUpperBreak(macd_latest, macd_prev, signal_latest, signal_prev) && h1dir > 0) {
          NOTIFY_MESSAGE(
-            _EA_NAME
+            _CONFIG.eaName
             , "[INFO] MACDがシグナルを上方ブレイクしました"
          );
 
          // 注文送信
-         BUY(request, _TARGET_STOP, _TARGET_VOLUME);
+         BUY(request, _CONFIG.sl, _CONFIG.volume);
          logRequest("[WARN] 新規買い注文を送信します", request);
          
          bool isSended = OrderSend(request, result);
@@ -314,12 +302,12 @@ void onNewBarCreated(SimpleMACDContext &contextM5, SimpleMACDContext &contextH1)
       // MACDがシグナルを下方にブレイク
       if (checkLowerBreak(macd_latest, macd_prev, signal_latest, signal_prev) && h1dir < 0) {
          NOTIFY_MESSAGE(
-            _EA_NAME
+            _CONFIG.eaName
             , "[INFO] MACDがシグナルを下方ブレイクしました"
          );
          
          // 注文送信
-         SELL(request, _TARGET_STOP, _TARGET_VOLUME);
+         SELL(request, _CONFIG.sl, _CONFIG.volume);
          logRequest("[WARN] 新規売り注文を送信します", request);
          
          bool isSended = OrderSend(request, result);
@@ -335,7 +323,7 @@ void onNewBarCreated(SimpleMACDContext &contextM5, SimpleMACDContext &contextH1)
 
          // 正常に処理が続行しているかを判定する必要があるかどの項目をどう判定すべきかわかってないのでとりあえずログだけ出しとく
          NOTIFY_MESSAGE(
-            _EA_NAME,
+            _CONFIG.eaName,
             StringFormat(
                "order sended - request_id: %d, retcode: %d, retcode_external: %d, deal: %d, order: %d, "
                , result.request_id
@@ -376,7 +364,7 @@ bool isStopMoved() {
  */
 void logRequest(string header, MqlTradeRequest &request) {
    NOTIFY_MESSAGE(
-      _EA_NAME,
+      _CONFIG.eaName,
       StringFormat(
          "%s - %s, price: %f, volume: %f, stop: %f, fillMode: %d"
          , header
@@ -396,7 +384,7 @@ void logResponse(string header, MqlTradeResult &result) {
    // retCode
    // 10009: TRADE_RETCODE_DONE - リクエスト完了
    NOTIFY_MESSAGE(
-      _EA_NAME,
+      _CONFIG.eaName,
       StringFormat(
          "%s - request_id: %d, retcode: %d, retcode_external: %d, deal: %d, order: %d, "
          , header
@@ -434,12 +422,12 @@ void createNewOrder(
    , double sl
    , double volume
 ) {
-   double targetPrice = SymbolInfoDouble(_TARGET_SYMBOL, targetSymbolInfo);
-   double oppositePrice = SymbolInfoDouble(_TARGET_SYMBOL, oppositeSymbolInfo);
+   double targetPrice = SymbolInfoDouble(_CONFIG.symbol, targetSymbolInfo);
+   double oppositePrice = SymbolInfoDouble(_CONFIG.symbol, oppositeSymbolInfo);
    request.action = TRADE_ACTION_DEAL;
    request.type = type;
-   request.symbol = _TARGET_SYMBOL;
-   request.volume = _TARGET_VOLUME;
+   request.symbol = _CONFIG.symbol;
+   request.volume = _CONFIG.volume;
    request.price = targetPrice;
    
    // 指定したボリュームを調達できない場合にどのように振る舞うかのモード
@@ -473,10 +461,10 @@ void createCloseOrder(
       symbolInfo = SYMBOL_ASK;
       closeType = ORDER_TYPE_SELL;
    }
-   request.volume = _TARGET_VOLUME;
+   request.volume = _CONFIG.volume;
    request.deviation = 3;
    request.magic = MAGICNUMBER;
-   request.price = SymbolInfoDouble(_TARGET_SYMBOL, symbolInfo);
+   request.price = SymbolInfoDouble(_CONFIG.symbol, symbolInfo);
    request.type = closeType;   
    request.type_filling = ORDER_FILLING_IOC;
 }
@@ -525,7 +513,7 @@ bool notifyOmen(SimpleMACDContext &contextM5, SimpleMACDContext &contextH1) {
    // MACDがシグナルを上方にブレイク
    if (checkUpperBreak(macd_current, macd_latest, signal_current, signal_latest)) {
       NOTIFY_MESSAGE(
-         _EA_NAME
+         _CONFIG.eaName
          , StringFormat(
             "[INFO] MACDのシグナル上方ブレイク予兆が発生しました - macd: %f => %f, h1dir: %f"
             , macd_current
@@ -539,7 +527,7 @@ bool notifyOmen(SimpleMACDContext &contextM5, SimpleMACDContext &contextH1) {
    // MACDがシグナルを下方にブレイク
    if (checkLowerBreak(macd_current, macd_latest, signal_current, signal_latest)) {
       NOTIFY_MESSAGE(
-         _EA_NAME
+         _CONFIG.eaName
          , StringFormat(
             "[INFO] MACDのシグナル下方ブレイク予兆が発生しました - macd: %f => %f, h1dir: %f"
             , macd_current
@@ -573,8 +561,8 @@ bool calcNextSL(double base, double current, double &nextSL, int &sign) {
          return false;
       }
       //printf("[calcNextSL] current: %f, base: %f, diff: %f", current, base, diff);      
-      if (diff > (_TARGET_STOP * 2)) {
-         base = base + (sign * _TARGET_STOP);
+      if (diff > (_CONFIG.sl * 2)) {
+         base = base + (sign * _CONFIG.sl);
          isStopUpdatedRequired = true;
       } else {
          break;
@@ -658,7 +646,7 @@ bool calcProfit(double &profit) {
       }
       result = true;
    }
-   POST_MESSAGE(_EA_NAME, StringFormat("[calcProfit] profit: %f", profit));
+   POST_MESSAGE(_CONFIG.eaName, StringFormat("[calcProfit] profit: %f", profit));
    return result;
 }
 
