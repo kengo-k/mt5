@@ -25,7 +25,7 @@
    bool filterCommand(ENUM_ENTRY_COMMAND command, SimpleMACDContext &contextMain, SimpleMACDContext &contextSub, SimpleMACDConfig &config);
 #import
 
-#import "Custom/Logics/observe1.ex5"
+#import "Custom/Logics/observe_simple.ex5"
    void observe(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub, SimpleMACDConfig &config);
 #import
 
@@ -55,7 +55,7 @@ int OnInit() {
    // ※SLACKのチェンネル名に合わせてあるから変えてはいけない
    const string EA_NAME = "simple_macd_v2!!";
    PrintFormat("[%s] start", EA_NAME);
-   
+
    // コード値メモ
    /* リターンコード
    10018: TRADE_RETCODE_MARKET_CLOSED 市場が閉鎖中
@@ -64,12 +64,12 @@ int OnInit() {
    // EAの動作をカスタマイズするためのコンフィグ値の設定
    _config.eaName = EA_NAME;
    _config.sl = 5;
-   _config.tp = 10;
+   _config.tp = 20;
    _config.unit = getUnit();
    _config.tpRatio = 2;
    _config.volume = 0.1;
    _config.mainPeriod = PERIOD_H1; //メイン足
-   _config.subPeriod = PERIOD_H1; //サブ足 
+   _config.subPeriod = PERIOD_H1; //サブ足
    _config.createCommand = _createCommand; //買い売り判断
    _config.filterCommand = _filterCommand; //ポジション構築フィルタ
    _config.observe = _observe; //ティック監視
@@ -77,12 +77,12 @@ int OnInit() {
 
    SimpleMACD_Configure(_config);
    SimpleMACD_Init(_contextMain, _contextSub);
-   
+
    return(INIT_SUCCEEDED);
 }
 
 void OnDeinit(const int reason) {
-   
+
 }
 
 void OnTick() {

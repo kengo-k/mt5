@@ -211,6 +211,7 @@ bool hasPosition() {
    } else {
       // ポジションは同時に複数持たない方針であるため
       // ポジション数が1でも0でもない場合は何らかの不具合であるため即座に処理を終了させる
+      printf("ポジション数が不正です");
       ExpertRemove();
       return false;
    }

@@ -23,6 +23,8 @@ struct SimpleMACDConfig {
    string eaName;
    // ストップ幅(pips)
    double sl;
+   // 利益確定幅
+   double tp;
    // 1pipsあたりの単位
    double unit;
    // 利益確定の基準(倍率)

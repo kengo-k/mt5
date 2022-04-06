@@ -17,6 +17,9 @@
    bool checkLowerBreak(double new_macd, double old_macd, double new_signal, double old_signal);
 #import
 
+/**
+ * MACDのシグナルブレイクをエントリタイミングとするロジック
+ */
 ENUM_ENTRY_COMMAND createCommand(
    SimpleMACDContext &contextMain,
    SimpleMACDConfig &config

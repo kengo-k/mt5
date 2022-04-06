@@ -163,6 +163,21 @@ double calcPositionPipsBetweenCurrentAndStop(double unit) export {
    return profit / unit;
 }
 
+double calcPositionPipsBetweenCurrentAndOpen(double unit) export {
+   ENUM_POSITION_TYPE type = getPositionType();
+   double current = getPositionCurrentPrice();
+   double open = getPositionOpenPrice();
+
+   double profit = -1;
+   if (type == POSITION_TYPE_BUY) {
+      profit = current - open;
+   } else {
+      profit = open - current;
+   }
+   return profit / unit;
+}
+
+
 /**
  * 現在保持しているポジションの種別(買い/売り)を取得する
  */
@@ -230,17 +245,19 @@ void checkTradeResult(MqlTradeResult &result) export {
 
 /**
  * 通貨ごとのpipsの単位を取得する
- * ex) USDJPY => 1pips = 0.01sss
+ * ex) USDJPY => 1pips = 0.01
  */
 double getUnit() export {
    string symbol = Symbol();
    double unit = -1;
    CHashMap<string, double> map;
    map.Add("USDJPY", 0.01);
+   map.Add("EURGBP", 0.0001);
    if (map.ContainsKey(symbol)) {
       map.TryGetValue(symbol, unit);
    }
    if (unit < 0) {
+      printf("unitの取得に失敗しました!");
       ExpertRemove();
    }
    return unit;
