@@ -4,21 +4,20 @@
 
 #include <Custom/SimpleMACDContext.mqh>
 
-
 enum ENUM_ENTRY_COMMAND {
    ENTRY_COMMAND_BUY
    ,ENTRY_COMMAND_SELL
    ,ENTRY_COMMAND_NOOP
 };
 
-typedef ENUM_ENTRY_COMMAND (*FnCreateCommand)(SimpleMACDContext&);
-typedef bool (*FnCommandFilter)(ENUM_ENTRY_COMMAND, SimpleMACDContext&, SimpleMACDContext&);
-typedef void (*FnExec)(SimpleMACDContext&, SimpleMACDContext&);
+typedef ENUM_ENTRY_COMMAND (*FnCreateCommand)(Context&);
+typedef bool (*FnCommandFilter)(ENUM_ENTRY_COMMAND, Context&, Context&);
+typedef void (*FnExec)(Context&, Context&);
 
 /**
  * カスタマイズ用のパラメータ構造体
  */
-struct SimpleMACDConfig {
+struct Config {
    // 動作させているEAの名前
    string eaName;
    // ストップ幅(pips)

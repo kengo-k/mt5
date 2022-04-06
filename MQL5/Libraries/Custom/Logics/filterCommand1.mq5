@@ -14,9 +14,9 @@
 
 bool filterCommand(
    ENUM_ENTRY_COMMAND command,
-   SimpleMACDContext &contextMain,
-   SimpleMACDContext &contextSub,
-   SimpleMACDConfig &config
+   Context &contextMain,
+   Context &contextSub,
+   Config &config
 ) export {
 
    if (command == ENTRY_COMMAND_NOOP) {

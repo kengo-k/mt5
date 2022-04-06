@@ -12,40 +12,40 @@
 #import
 
 #import "Custom/Logics/SimpleMACDLogics_v2.ex5"
-  void SimpleMACD_Configure(SimpleMACDConfig &config);
-  void SimpleMACD_Init(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub);
-  void SimpleMACD_OnTick(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub);
+  void SimpleMACD_Configure(Config &config);
+  void SimpleMACD_Init(Context &contextMain, Context &contextSub);
+  void SimpleMACD_OnTick(Context &contextMain, Context &contextSub);
 #import
 
 #import "Custom/Logics/createCommand1.ex5"
-   ENUM_ENTRY_COMMAND createCommand(SimpleMACDContext &contextMain, SimpleMACDConfig &config);
+   ENUM_ENTRY_COMMAND createCommand(Context &contextMain, Config &config);
 #import
 
 #import "Custom/Logics/filterCommand0.ex5"
-   bool filterCommand(ENUM_ENTRY_COMMAND command, SimpleMACDContext &contextMain, SimpleMACDContext &contextSub, SimpleMACDConfig &config);
+   bool filterCommand(ENUM_ENTRY_COMMAND command, Context &contextMain, Context &contextSub, Config &config);
 #import
 
 #import "Custom/Logics/observe_simple.ex5"
-   void observe(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub, SimpleMACDConfig &config);
+   void observe(Context &contextMain, Context &contextSub, Config &config);
 #import
 
 #define MAGICNUMBER_PREFIX 100
 #define REVISION 1
 #define MAGICNUMBER createMagicNumber(MAGICNUMBER_PREFIX, REVISION)
 
-SimpleMACDConfig _config = {};
-SimpleMACDContext _contextMain;
-SimpleMACDContext _contextSub;
+Config _config = {};
+Context _contextMain;
+Context _contextSub;
 
-ENUM_ENTRY_COMMAND _createCommand(SimpleMACDContext &context) {
+ENUM_ENTRY_COMMAND _createCommand(Context &context) {
    return createCommand(context, _config);
 }
 
-bool _filterCommand(ENUM_ENTRY_COMMAND command, SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) {
+bool _filterCommand(ENUM_ENTRY_COMMAND command, Context &contextMain, Context &contextSub) {
    return filterCommand(command, contextMain, contextSub, _config);
 }
 
-void _observe(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) {
+void _observe(Context &contextMain, Context &contextSub) {
    observe(contextMain, contextSub, _config);
 }
 

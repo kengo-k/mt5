@@ -21,9 +21,9 @@
  * ポジション保有中の監視処理
  */
 void observe(
-   SimpleMACDContext &contextMain,
-   SimpleMACDContext &contextSub,
-   SimpleMACDConfig &config
+   Context &contextMain,
+   Context &contextSub,
+   Config &config
 ) export {
 
    double pips = calcPositionPipsBetweenCurrentAndStop(config.unit);

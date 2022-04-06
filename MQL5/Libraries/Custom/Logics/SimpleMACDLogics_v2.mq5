@@ -35,7 +35,7 @@
    double getPositionSL();
 #import
 
-SimpleMACDConfig _CONFIG;
+Config _CONFIG;
 
 // 予兆の通知済みフラグ
 bool isOmenNotified;
@@ -44,7 +44,7 @@ bool isOmenNotified;
  * パラメータ等の情報を設定する処理!
  */
 void SimpleMACD_Configure(
-   SimpleMACDConfig &CONFIG
+   Config &CONFIG
 ) export {
    _CONFIG = CONFIG;
    NOTIFY_MESSAGE(_CONFIG.eaName, StringFormat("start %s using %d/%d period", _CONFIG.eaName, _CONFIG.mainPeriod, _CONFIG.subPeriod));
@@ -55,7 +55,7 @@ void SimpleMACD_Configure(
  *
  * インディケーターや各種変数の初期化等の処理を行う。
  */
-void SimpleMACD_Init(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) export {
+void SimpleMACD_Init(Context &contextMain, Context &contextSub) export {
    contextMain.macdHandle = iMACD(Symbol(), _CONFIG.mainPeriod, 12, 26, 9, PRICE_CLOSE);
    contextMain.barCount = -1;
    contextSub.macdHandle = iMACD(Symbol(), _CONFIG.subPeriod, 12, 26, 9, PRICE_CLOSE);
@@ -65,7 +65,7 @@ void SimpleMACD_Init(SimpleMACDContext &contextMain, SimpleMACDContext &contextS
 /**
  * Tickが生成されるたびに呼び出される処理
  */
-void SimpleMACD_OnTick(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) export {
+void SimpleMACD_OnTick(Context &contextMain, Context &contextSub) export {
       
    // ローソク足が新しく生成されているか数を確認
    int newM5BarCount = Bars(Symbol(), _CONFIG.mainPeriod);
@@ -100,7 +100,7 @@ void SimpleMACD_OnTick(SimpleMACDContext &contextMain, SimpleMACDContext &contex
  *
  * 新規ポジションの構築/決済などの処理を行う
  */
-void onNewBarCreated(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) {
+void onNewBarCreated(Context &contextMain, Context &contextSub) {
 
    MqlTradeRequest request = {};
    MqlTradeResult result = {};
@@ -148,7 +148,7 @@ void onNewBarCreated(SimpleMACDContext &contextMain, SimpleMACDContext &contextS
  * サインを出すのは足が確定した後となるが、あらかじめ臨戦態勢に入っていないと遅れてしまうので
  * サイン発生前の予兆として使う。
  */
-bool notifyOmen(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) {
+bool notifyOmen(Context &contextMain, Context &contextSub) {
    
    CopyBuffer(contextMain.macdHandle, 0, 0, 2, contextMain.macd);
    CopyBuffer(contextMain.macdHandle, 1, 0, 2, contextMain.signal);
@@ -217,7 +217,7 @@ bool hasPosition() {
    }
 }
 
-void logNewBar(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) {
+void logNewBar(Context &contextMain, Context &contextSub) {
    
    CopyBuffer(contextMain.macdHandle, 0, 0, 3, contextMain.macd);
    CopyBuffer(contextMain.macdHandle, 1, 0, 3, contextMain.signal);

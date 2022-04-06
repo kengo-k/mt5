@@ -21,8 +21,8 @@
  * MACDのシグナルブレイクをエントリタイミングとするロジック
  */
 ENUM_ENTRY_COMMAND createCommand(
-   SimpleMACDContext &contextMain,
-   SimpleMACDConfig &config
+   Context &contextMain,
+   Config &config
 ) export {
    CopyBuffer(contextMain.macdHandle, 0, 0, 3, contextMain.macd);
    CopyBuffer(contextMain.macdHandle, 1, 0, 3, contextMain.signal);
