@@ -4,8 +4,8 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
-#include <Custom/SimpleMACDConfig.mqh>
-#include <Custom/SimpleMACDContext.mqh>
+#include <Custom/v1/SimpleMACDConfig.mqh>
+#include <Custom/v1/SimpleMACDContext.mqh>
 
 #import "Custom/Logics/common.ex5"
    double calcPositionPipsBetweenCurrentAndStop(double unit);

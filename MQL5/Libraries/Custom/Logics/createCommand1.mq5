@@ -7,10 +7,10 @@
 #import "Custom/Apis/NotifySlack.ex5"
   int notifySlack(string message, string channel);
 #import
-#include <Custom/SlackLib.mqh>
+#include <Custom/v1/SlackLib.mqh>
 
-#include <Custom/SimpleMACDConfig.mqh>
-#include <Custom/SimpleMACDContext.mqh>
+#include <Custom/v1/SimpleMACDConfig.mqh>
+#include <Custom/v1/SimpleMACDContext.mqh>
 
 #import "Custom/Logics/common.ex5"
    bool checkUpperBreak(double new_macd, double old_macd, double new_signal, double old_signal);

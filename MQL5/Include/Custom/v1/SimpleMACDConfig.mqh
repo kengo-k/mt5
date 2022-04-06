@@ -2,7 +2,7 @@
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
 
-#include <Custom/SimpleMACDContext.mqh>
+#include <Custom/v1/SimpleMACDContext.mqh>
 
 enum ENUM_ENTRY_COMMAND {
    ENTRY_COMMAND_BUY

@@ -7,10 +7,10 @@
 #import "Custom/Apis/NotifySlack.ex5"
   int notifySlack(string message, string channel);
 #import
-#include <Custom/SlackLib.mqh>
+#include <Custom/v1/SlackLib.mqh>
 
-#include <Custom/SimpleMACDConfig.mqh>
-#include <Custom/SimpleMACDContext.mqh>
+#include <Custom/v1/SimpleMACDConfig.mqh>
+#include <Custom/v1/SimpleMACDContext.mqh>
 
 bool filterCommand(
    ENUM_ENTRY_COMMAND command,

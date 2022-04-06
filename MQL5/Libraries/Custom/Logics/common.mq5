@@ -5,7 +5,7 @@
 #property version   "1.00"
 
 #include <Generic\HashMap.mqh>
-#include <Custom/SlackLib.mqh>
+#include <Custom/v1/SlackLib.mqh>
 
 #import "Custom/Apis/NotifySlack.ex5"
   int notifySlack(string message, string channel);
