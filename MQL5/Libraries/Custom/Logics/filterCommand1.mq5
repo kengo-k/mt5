@@ -9,8 +9,8 @@
 #import
 #include <Custom/v1/SlackLib.mqh>
 
-#include <Custom/v1/SimpleMACDConfig.mqh>
-#include <Custom/v1/SimpleMACDContext.mqh>
+#include <Custom/v1/Config.mqh>
+#include <Custom/v1/Context.mqh>
 
 bool filterCommand(
    ENUM_ENTRY_COMMAND command,

@@ -19,8 +19,8 @@
 #import
 #include <Custom/v1/SlackLib.mqh>
 
-#include <Custom/v1/SimpleMACDConfig.mqh>
-#include <Custom/v1/SimpleMACDContext.mqh>
+#include <Custom/v1/Config.mqh>
+#include <Custom/v1/Context.mqh>
 
 #import "Custom/Logics/common.ex5"
    bool checkUpperBreak(double new_macd, double old_macd, double new_signal, double old_signal);
