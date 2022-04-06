@@ -6,26 +6,26 @@
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
 
-#import "Custom/Logics/common.ex5"
+#import "Custom/v1/common/common.ex5"
    long createMagicNumber(int prefix, int revision);
    double getUnit();
 #import
 
-#import "Custom/Logics/SimpleMACDLogics_v2.ex5"
+#import "Custom/v1/main/main1.ex5"
   void configure(Config &config);
   void init(Context &contextMain, Context &contextSub);
   void handleTick(Context &contextMain, Context &contextSub);
 #import
 
-#import "Custom/Logics/createCommand1.ex5"
+#import "Custom/v1/command/createCommand1.ex5"
    ENUM_ENTRY_COMMAND createCommand(Context &contextMain, Config &config);
 #import
 
-#import "Custom/Logics/filterCommand0.ex5"
+#import "Custom/v1/filter/filterCommand0.ex5"
    bool filterCommand(ENUM_ENTRY_COMMAND command, Context &contextMain, Context &contextSub, Config &config);
 #import
 
-#import "Custom/Logics/observe1.ex5"
+#import "Custom/v1/observer/observe2.ex5"
    void observe(Context &contextMain, Context &contextSub, Config &config);
 #import
 

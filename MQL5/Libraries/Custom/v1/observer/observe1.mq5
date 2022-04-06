@@ -6,12 +6,12 @@
 
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
+#include <Custom/v1/SlackLib.mqh>
 
-#import "Custom/Logics/common.ex5"
-   double calcPositionPipsBetweenCurrentAndStop(double unit);
-   ENUM_POSITION_TYPE getPositionType();
-   double getPositionSL();
-   void setStop(MqlTradeRequest &request, double newSL, long magicNumber);
+#import "Custom/v1/common/common.ex5"
+   int notifySlack(string message, string channel);
+   void close(MqlTradeRequest &request, long magicNumber);
+   double calcPositionPipsBetweenCurrentAndOpen(double unit);
    void checkTradeResult(MqlTradeResult &result);
    void logRequest(string eaName, string header, MqlTradeRequest &request);
    void logResponse(string eaName, string header, MqlTradeResult &result);
@@ -26,23 +26,17 @@ void observe(
    Config &config
 ) export {
 
-   double pips = calcPositionPipsBetweenCurrentAndStop(config.unit);
-   double newSL = getPositionSL();
-   if (pips > config.sl * config.tpRatio) {
-      ENUM_POSITION_TYPE type = getPositionType();
-      if (type == POSITION_TYPE_BUY) {
-         newSL = newSL + (config.sl * config.unit);
-      } else {
-         newSL = newSL - (config.sl * config.unit);
-      }
+   double pips = calcPositionPipsBetweenCurrentAndOpen(config.unit);
+   if (pips >= config.tp) {
+      POST_MESSAGE(config.eaName, StringFormat("pips: %f, tp: %f", pips, config.tp));
       MqlTradeRequest request = {};
       MqlTradeResult result = {};
       ZeroMemory(request);
       ZeroMemory(result);
-
-      setStop(request, newSL, config.MAGIC_NUMBER);
-      logRequest(config.eaName, "[WARN] ストップ更新注文を送信します", request);
-
+      
+      close(request, config.MAGIC_NUMBER);
+      logRequest(config.eaName, "[WARN] 決済注文送信します", request);
+      
       bool isSended = OrderSend(request, result);
       logResponse(config.eaName, "[WARN] 注文送信結果", result);
 
@@ -50,5 +44,4 @@ void observe(
          checkTradeResult(result);
       }
    }
-
 }

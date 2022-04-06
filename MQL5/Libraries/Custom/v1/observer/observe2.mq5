@@ -4,17 +4,14 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
-#import "Custom/Apis/NotifySlack.ex5"
-  int notifySlack(string message, string channel);
-#import
-#include <Custom/v1/SlackLib.mqh>
-
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
 
-#import "Custom/Logics/common.ex5"
-   void close(MqlTradeRequest &request, long magicNumber);
-   double calcPositionPipsBetweenCurrentAndOpen(double unit);
+#import "Custom/v1/common/common.ex5"
+   double calcPositionPipsBetweenCurrentAndStop(double unit);
+   ENUM_POSITION_TYPE getPositionType();
+   double getPositionSL();
+   void setStop(MqlTradeRequest &request, double newSL, long magicNumber);
    void checkTradeResult(MqlTradeResult &result);
    void logRequest(string eaName, string header, MqlTradeRequest &request);
    void logResponse(string eaName, string header, MqlTradeResult &result);
@@ -29,17 +26,23 @@ void observe(
    Config &config
 ) export {
 
-   double pips = calcPositionPipsBetweenCurrentAndOpen(config.unit);
-   if (pips >= config.tp) {
-      POST_MESSAGE(config.eaName, StringFormat("pips: %f, tp: %f", pips, config.tp));
+   double pips = calcPositionPipsBetweenCurrentAndStop(config.unit);
+   double newSL = getPositionSL();
+   if (pips > config.sl * config.tpRatio) {
+      ENUM_POSITION_TYPE type = getPositionType();
+      if (type == POSITION_TYPE_BUY) {
+         newSL = newSL + (config.sl * config.unit);
+      } else {
+         newSL = newSL - (config.sl * config.unit);
+      }
       MqlTradeRequest request = {};
       MqlTradeResult result = {};
       ZeroMemory(request);
       ZeroMemory(result);
-      
-      close(request, config.MAGIC_NUMBER);
-      logRequest(config.eaName, "[WARN] 決済注文送信します", request);
-      
+
+      setStop(request, newSL, config.MAGIC_NUMBER);
+      logRequest(config.eaName, "[WARN] ストップ更新注文を送信します", request);
+
       bool isSended = OrderSend(request, result);
       logResponse(config.eaName, "[WARN] 注文送信結果", result);
 
@@ -47,4 +50,5 @@ void observe(
          checkTradeResult(result);
       }
    }
+
 }

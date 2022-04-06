@@ -4,15 +4,12 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
-#import "Custom/Apis/NotifySlack.ex5"
-  int notifySlack(string message, string channel);
-#import
-#include <Custom/v1/SlackLib.mqh>
-
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
+#include <Custom/v1/SlackLib.mqh>
 
-#import "Custom/Logics/common.ex5"
+#import "Custom/v1/common/common.ex5"
+   int notifySlack(string message, string channel);
    bool checkUpperBreak(double new_macd, double old_macd, double new_signal, double old_signal);
    bool checkLowerBreak(double new_macd, double old_macd, double new_signal, double old_signal);
 #import

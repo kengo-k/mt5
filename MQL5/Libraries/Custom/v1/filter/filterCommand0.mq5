@@ -4,11 +4,6 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
-#import "Custom/Apis/NotifySlack.ex5"
-  int notifySlack(string message, string channel);
-#import
-#include <Custom/v1/SlackLib.mqh>
-
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
 
