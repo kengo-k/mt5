@@ -1,4 +1,4 @@
-// Libraries/Custom/Logics/SimpleMACDLogics_v2.mq5
+// in Libraries/Custom/v1/main
 
 /**
  [仕様]

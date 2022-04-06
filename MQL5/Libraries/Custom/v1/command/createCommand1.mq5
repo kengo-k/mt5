@@ -1,4 +1,4 @@
-// Libraries/Custom/Logics/createCommand1.mq5
+// in Libraries/Custom/v1/command
 #property library
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"

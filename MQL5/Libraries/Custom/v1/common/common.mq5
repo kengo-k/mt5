@@ -1,4 +1,4 @@
-// Libraries/Custom/Logics/common.mq5
+// in Libraries/Custom/v1/common
 #property library
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"

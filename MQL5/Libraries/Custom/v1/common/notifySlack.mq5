@@ -1,4 +1,4 @@
-// Libraries/Custom/Apis/notifySlack.mq5
+// in Libraries/Custom/v1/common
 #property library
 
 const string API_PATH = "https://slack.com/api/chat.postMessage";

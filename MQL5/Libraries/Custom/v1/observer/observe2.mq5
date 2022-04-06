@@ -1,4 +1,4 @@
-// Libraries/Custom/Logics/observe1.mq5
+// in Libraries/Custom/v1/observer
 #property library
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
