@@ -21,8 +21,10 @@ typedef void (*FnExec)(SimpleMACDContext&, SimpleMACDContext&);
 struct SimpleMACDConfig {
    // 動作させているEAの名前
    string eaName;
-   // ストップ幅
+   // ストップ幅(pips)
    double sl;
+   // 1pipsあたりの単位
+   double unit;
    // 利益確定の基準(倍率)
    // ストップ幅に指定された値*ここで指定された値だけ利益が出た段階でストップをストップ幅だけ切り上げる
    int tpRatio;

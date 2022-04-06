@@ -8,6 +8,7 @@
 
 #import "Custom/Logics/common.ex5"
    long createMagicNumber(int prefix, int revision);
+   double getUnit();
 #import
 
 #import "Custom/Logics/SimpleMACDLogics_v2.ex5"
@@ -52,7 +53,7 @@ int OnInit() {
 
    // このEAの名前
    // ※SLACKのチェンネル名に合わせてあるから変えてはいけない
-   const string EA_NAME = "simple_macd_v2!!!";
+   const string EA_NAME = "simple_macd_v2";
    PrintFormat("[%s] start", EA_NAME);
    
    // コード値メモ
@@ -62,7 +63,8 @@ int OnInit() {
 
    // EAの動作をカスタマイズするためのコンフィグ値の設定
    _config.eaName = EA_NAME;
-   _config.sl = 0.05;
+   _config.sl = 5;
+   _config.unit = getUnit();
    _config.tpRatio = 2;
    _config.volume = 0.1;
    _config.mainPeriod = PERIOD_H1; //メイン足

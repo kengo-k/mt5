@@ -149,7 +149,7 @@ double getPositionCurrentPrice() export {
    return PositionGetDouble(POSITION_PRICE_CURRENT);
 }
 
-double calcPositionPipsBetweenCurrentAndStop() export {
+double calcPositionPipsBetweenCurrentAndStop(double unit) export {
    ENUM_POSITION_TYPE type = getPositionType();
    double current = getPositionCurrentPrice();
    double sl = getPositionSL();
@@ -160,7 +160,7 @@ double calcPositionPipsBetweenCurrentAndStop() export {
    } else {
       profit = sl - current;
    }
-   return profit;
+   return profit / unit;
 }
 
 /**
@@ -230,7 +230,7 @@ void checkTradeResult(MqlTradeResult &result) export {
 
 /**
  * 通貨ごとのpipsの単位を取得する
- * ex) USDJPY => 1pips = 0.01
+ * ex) USDJPY => 1pips = 0.01sss
  */
 double getUnit() export {
    string symbol = Symbol();

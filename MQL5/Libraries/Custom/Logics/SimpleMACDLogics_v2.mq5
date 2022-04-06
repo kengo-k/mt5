@@ -30,7 +30,7 @@
    void buy(MqlTradeRequest &request, double sl, double volume, long magic);
    void sell(MqlTradeRequest &request, double sl, double volume, long magic);
    void checkTradeResult(MqlTradeResult &result);
-   double calcPositionPipsBetweenCurrentAndStop();
+   double calcPositionPipsBetweenCurrentAndStop(double unit);
    double getPositionCurrentPrice();
    double getPositionSL();
 #import
@@ -117,7 +117,7 @@ void onNewBarCreated(SimpleMACDContext &contextMain, SimpleMACDContext &contextS
       bool accept = _CONFIG.filterCommand(command, contextMain, contextSub);
       
       if (command == ENTRY_COMMAND_BUY && accept) {
-         buy(request, _CONFIG.sl, _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
+         buy(request, (_CONFIG.sl * _CONFIG.unit), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
          logRequest(_CONFIG.eaName, "[WARN] 新規買い注文を送信します", request);
          
          bool isSended = OrderSend(request, result);
@@ -129,7 +129,7 @@ void onNewBarCreated(SimpleMACDContext &contextMain, SimpleMACDContext &contextS
       }
 
       if (command == ENTRY_COMMAND_SELL && accept) {
-         sell(request, _CONFIG.sl, _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
+         sell(request, (_CONFIG.sl * _CONFIG.unit), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
          logRequest(_CONFIG.eaName, "[WARN] 新規売り注文を送信します", request);
          
          bool isSended = OrderSend(request, result);
@@ -238,11 +238,11 @@ void logNewBar(SimpleMACDContext &contextMain, SimpleMACDContext &contextSub) {
    if (hasPosition()) {
       double current = getPositionCurrentPrice();
       double sl = getPositionSL();
-      double pips = calcPositionPipsBetweenCurrentAndStop();
+      double pips = calcPositionPipsBetweenCurrentAndStop(_CONFIG.unit);
       POST_MESSAGE(
          _CONFIG.eaName
          , StringFormat(
-            "[INFO][HAS_POSITION] new bar was created, bid: %s, ask: %s, spread: %f, current: %f, sl: %f, diff: %f"
+            "[INFO][HAS_POSITION] new bar was created, bid: %s, ask: %s, spread: %f, current: %f, sl: %f, expect profit(pips): %f"
             , DoubleToString(bid, digits)
             , DoubleToString(ask, digits)
             , spread
