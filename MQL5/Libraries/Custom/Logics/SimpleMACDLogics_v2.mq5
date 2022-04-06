@@ -43,7 +43,7 @@ bool isOmenNotified;
 /**
  * パラメータ等の情報を設定する処理!
  */
-void SimpleMACD_Configure(
+void configure(
    Config &CONFIG
 ) export {
    _CONFIG = CONFIG;
@@ -55,7 +55,7 @@ void SimpleMACD_Configure(
  *
  * インディケーターや各種変数の初期化等の処理を行う。
  */
-void SimpleMACD_Init(Context &contextMain, Context &contextSub) export {
+void init(Context &contextMain, Context &contextSub) export {
    contextMain.macdHandle = iMACD(Symbol(), _CONFIG.mainPeriod, 12, 26, 9, PRICE_CLOSE);
    contextMain.barCount = -1;
    contextSub.macdHandle = iMACD(Symbol(), _CONFIG.subPeriod, 12, 26, 9, PRICE_CLOSE);
@@ -65,7 +65,7 @@ void SimpleMACD_Init(Context &contextMain, Context &contextSub) export {
 /**
  * Tickが生成されるたびに呼び出される処理
  */
-void SimpleMACD_OnTick(Context &contextMain, Context &contextSub) export {
+void handleTick(Context &contextMain, Context &contextSub) export {
       
    // ローソク足が新しく生成されているか数を確認
    int newM5BarCount = Bars(Symbol(), _CONFIG.mainPeriod);

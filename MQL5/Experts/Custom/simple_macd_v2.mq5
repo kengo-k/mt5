@@ -12,9 +12,9 @@
 #import
 
 #import "Custom/Logics/SimpleMACDLogics_v2.ex5"
-  void SimpleMACD_Configure(Config &config);
-  void SimpleMACD_Init(Context &contextMain, Context &contextSub);
-  void SimpleMACD_OnTick(Context &contextMain, Context &contextSub);
+  void configure(Config &config);
+  void init(Context &contextMain, Context &contextSub);
+  void handleTick(Context &contextMain, Context &contextSub);
 #import
 
 #import "Custom/Logics/createCommand1.ex5"
@@ -75,8 +75,8 @@ int OnInit() {
    _config.observe = _observe; //ティック監視
    _config.MAGIC_NUMBER = MAGICNUMBER;
 
-   SimpleMACD_Configure(_config);
-   SimpleMACD_Init(_contextMain, _contextSub);
+   configure(_config);
+   init(_contextMain, _contextSub);
    
    return(INIT_SUCCEEDED);
 }
@@ -86,5 +86,5 @@ void OnDeinit(const int reason) {
 }
 
 void OnTick() {
-   SimpleMACD_OnTick(_contextMain, _contextSub);
+   handleTick(_contextMain, _contextSub);
 }
