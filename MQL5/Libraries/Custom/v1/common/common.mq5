@@ -7,70 +7,74 @@
 #include <Generic\HashMap.mqh>
 #include <Custom/v1/SlackLib.mqh>
 
+// slack関連定数
 const string API_PATH = "https://slack.com/api/chat.postMessage";
 const string API_TOKEN = "xoxb-1575963846754-2351585442598-1sXQfrbugJpksBPHmtDJQcQQ";
 const int timeout = 3000;
+const bool TestMode = true;
 
-// TestModeの場合はSlackに通知しない
-#define TestMode
+// このストラテジグループのマジックナンバーに使用する共通のプレフィクス番号
+const int MAGICNUMBER_PREFIX = 100;
 
+/**
+ * slackのチャンネルにメッセージを投稿する
+ * 
+ * バックテスト中の場合は大量のメッセージを投稿してしまうため
+ * モードが有効の場合のみ実行する。
+ */
 int notifySlack(string message, string channel) export
 {
-#ifdef TestMode
-   Print(message);
-   return 0;
-#else
-   string requestHeaders;
-   string responseHeaders;
-   char request[];
-   char response[];
-   datetime current = TimeCurrent();
-   string messageWithTime = StringFormat("%s [%s]", message, TimeToString(current, TIME_DATE | TIME_MINUTES));
-   string reqString = StringFormat("token=%s&channel=%s&text=%s"
-      , API_TOKEN
-      , channel
-      , messageWithTime
-   );
-   StringToCharArray(reqString, request, 0, -1, CP_UTF8);
-   int retCode = WebRequest("POST"
-      , API_PATH
-      , requestHeaders
-      , timeout
-      , request
-      , response
-      , responseHeaders
-   );
-   //printf("web request result: %d", retCode);
-   //printf("web request response: %s", responseHeaders);
-   //printf("web response: %s", CharArrayToString(response));
-   return retCode;
-#endif
+   if (TestMode) {
+      Print(message);
+      return 0;   
+   } else {
+      string requestHeaders;
+      string responseHeaders;
+      char request[];
+      char response[];
+      datetime current = TimeCurrent();
+      string messageWithTime = StringFormat("%s [%s]", message, TimeToString(current, TIME_DATE | TIME_MINUTES));
+      string reqString = StringFormat("token=%s&channel=%s&text=%s"
+         , API_TOKEN
+         , channel
+         , messageWithTime
+      );
+      StringToCharArray(reqString, request, 0, -1, CP_UTF8);
+      int retCode = WebRequest("POST"
+         , API_PATH
+         , requestHeaders
+         , timeout
+         , request
+         , response
+         , responseHeaders
+      );
+      return retCode;
+   }
 }
 
 /**
  * EAを特定するためのユニーク番号を生成する
  */
-long createMagicNumber(int prefix, int revision) export {
-   string magic = StringFormat("%d%d", prefix, revision);
+long createMagicNumber(int pattern, char revision) export {
+   string magic = StringFormat("%d%02d%03d", MAGICNUMBER_PREFIX, pattern, revision);
    return StringToInteger(magic);
 }
 
-bool checkUpperBreak(double new_macd, double old_macd, double new_signal, double old_signal) export {
-   if (new_macd >= old_macd
-         && new_macd > new_signal
-         && old_macd <= old_signal) {
-      return true;
+/**
+ * 通貨ごとのpipsの単位を取得する
+ * ex) USDJPY => 1pips = 0.01
+ */
+double getUnit() export {
+   string symbol = Symbol();
+   double unit = -1;
+   CHashMap<string, double> map;
+   // 新しい通貨ペアを取り扱う場合はここに追記すること
+   map.Add("USDJPY", 0.01);
+   map.Add("EURGBP", 0.0001);
+   if (map.ContainsKey(symbol)) {
+      map.TryGetValue(symbol, unit);
    }
-   return false;
-}
-
-bool checkLowerBreak(double new_macd, double old_macd, double new_signal, double old_signal) export {
-   if (new_macd <= old_macd
-         && new_macd < new_signal
-         && old_macd >= old_signal) {
-      return true;
-   }
-   return false;
+   return unit;
 }
 
 /**
@@ -109,9 +113,147 @@ void logResponse(string eaName, string header, MqlTradeResult &result) export {
    );
 }
 
-// OK
 /**
- * 新規注文のリクエストを生成する
+ * 注文の送信が正常に行われなかった場合の処理
+ * 注文送信結果を判定して必要な場合システムを停止する等の処理を行う
+ */
+bool checkTradeResult(MqlTradeResult &result) export {
+   // falseが返された場合はシステムを停止する
+   bool isValid = false;
+   if (result.retcode == TRADE_RETCODE_MARKET_CLOSED) {
+      isValid = true;
+   }
+   if (!isValid) {
+      ExpertRemove();
+   }
+   return isValid;
+}
+
+/**
+ * 買い注文のリクエストを生成する
+ */
+void buy(MqlTradeRequest &request, double sl, double volume, long magic) export {
+   createNewOrder(request, ORDER_TYPE_BUY, SYMBOL_ASK, SYMBOL_BID, -sl, volume, magic);
+}
+
+/**
+ * 売り注文のリクエストを生成する
+ */
+void sell(MqlTradeRequest &request, double sl, double volume, long magic) export {
+   createNewOrder(request, ORDER_TYPE_SELL, SYMBOL_BID, SYMBOL_ASK, +sl, volume, magic);
+}
+
+/**
+ * 決済注文のリクエストを生成する
+ */
+void close(MqlTradeRequest &request, long magicNumber) export {
+
+   ulong ticketNo = getPositionTicket();
+   double volume = getPositionVolume();
+   ENUM_POSITION_TYPE entryType = getPositionType();
+
+   // ポジション種別に応じて決済の種別を設定
+   ENUM_ORDER_TYPE closeType = ORDER_TYPE_BUY;
+   ENUM_SYMBOL_INFO_DOUBLE symbolInfo = SYMBOL_BID;
+   if (entryType == POSITION_TYPE_BUY) {
+      symbolInfo = SYMBOL_ASK;
+      closeType = ORDER_TYPE_SELL;
+   }
+
+   request.action = TRADE_ACTION_DEAL;
+   request.position = ticketNo;
+   request.symbol = Symbol();
+   request.volume = volume;
+   request.deviation = 3;
+   request.magic = magicNumber;
+   request.price = SymbolInfoDouble(Symbol(), symbolInfo);
+   request.type = closeType;
+   request.type_filling = ORDER_FILLING_IOC;
+}
+
+/**
+ * ストップ変更注文のリクエストを生成する
+ */
+void setStop(MqlTradeRequest &request, double newSL, long magicNumber) export {
+
+   ulong ticketNo = getPositionTicket();
+   double tp = getPositionTP();
+
+   request.action = TRADE_ACTION_SLTP;
+   request.position = ticketNo;
+   request.symbol = Symbol();
+   request.sl = newSL;
+   request.tp = tp;
+   request.magic = magicNumber;
+}
+
+/**
+ * 現在保持しているポジションの種別(買い/売り)を取得する
+ */
+ENUM_POSITION_TYPE getPositionType() export {
+   return (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+}
+
+/**
+ * 現在保持しているポジションのチケット番号を取得する。
+ */
+ulong getPositionTicket() export {
+   return PositionGetInteger(POSITION_TICKET);
+}
+
+/**
+ * 現在保持しているポジションのボリュームを取得する
+ */
+double getPositionVolume() export {
+   return PositionGetDouble(POSITION_VOLUME);
+}
+
+double getPositionSL() export {
+   return PositionGetDouble(POSITION_SL);
+}
+
+double getPositionTP() export {
+   return PositionGetDouble(POSITION_TP);
+}
+
+double getPositionOpenPrice() export {
+   return PositionGetDouble(POSITION_PRICE_OPEN);
+}
+
+double getPositionCurrentPrice() export {
+   return PositionGetDouble(POSITION_PRICE_CURRENT);
+}
+
+double calcPositionPipsBetweenCurrentAndStop() export {
+   ENUM_POSITION_TYPE type = getPositionType();
+   double current = getPositionCurrentPrice();
+   double sl = getPositionSL();
+
+   double profit = -1;
+   if (type == POSITION_TYPE_BUY) {
+      profit = current - sl;
+   } else {
+      profit = sl - current;
+   }
+   return profit / getUnit();
+}
+
+double calcPositionPipsBetweenCurrentAndOpen() export {
+   ENUM_POSITION_TYPE type = getPositionType();
+   double current = getPositionCurrentPrice();
+   double open = getPositionOpenPrice();
+
+   double profit = -1;
+   if (type == POSITION_TYPE_BUY) {
+      profit = current - open;
+   } else {
+      profit = open - current;
+   }
+   return profit / getUnit();
+}
+
+/**
+ * 新規注文のリクエストを生成する共通処理
  */
 void createNewOrder(
    MqlTradeRequest &request
@@ -147,154 +289,20 @@ void createNewOrder(
    request.magic = magicNumber;
 }
 
-void buy(MqlTradeRequest &request, double sl, double volume, long magic) export {
-   createNewOrder(request, ORDER_TYPE_BUY, SYMBOL_ASK, SYMBOL_BID, -sl, volume, magic);
-}
-
-void sell(MqlTradeRequest &request, double sl, double volume, long magic) export {
-   createNewOrder(request, ORDER_TYPE_SELL, SYMBOL_BID, SYMBOL_ASK, +sl, volume, magic);
-}
-
-/**
- * 現在保持しているポジションのチケット番号を取得する。
- */
-ulong getPositionTicket() export {
-   return PositionGetInteger(POSITION_TICKET);
-}
-
-/**
- * 現在保持しているポジションのボリュームを取得する
- */
-double getPositionVolume() export {
-   return PositionGetDouble(POSITION_VOLUME);
-}
-
-double getPositionSL() export {
-   return PositionGetDouble(POSITION_SL);
-}
-
-double getPositionTP() export {
-   return PositionGetDouble(POSITION_TP);
-}
-
-double getPositionOpenPrice() export {
-   return PositionGetDouble(POSITION_PRICE_OPEN);
-}
-
-double getPositionCurrentPrice() export {
-   return PositionGetDouble(POSITION_PRICE_CURRENT);
-}
-
-double calcPositionPipsBetweenCurrentAndStop(double unit) export {
-   ENUM_POSITION_TYPE type = getPositionType();
-   double current = getPositionCurrentPrice();
-   double sl = getPositionSL();
-
-   double profit = -1;
-   if (type == POSITION_TYPE_BUY) {
-      profit = current - sl;
-   } else {
-      profit = sl - current;
+bool checkUpperBreak(double new_macd, double old_macd, double new_signal, double old_signal) export {
+   if (new_macd >= old_macd
+         && new_macd > new_signal
+         && old_macd <= old_signal) {
+      return true;
    }
-   return profit / unit;
+   return false;
 }
 
-double calcPositionPipsBetweenCurrentAndOpen(double unit) export {
-   ENUM_POSITION_TYPE type = getPositionType();
-   double current = getPositionCurrentPrice();
-   double open = getPositionOpenPrice();
-
-   double profit = -1;
-   if (type == POSITION_TYPE_BUY) {
-      profit = current - open;
-   } else {
-      profit = open - current;
+bool checkLowerBreak(double new_macd, double old_macd, double new_signal, double old_signal) export {
+   if (new_macd <= old_macd
+         && new_macd < new_signal
+         && old_macd >= old_signal) {
+      return true;
    }
-   return profit / unit;
-}
-
-
-/**
- * 現在保持しているポジションの種別(買い/売り)を取得する
- */
-ENUM_POSITION_TYPE getPositionType() export {
-   return (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
-}
-
-/**
- * 決済注文のリクエストを生成する
- */
-void close(MqlTradeRequest &request, long magicNumber) export {
-
-   ulong ticketNo = getPositionTicket();
-   double volume = getPositionVolume();
-   ENUM_POSITION_TYPE entryType = getPositionType();
-
-   // ポジション種別に応じて決済の種別を設定
-   ENUM_ORDER_TYPE closeType = ORDER_TYPE_BUY;
-   ENUM_SYMBOL_INFO_DOUBLE symbolInfo = SYMBOL_BID;
-   if (entryType == POSITION_TYPE_BUY) {
-      symbolInfo = SYMBOL_ASK;
-      closeType = ORDER_TYPE_SELL;
-   }
-
-   request.action = TRADE_ACTION_DEAL;
-   request.position = ticketNo;
-   request.symbol = Symbol();
-   request.volume = volume;
-   request.deviation = 3;
-   request.magic = magicNumber;
-   request.price = SymbolInfoDouble(Symbol(), symbolInfo);
-   request.type = closeType;
-   request.type_filling = ORDER_FILLING_IOC;
-}
-
-/**
- * ストップを変更するリクエストを生成する
- */
-void setStop(MqlTradeRequest &request, double newSL, long magicNumber) export {
-
-   ulong ticketNo = getPositionTicket();
-   double tp = getPositionTP();
-
-   request.action = TRADE_ACTION_SLTP;
-   request.position = ticketNo;
-   request.symbol = Symbol();
-   request.sl = newSL;
-   request.tp = tp;
-   request.magic = magicNumber;
-}
-
-/**
- * 注文送信結果を判定して必要な場合システムを停止する等の処理を行う
- */
-void checkTradeResult(MqlTradeResult &result) export {
-   bool isAbortRequired = true;
-   if (result.retcode == TRADE_RETCODE_MARKET_CLOSED) {
-      isAbortRequired = false;
-   }
-   if (isAbortRequired) {
-      ExpertRemove();
-   }
-}
-
-
-/**
- * 通貨ごとのpipsの単位を取得する
- * ex) USDJPY => 1pips = 0.01
- */
-double getUnit() export {
-   string symbol = Symbol();
-   double unit = -1;
-   CHashMap<string, double> map;
-   map.Add("USDJPY", 0.01);
-   map.Add("EURGBP", 0.0001);
-   if (map.ContainsKey(symbol)) {
-      map.TryGetValue(symbol, unit);
-   }
-   if (unit < 0) {
-      printf("unitの取得に失敗しました!");
-      ExpertRemove();
-   }
-   return unit;
+   return false;
 }

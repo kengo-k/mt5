@@ -8,11 +8,12 @@
 #include <Custom/v1/Context.mqh>
 
 #import "Custom/v1/common/common.ex5"
-   double calcPositionPipsBetweenCurrentAndStop(double unit);
+   double getUnit();
+   double calcPositionPipsBetweenCurrentAndStop();
    ENUM_POSITION_TYPE getPositionType();
    double getPositionSL();
    void setStop(MqlTradeRequest &request, double newSL, long magicNumber);
-   void checkTradeResult(MqlTradeResult &result);
+   bool checkTradeResult(MqlTradeResult &result);
    void logRequest(string eaName, string header, MqlTradeRequest &request);
    void logResponse(string eaName, string header, MqlTradeResult &result);
 #import
@@ -26,14 +27,14 @@ void observe(
    Config &config
 ) export {
 
-   double pips = calcPositionPipsBetweenCurrentAndStop(config.unit);
+   double pips = calcPositionPipsBetweenCurrentAndStop();
    double newSL = getPositionSL();
    if (pips > config.sl * config.tpRatio) {
       ENUM_POSITION_TYPE type = getPositionType();
       if (type == POSITION_TYPE_BUY) {
-         newSL = newSL + (config.sl * config.unit);
+         newSL = newSL + (config.sl * getUnit());
       } else {
-         newSL = newSL - (config.sl * config.unit);
+         newSL = newSL - (config.sl * getUnit());
       }
       MqlTradeRequest request = {};
       MqlTradeResult result = {};

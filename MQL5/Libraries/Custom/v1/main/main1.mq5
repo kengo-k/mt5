@@ -19,6 +19,7 @@
 #include <Custom/v1/Context.mqh>
 
 #import "Custom/v1/common/common.ex5"
+   double getUnit();
    int notifySlack(string message, string channel);
    bool checkUpperBreak(double new_macd, double old_macd, double new_signal, double old_signal);
    bool checkLowerBreak(double new_macd, double old_macd, double new_signal, double old_signal);
@@ -26,8 +27,8 @@
    void logResponse(string eaName, string header, MqlTradeResult &result);
    void buy(MqlTradeRequest &request, double sl, double volume, long magic);
    void sell(MqlTradeRequest &request, double sl, double volume, long magic);
-   void checkTradeResult(MqlTradeResult &result);
-   double calcPositionPipsBetweenCurrentAndStop(double unit);
+   bool checkTradeResult(MqlTradeResult &result);
+   double calcPositionPipsBetweenCurrentAndStop();
    double getPositionCurrentPrice();
    double getPositionSL();
 #import
@@ -114,7 +115,7 @@ void onNewBarCreated(Context &contextMain, Context &contextSub) {
       bool accept = _CONFIG.filterCommand(command, contextMain, contextSub);
       
       if (command == ENTRY_COMMAND_BUY && accept) {
-         buy(request, (_CONFIG.sl * _CONFIG.unit), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
+         buy(request, (_CONFIG.sl * getUnit()), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
          logRequest(_CONFIG.eaName, "[WARN] 新規買い注文を送信します", request);
          
          bool isSended = OrderSend(request, result);
@@ -126,7 +127,7 @@ void onNewBarCreated(Context &contextMain, Context &contextSub) {
       }
 
       if (command == ENTRY_COMMAND_SELL && accept) {
-         sell(request, (_CONFIG.sl * _CONFIG.unit), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
+         sell(request, (_CONFIG.sl * getUnit()), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
          logRequest(_CONFIG.eaName, "[WARN] 新規売り注文を送信します", request);
          
          bool isSended = OrderSend(request, result);
@@ -236,7 +237,7 @@ void logNewBar(Context &contextMain, Context &contextSub) {
    if (hasPosition()) {
       double current = getPositionCurrentPrice();
       double sl = getPositionSL();
-      double pips = calcPositionPipsBetweenCurrentAndStop(_CONFIG.unit);
+      double pips = calcPositionPipsBetweenCurrentAndStop();
       POST_MESSAGE(
          _CONFIG.eaName
          , StringFormat(

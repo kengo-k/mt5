@@ -3,11 +3,13 @@
 #property link      "https://www.mql5.com"
 #property version   "1.00"
 
+#include <Custom/v1/SlackLib.mqh>
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
 
 #import "Custom/v1/common/common.ex5"
-   long createMagicNumber(int prefix, int revision);
+   int notifySlack(string message, string channel);
+   long createMagicNumber(int revision);
    double getUnit();
 #import
 
@@ -25,13 +27,17 @@
    bool filterCommand(ENUM_ENTRY_COMMAND command, Context &contextMain, Context &contextSub, Config &config);
 #import
 
-#import "Custom/v1/observer/observe2.ex5"
+#import "Custom/v1/observer/observe1.ex5"
    void observe(Context &contextMain, Context &contextSub, Config &config);
 #import
 
-#define MAGICNUMBER_PREFIX 100
-#define REVISION 1
-#define MAGICNUMBER createMagicNumber(MAGICNUMBER_PREFIX, REVISION)
+const int REVISION = 2;
+#define MAGICNUMBER createMagicNumber(REVISION)
+
+input double sl = 5; // stop loss (pips)
+input double tp = 8; // take profit (pips)
+input ENUM_TIMEFRAMES mainPeriod = PERIOD_H1; // main timeframes
+input ENUM_TIMEFRAMES subPeriod = PERIOD_H1; // sub timeframes
 
 Config _config = {};
 Context _contextMain;
@@ -52,24 +58,24 @@ void _observe(Context &contextMain, Context &contextSub) {
 int OnInit() {
 
    // このEAの名前
-   // ※SLACKのチェンネル名に合わせてあるから変えてはいけない
-   const string EA_NAME = "simple_macd_v2!!";
-   PrintFormat("[%s] start", EA_NAME);
-   
-   // コード値メモ
-   /* リターンコード
-   10018: TRADE_RETCODE_MARKET_CLOSED 市場が閉鎖中
-    */
+   // ※SLACKのチェンネル名に対応させるため変えてはいけない
+   const string EA_NAME = "strategy_01";
+   const double unit = getUnit();
+   if (unit < 0) {
+      POST_MESSAGE(EA_NAME, "[ERROR] cannot get unit!");
+      ExpertRemove();
+      return (INIT_FAILED);
+   }
+   POST_MESSAGE(EA_NAME, StringFormat("[INFO] %s start - %s, unit: %f", EA_NAME, Symbol(), unit));
 
    // EAの動作をカスタマイズするためのコンフィグ値の設定
    _config.eaName = EA_NAME;
-   _config.sl = 5;
-   _config.tp = 10;
-   _config.unit = getUnit();
+   _config.sl = sl;
+   _config.tp = tp;
    _config.tpRatio = 2;
    _config.volume = 0.1;
-   _config.mainPeriod = PERIOD_H1; //メイン足
-   _config.subPeriod = PERIOD_H1; //サブ足 
+   _config.mainPeriod = mainPeriod; //メイン足
+   _config.subPeriod = subPeriod; //サブ足
    _config.createCommand = _createCommand; //買い売り判断
    _config.filterCommand = _filterCommand; //ポジション構築フィルタ
    _config.observe = _observe; //ティック監視
@@ -77,12 +83,12 @@ int OnInit() {
 
    configure(_config);
    init(_contextMain, _contextSub);
-   
+
    return(INIT_SUCCEEDED);
 }
 
 void OnDeinit(const int reason) {
-   
+
 }
 
 void OnTick() {

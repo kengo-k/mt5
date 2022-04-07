@@ -11,8 +11,8 @@
 #import "Custom/v1/common/common.ex5"
    int notifySlack(string message, string channel);
    void close(MqlTradeRequest &request, long magicNumber);
-   double calcPositionPipsBetweenCurrentAndOpen(double unit);
-   void checkTradeResult(MqlTradeResult &result);
+   double calcPositionPipsBetweenCurrentAndOpen();
+   bool checkTradeResult(MqlTradeResult &result);
    void logRequest(string eaName, string header, MqlTradeRequest &request);
    void logResponse(string eaName, string header, MqlTradeResult &result);
 #import
@@ -26,7 +26,7 @@ void observe(
    Config &config
 ) export {
 
-   double pips = calcPositionPipsBetweenCurrentAndOpen(config.unit);
+   double pips = calcPositionPipsBetweenCurrentAndOpen();
    if (pips >= config.tp) {
       POST_MESSAGE(config.eaName, StringFormat("pips: %f, tp: %f", pips, config.tp));
       MqlTradeRequest request = {};

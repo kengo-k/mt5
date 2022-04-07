@@ -24,8 +24,6 @@ struct Config {
    double sl;
    // 利益確定幅
    double tp;
-   // 1pipsあたりの単位
-   double unit;
    // 利益確定の基準(倍率)
    // ストップ幅に指定された値*ここで指定された値だけ利益が出た段階でストップをストップ幅だけ切り上げる
    int tpRatio;
