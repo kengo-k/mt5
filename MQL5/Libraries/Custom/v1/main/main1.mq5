@@ -76,7 +76,7 @@ void handleTick(Context &contextMain, Context &contextSub) export {
    // 一応注意を促しておいたほうがいいため通知だけはする。
    // 無制限に出すと通知であふれるため同じ足の中で一度だけ出す
    if (!isOmenNotified) {
-      isOmenNotified = notifyOmen(contextMain, contextSub);
+      //isOmenNotified = notifyOmen(contextMain, contextSub);
    }
 
    // ポジションを保持している場合ティックの動きを監視して、利益がでている場合はストップを移動させて利益を確定させる
