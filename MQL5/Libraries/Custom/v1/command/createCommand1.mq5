@@ -14,6 +14,10 @@
    bool checkLowerBreak(double new_macd, double old_macd, double new_signal, double old_signal);
 #import
 
+string getCommandName() export {
+   return "command1";
+}
+
 /**
  * MACDのシグナルブレイクをエントリタイミングとするロジック
  */

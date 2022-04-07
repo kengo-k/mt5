@@ -7,6 +7,10 @@
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
 
+string getFilterName() export {
+   return "filter0";
+}
+
 bool filterCommand(
    ENUM_ENTRY_COMMAND command,
    Context &contextMain,

@@ -17,6 +17,10 @@
    void logResponse(string eaName, string header, MqlTradeResult &result);
 #import
 
+string getObserverName() export {
+   return "observe1";
+}
+
 /**
  * ポジション保有中の監視処理
  */

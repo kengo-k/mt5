@@ -105,7 +105,7 @@ void onNewBarCreated(Context &contextMain, Context &contextSub) {
    ZeroMemory(request);
    ZeroMemory(result);
    
-   logNewBar(contextMain, contextSub);
+   //logNewBar(contextMain, contextSub);
    if (hasPosition()) {
      // logNewBar(contextMain, contextSub);
    } else {

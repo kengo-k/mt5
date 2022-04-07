@@ -8,13 +8,13 @@
 #include <Custom/v1/Context.mqh>
 
 string getFilterName() export {
-   return "filter1";
+   return "filter2";
 }
 
 /**
  * フィルタ条件
- * ・MACDが0より小さい場合に買い
- * ・MACDが0より大きい場合に売る
+ * ・MACDが0より大きい場合に買い
+ * ・MACDが0より小さい場合に売る
  */
 bool filterCommand(
    ENUM_ENTRY_COMMAND command,
@@ -22,7 +22,7 @@ bool filterCommand(
    Context &contextSub,
    Config &config
 ) export {
-
+   //printf("filter2");
    if (command == ENTRY_COMMAND_NOOP) {
       return false;
    }
@@ -33,11 +33,11 @@ bool filterCommand(
    double macd_latest = contextMain.macd[0]; // 確定した最新のMACD値。
 
    if (command == ENTRY_COMMAND_BUY) {
-      if (macd_latest < 0) {
+      if (macd_latest > 0) {
          accept = true;
       }
    } else {
-      if (macd_latest > 0) {
+      if (macd_latest < 0) {
          accept = true;
       }
    }

@@ -1,4 +1,14 @@
 // in Experts/Custom/v1
+/*
+   pattern: 1
+      固定幅のストップと利益確定によるストラテジー
+   revision: b
+      MACDのブレイクをエントリタイミングとするが騙しが多すぎて使いものにならないため
+      フィルタ条件を加えてみる。
+      ・上方ブレイクでエントリする場合はMACD < 0
+      ・下方ブレイクでエントリする場合はMACD > 0
+*/
+
 #property copyright "Copyright 2021, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
 #property version   "1.00"
@@ -7,9 +17,12 @@
 #include <Custom/v1/Config.mqh>
 #include <Custom/v1/Context.mqh>
 
+const int PATTERN = 1;
+const char REVISION = 'b';
+
 #import "Custom/v1/common/common.ex5"
    int notifySlack(string message, string channel);
-   long createMagicNumber(int revision);
+   long createMagicNumber(int pattern, char revision);
    double getUnit();
 #import
 
@@ -20,19 +33,21 @@
 #import
 
 #import "Custom/v1/command/createCommand1.ex5"
+   string getCommandName();
    ENUM_ENTRY_COMMAND createCommand(Context &contextMain, Config &config);
 #import
 
-#import "Custom/v1/filter/filterCommand0.ex5"
+#import "Custom/v1/filter/filterCommand1.ex5"
+   string getFilterName();
    bool filterCommand(ENUM_ENTRY_COMMAND command, Context &contextMain, Context &contextSub, Config &config);
 #import
 
 #import "Custom/v1/observer/observe1.ex5"
+   string getObserverName();
    void observe(Context &contextMain, Context &contextSub, Config &config);
 #import
 
-const int REVISION = 2;
-#define MAGICNUMBER createMagicNumber(REVISION)
+#define MAGICNUMBER createMagicNumber(PATTERN, REVISION)
 
 input double sl = 5; // stop loss (pips)
 input double tp = 8; // take profit (pips)
@@ -56,17 +71,17 @@ void _observe(Context &contextMain, Context &contextSub) {
 }
 
 int OnInit() {
-
    // このEAの名前
    // ※SLACKのチェンネル名に対応させるため変えてはいけない
-   const string EA_NAME = "strategy_01";
+   const string EA_NAME = StringFormat("strategy_%02d%C", PATTERN, REVISION);
    const double unit = getUnit();
    if (unit < 0) {
-      POST_MESSAGE(EA_NAME, "[ERROR] cannot get unit!");
+      POST_MESSAGE(EA_NAME, "[ERROR] cannot get unit");
       ExpertRemove();
       return (INIT_FAILED);
    }
-   POST_MESSAGE(EA_NAME, StringFormat("[INFO] %s start - %s, unit: %f", EA_NAME, Symbol(), unit));
+   POST_MESSAGE(EA_NAME, StringFormat("[INFO] %s(%d) start - %s, unit: %f", EA_NAME, MAGICNUMBER, Symbol(), unit));
+   POST_MESSAGE(EA_NAME, StringFormat("[INFO] plugin logic - command: %s, filter: %s, observe: %s", getCommandName(), getFilterName(), getObserverName()));
 
    // EAの動作をカスタマイズするためのコンフィグ値の設定
    _config.eaName = EA_NAME;
