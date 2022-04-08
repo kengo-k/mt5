@@ -29,6 +29,8 @@ struct Config {
    int tpRatio;
    // 取引量
    double volume;
+   // MACDによるエントリタイミングのフィルタとして使用するMACD値の敷居値
+   double macdThreshold;
    // メイン足
    ENUM_TIMEFRAMES mainPeriod;
    // サブ足(方向性を特定するための足。フィルターとして使う)

@@ -45,7 +45,6 @@ void configure(
    Config &CONFIG
 ) export {
    _CONFIG = CONFIG;
-   NOTIFY_MESSAGE(_CONFIG.eaName, StringFormat("start %s using %d/%d period", _CONFIG.eaName, _CONFIG.mainPeriod, _CONFIG.subPeriod));
 }
 
 /**
