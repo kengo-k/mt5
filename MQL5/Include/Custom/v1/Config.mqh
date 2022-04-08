@@ -10,9 +10,8 @@ enum ENUM_ENTRY_COMMAND {
    ,ENTRY_COMMAND_NOOP
 };
 
-typedef ENUM_ENTRY_COMMAND (*FnCreateCommand)(Context&);
-typedef bool (*FnCommandFilter)(ENUM_ENTRY_COMMAND, Context&, Context&);
-typedef void (*FnExec)(Context&, Context&);
+typedef ENUM_ENTRY_COMMAND (*FnOpen)(Context&, Context&);
+typedef void (*FnClose)(Context&, Context&);
 
 /**
  * カスタマイズ用のパラメータ構造体
@@ -35,13 +34,10 @@ struct Config {
    ENUM_TIMEFRAMES mainPeriod;
    // サブ足(方向性を特定するための足。フィルターとして使う)
    ENUM_TIMEFRAMES subPeriod;
-   // メイン足によるエントリフィルタ
-   FnCreateCommand createCommand;
-   // サブ足によるエントリフィルタ
-   FnCommandFilter filterCommand;
-   // 保有ポジションを監視する処理
-   // ストップを更新するとか利益確定する等任意の処理を入れる
-   FnExec observe;
+   // ポジションを建てるロジック
+   FnOpen open;
+   // ポジションを決済するロジック
+   FnClose close;
    // マジックナンバー
    long MAGIC_NUMBER;
 };

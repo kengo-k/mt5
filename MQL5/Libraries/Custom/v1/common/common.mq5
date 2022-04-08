@@ -14,7 +14,7 @@ const int timeout = 3000;
 const bool TestMode = true;
 
 // このストラテジグループのマジックナンバーに使用する共通のプレフィクス番号
-const int MAGICNUMBER_PREFIX = 100;
+const int MAGICNUMBER_PREFIX = 1;
 
 /**
  * slackのチャンネルにメッセージを投稿する
@@ -55,8 +55,8 @@ int notifySlack(string message, string channel) export
 /**
  * EAを特定するためのユニーク番号を生成する
  */
-long createMagicNumber(int pattern, char revision) export {
-   string magic = StringFormat("%d%02d%03d", MAGICNUMBER_PREFIX, pattern, revision);
+long createMagicNumber(string pattern1, string pattern2) export {
+   string magic = StringFormat("%03d%s%s", MAGICNUMBER_PREFIX, pattern1, pattern2);
    return StringToInteger(magic);
 }
 
@@ -146,7 +146,7 @@ void sell(MqlTradeRequest &request, double sl, double volume, long magic) export
 /**
  * 決済注文のリクエストを生成する
  */
-void close(MqlTradeRequest &request, long magicNumber) export {
+void fix(MqlTradeRequest &request, long magicNumber) export {
 
    ulong ticketNo = getPositionTicket();
    double volume = getPositionVolume();

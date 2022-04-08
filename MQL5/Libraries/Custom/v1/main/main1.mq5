@@ -80,7 +80,7 @@ void handleTick(Context &contextMain, Context &contextSub) export {
 
    // ポジションを保持している場合ティックの動きを監視して、利益がでている場合はストップを移動させて利益を確定させる
    if (hasPosition()) {
-      _CONFIG.observe(contextMain, contextSub);
+      _CONFIG.close(contextMain, contextSub);
    }
 
    // 新しい足が生まれた場合
@@ -109,11 +109,9 @@ void onNewBarCreated(Context &contextMain, Context &contextSub) {
      // logNewBar(contextMain, contextSub);
    } else {
       // 新規ポジションを建てるかどうかの判定を行う
-      ENUM_ENTRY_COMMAND command = _CONFIG.createCommand(contextMain);
-      // フィルタを適用して実際にポジションを建てるかどうかチェックを行う
-      bool accept = _CONFIG.filterCommand(command, contextMain, contextSub);
+      ENUM_ENTRY_COMMAND command = _CONFIG.open(contextMain, contextSub);
       
-      if (command == ENTRY_COMMAND_BUY && accept) {
+      if (command == ENTRY_COMMAND_BUY) {
          buy(request, (_CONFIG.sl * getUnit()), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
          logRequest(_CONFIG.eaName, "[WARN] 新規買い注文を送信します", request);
          
@@ -125,7 +123,7 @@ void onNewBarCreated(Context &contextMain, Context &contextSub) {
          }
       }
 
-      if (command == ENTRY_COMMAND_SELL && accept) {
+      if (command == ENTRY_COMMAND_SELL) {
          sell(request, (_CONFIG.sl * getUnit()), _CONFIG.volume, _CONFIG.MAGIC_NUMBER);
          logRequest(_CONFIG.eaName, "[WARN] 新規売り注文を送信します", request);
          

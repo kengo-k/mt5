@@ -1,4 +1,4 @@
-// in Libraries/Custom/v1/command
+// in Libraries/Custom/v1/opener
 #property library
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
@@ -14,15 +14,16 @@
    bool checkLowerBreak(double new_macd, double old_macd, double new_signal, double old_signal);
 #import
 
-string getCommandName() export {
-   return "command1";
+string getOpenerName() export {
+   return "001";
 }
 
 /**
  * MACDのシグナルブレイクをエントリタイミングとするロジック
  */
-ENUM_ENTRY_COMMAND createCommand(
+ENUM_ENTRY_COMMAND open(
    Context &contextMain,
+   Context &contextSub,
    Config &config
 ) export {
    CopyBuffer(contextMain.macdHandle, 0, 0, 3, contextMain.macd);
