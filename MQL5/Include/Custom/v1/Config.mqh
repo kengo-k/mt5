@@ -28,6 +28,10 @@ struct Config {
    int tpRatio;
    // 取引量
    double volume;
+   // 長期MA期間
+   int longMaPeriod;
+   // 短期MA期間
+   int shortMaPeriod;
    // MACDによるエントリタイミングのフィルタとして使用するMACD値の敷居値
    double macdThreshold;
    // メイン足

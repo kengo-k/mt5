@@ -38,10 +38,17 @@ Config _CONFIG;
 // 予兆の通知済みフラグ
 bool isOmenNotified;
 
+Config createConfigure() export {
+   Config config = {};
+   config.shortMaPeriod = 10;
+   config.longMaPeriod = 100;
+   return config;
+}
+
 /**
  * パラメータ等の情報を設定する処理!
  */
-void configure(
+void setConfigure(
    Config &CONFIG
 ) export {
    _CONFIG = CONFIG;
@@ -53,8 +60,10 @@ void configure(
  * インディケーターや各種変数の初期化等の処理を行う。
  */
 void init(Context &contextMain, Context &contextSub) export {
-   contextMain.macdHandle = iMACD(Symbol(), _CONFIG.mainPeriod, 12, 26, 9, PRICE_CLOSE);
    contextMain.barCount = -1;
+   contextMain.maHandle = iMA(Symbol(), _CONFIG.mainPeriod, _CONFIG.shortMaPeriod, 0, MODE_SMA, PRICE_CLOSE);
+   contextSub.maHandle = iMA(Symbol(), _CONFIG.subPeriod, _CONFIG.longMaPeriod, 0, MODE_SMA, PRICE_CLOSE);
+   contextMain.macdHandle = iMACD(Symbol(), _CONFIG.mainPeriod, 12, 26, 9, PRICE_CLOSE);
    contextSub.macdHandle = iMACD(Symbol(), _CONFIG.subPeriod, 12, 26, 9, PRICE_CLOSE);
    isOmenNotified = false;
 }

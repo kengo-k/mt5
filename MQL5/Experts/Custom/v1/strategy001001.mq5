@@ -20,9 +20,10 @@
 #import
 
 #import "Custom/v1/main/main1.ex5"
-  void configure(Config &config);
-  void init(Context &contextMain, Context &contextSub);
-  void handleTick(Context &contextMain, Context &contextSub);
+   Config createConfigure();
+   void setConfigure(Config &config);
+   void init(Context &contextMain, Context &contextSub);
+   void handleTick(Context &contextMain, Context &contextSub);
 #import
 
 #import "Custom/v1/opener/opener001.ex5"
@@ -40,7 +41,7 @@ input double tp = 8; // take profit (pips)
 input ENUM_TIMEFRAMES mainPeriod = PERIOD_H1; // main timeframes
 input ENUM_TIMEFRAMES subPeriod = PERIOD_H1; // sub timeframes
 
-Config _config = {};
+Config _config;
 Context _contextMain;
 Context _contextSub;
 
@@ -67,6 +68,7 @@ int OnInit() {
    POST_MESSAGE(EA_NAME, StringFormat("[INFO] start: %s, unit=%f", EA_NAME, Symbol(), unit));
    POST_MESSAGE(EA_NAME, StringFormat("[INFO] plugin logic: opener=%s, closer=%s", getOpenerName(), getCloserName()));
    // EAの動作をカスタマイズするためのコンフィグ値の設定
+   _config = createConfigure();
    _config.eaName = EA_NAME;
    _config.MAGIC_NUMBER = magic;
    _config.mainPeriod = mainPeriod;
@@ -78,7 +80,7 @@ int OnInit() {
    _config.open = _open; 
    _config.close = _close;
 
-   configure(_config);
+   setConfigure(_config);
    init(_contextMain, _contextSub);
 
    return(INIT_SUCCEEDED);
