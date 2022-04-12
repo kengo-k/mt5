@@ -9,10 +9,10 @@ set current_dir=%~dp0
 @rem データディレクトリはC:\Users\maku\AppData\Roaming\MetaQuotes\Terminal\XXXXXXXXXXXのような形式になっている
 @rem ※各マシンごとに異なるので確認すること
 @rem 自宅のメインPC: C:\Users\kuronyan\AppData\Roaming\MetaQuotes\Terminal\EE0304F13905552AE0B5EAEFB04866EB
-set data_dir=%~1
+@rem set data_dir=%~1
 
 
-cd /d %data_dir%
-mklink /d MQL5\Experts\Custom %current_dir%MQL5\Experts\Custom
-mklink /d MQL5\Include\Custom %current_dir%MQL5\Include\Custom
-mklink /d MQL5\Libraries\Custom %current_dir%MQL5\Libraries\Custom
+@rem cd /d %data_dir%
+mklink /d D:\MQL5\Experts %current_dir%Experts\Custom
+mklink /d D:\MQL5\Include %current_dir%Include\Custom
+mklink /d D:\MQL5\Libraries %current_dir%Libraries\Custom

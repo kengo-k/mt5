@@ -1,2 +1,11 @@
 *.ex4
 *.ex5
+experts.dat
+Images/*
+Indicators/*
+Profiles/*
+Scripts/*
+Experts/*
+Include/*
+Libraries/*
+!Custom
