@@ -3,10 +3,13 @@
 #property link      "https://www.mql5.com"
 
 struct Context {
-   int maHandle;
+   int shortMaHandle;
+   int longMaHandle;
+   int longlongMaHandle;
    int macdHandle;
    double shortMA[];
    double longMA[];
+   double longlongMA[];
    double macd[];
    double signal[];
    int barCount;

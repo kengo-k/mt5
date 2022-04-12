@@ -77,6 +77,40 @@ double getUnit() export {
    return unit;
 }
 
+string getPeriodName(ENUM_TIMEFRAMES period) export {
+   string periodName = "";
+   if (period == PERIOD_CURRENT) {
+      period = Period();
+   }
+   switch (period) {
+      case PERIOD_M5:
+         periodName = "M5";
+         break;
+      case PERIOD_M15:
+         periodName = "M15";
+         break;
+      case PERIOD_H1:
+         periodName = "H1";
+         break;
+      case PERIOD_H4:
+         periodName = "H4";
+         break;
+      case PERIOD_D1:
+         periodName = "D1";
+         break;
+      case PERIOD_W1:
+         periodName = "W1";
+         break;
+      case PERIOD_MN1:
+         periodName = "MN1";
+         break;                                             
+   }
+   if (StringLen(periodName) == 0) {
+      ExpertRemove();
+   }
+   return periodName;
+}
+
 /**
  * 注文のリクエスト情報をログに出力
  */
@@ -250,6 +284,27 @@ double calcPositionPipsBetweenCurrentAndOpen() export {
       profit = open - current;
    }
    return profit / getUnit();
+}
+
+bool isStopMoved() export {
+   
+   bool moved = false;
+
+   ENUM_POSITION_TYPE type = getPositionType();
+   double sl = getPositionSL();
+   double open = getPositionOpenPrice();
+   
+   if (type == POSITION_TYPE_BUY) {
+      if (sl > open) {
+         moved = true;
+      }
+   } else {
+      if (sl < open) {
+         moved = true;
+      }
+   }
+   
+   return moved;
 }
 
 /**

@@ -1,8 +1,8 @@
 // in Experts/Custom/v1
 
 /*
- * 001: MACDブレイク
- * 001: 固定幅SLTP
+ * 051: MAブレイク
+ * 101: 固定幅トレール
  */
 
 #property copyright "Copyright 2021, MetaQuotes Ltd."
@@ -26,12 +26,12 @@
    void handleTick(Context &contextMain, Context &contextSub);
 #import
 
-#import "Custom/v1/opener/opener001.ex5"
+#import "Custom/v1/opener/opener051.ex5"
    string getOpenerName();
    ENUM_ENTRY_COMMAND open(Context &contextMain, Context &contextSub, Config &config);
 #import
 
-#import "Custom/v1/closer/closer001.ex5"
+#import "Custom/v1/closer/closer101.ex5"
    string getCloserName();
    void close(Context &contextMain, Context &contextSub, Config &config);
 #import
@@ -40,6 +40,8 @@ input double sl = 5; // stop loss (pips)
 input double tp = 8; // take profit (pips)
 input ENUM_TIMEFRAMES mainPeriod = PERIOD_H1; // main timeframes
 input ENUM_TIMEFRAMES subPeriod = PERIOD_H1; // sub timeframes
+input int shortMaPeriod = 10;
+input int longMaPeriod = 100;
 
 Config _config;
 Context _contextMain;
@@ -59,13 +61,14 @@ int OnInit() {
    const long magic = createMagicNumber(getOpenerName(), getCloserName());
    const string EA_NAME = StringFormat("strategy%d", magic);
    const double unit = getUnit();
+   printf("unit: %f", unit);
    if (unit < 0) {
       POST_MESSAGE(EA_NAME, "[ERROR] cannot get unit");
       ExpertRemove();
       return (INIT_FAILED);
    }
-   
-   POST_MESSAGE(EA_NAME, StringFormat("[INFO] start: %s, unit=%f", EA_NAME, Symbol(), unit));
+
+   POST_MESSAGE(EA_NAME, StringFormat("[INFO] start: %s, unit=%f", Symbol(), unit));
    POST_MESSAGE(EA_NAME, StringFormat("[INFO] plugin logic: opener=%s, closer=%s", getOpenerName(), getCloserName()));
    // EAの動作をカスタマイズするためのコンフィグ値の設定
    _config = createConfigure();
@@ -76,11 +79,10 @@ int OnInit() {
    _config.tp = tp;
    _config.tpRatio = 2;
    _config.volume = 0.1;
-   _config.open = _open; 
+   _config.shortMaPeriod = shortMaPeriod;
+   _config.longMaPeriod = longMaPeriod;
+   _config.open = _open;
    _config.close = _close;
-   _config.shortMaPeriod = -1;
-   _config.longMaPeriod = -1;
-   _config.longlongMaPeriod = -1;
 
    setConfigure(_config);
    init(_contextMain, _contextSub);

@@ -1,4 +1,5 @@
 // in Libraries/Custom/v1/opener
+
 #property library
 #property copyright "Copyright 2022, MetaQuotes Ltd."
 #property link      "https://www.mql5.com"
@@ -15,29 +16,31 @@
 #import
 
 string getOpenerName() export {
-   return "002";
+   return "051";
 }
 
 /**
- * MACDがシグナルを超えていることをエントリタイミングとするロジック
+ * 短期MAが長期MAをブレイクした瞬間にエントリする
  */
 ENUM_ENTRY_COMMAND open(
    Context &contextMain,
    Context &contextSub,
    Config &config
 ) export {
-   CopyBuffer(contextMain.macdHandle, 0, 0, 2, contextMain.macd);
-   CopyBuffer(contextMain.macdHandle, 1, 0, 2, contextMain.signal);
+   CopyBuffer(contextMain.shortMaHandle, 0, 0, 3, contextMain.shortMA);
+   CopyBuffer(contextMain.longMaHandle, 0, 0, 3, contextMain.longMA);
 
-   double macd_latest = contextMain.macd[0]; // 確定した最新の(=直近の)MACD値。
-   double signal_latest = contextMain.signal[0]; // 確定した最新の(=直近の)シグナル値。
+   double shortMA_latest = contextMain.shortMA[1];
+   double longMA_latest = contextMain.longMA[1];
+   double shortMA_prev = contextMain.shortMA[0];
+   double longMA_prev = contextMain.longMA[0];
 
-   if (macd_latest > 0 && macd_latest > signal_latest) {
+   if (shortMA_prev < longMA_prev && shortMA_latest > longMA_latest) {
       NOTIFY_MESSAGE(config.eaName, "[INFO] 買いサインが発生しました");
       return ENTRY_COMMAND_BUY;
    }
 
-   if (macd_latest < 0 && macd_latest < signal_latest) {
+   if (shortMA_prev > longMA_prev && shortMA_latest < longMA_latest) {
       NOTIFY_MESSAGE(config.eaName, "[INFO] 売りサインが発生しました");
       return ENTRY_COMMAND_SELL;
    }

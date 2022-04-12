@@ -40,8 +40,12 @@ bool isOmenNotified;
 
 Config createConfigure() export {
    Config config = {};
-   config.shortMaPeriod = 10;
-   config.longMaPeriod = 100;
+   config.shortMaPeriod = -1;
+   config.longMaPeriod = -1;
+   config.longlongMaPeriod = -1;
+   config.macdPeriod[0] = -1;
+   config.macdPeriod[1] = -1;
+   config.macdPeriod[2] = -1;
    return config;
 }
 
@@ -61,10 +65,22 @@ void setConfigure(
  */
 void init(Context &contextMain, Context &contextSub) export {
    contextMain.barCount = -1;
-   contextMain.maHandle = iMA(Symbol(), _CONFIG.mainPeriod, _CONFIG.shortMaPeriod, 0, MODE_SMA, PRICE_CLOSE);
-   contextSub.maHandle = iMA(Symbol(), _CONFIG.subPeriod, _CONFIG.longMaPeriod, 0, MODE_SMA, PRICE_CLOSE);
-   contextMain.macdHandle = iMACD(Symbol(), _CONFIG.mainPeriod, 12, 26, 9, PRICE_CLOSE);
-   contextSub.macdHandle = iMACD(Symbol(), _CONFIG.subPeriod, 12, 26, 9, PRICE_CLOSE);
+   if (_CONFIG.shortMaPeriod > 0) {
+      contextMain.shortMaHandle = iMA(Symbol(), PERIOD_CURRENT, _CONFIG.shortMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      contextSub.shortMaHandle = iMA(Symbol(), _CONFIG.subPeriod, _CONFIG.shortMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   }
+   if (_CONFIG.longMaPeriod > 0) {
+      contextMain.longMaHandle = iMA(Symbol(), PERIOD_CURRENT, _CONFIG.longMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      contextSub.longMaHandle = iMA(Symbol(), _CONFIG.subPeriod, _CONFIG.longMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   }
+   if (_CONFIG.longlongMaPeriod > 0) {
+      contextMain.longlongMaHandle = iMA(Symbol(), PERIOD_CURRENT, _CONFIG.longlongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      contextSub.longlongMaHandle = iMA(Symbol(), _CONFIG.subPeriod, _CONFIG.longlongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   }
+   if (_CONFIG.macdPeriod[0] > 0) {
+      contextMain.macdHandle = iMACD(Symbol(), PERIOD_CURRENT, _CONFIG.macdPeriod[0], _CONFIG.macdPeriod[1], _CONFIG.macdPeriod[2], PRICE_CLOSE);
+      contextSub.macdHandle = iMACD(Symbol(), _CONFIG.subPeriod, _CONFIG.macdPeriod[0], _CONFIG.macdPeriod[1], _CONFIG.macdPeriod[2], PRICE_CLOSE);   
+   }
    isOmenNotified = false;
 }
 
@@ -74,7 +90,7 @@ void init(Context &contextMain, Context &contextSub) export {
 void handleTick(Context &contextMain, Context &contextSub) export {
       
    // ローソク足が新しく生成されているか数を確認
-   int newM5BarCount = Bars(Symbol(), _CONFIG.mainPeriod);
+   int newM5BarCount = Bars(Symbol(), PERIOD_CURRENT);
    if (contextMain.barCount == -1) {
       contextMain.barCount = newM5BarCount;
    }
