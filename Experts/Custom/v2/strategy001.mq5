@@ -5,8 +5,8 @@
 #include <Custom/v2/Config/Config001.mqh>
 #include <Custom/v2/Context/Context001.mqh>
 #include <Custom/v2/Context/ContextHelper.mqh>
-#include <Custom/v2/Logic/Logic001.mqh>
 #include <Custom/v2/Builder/StrategyBuilder001.mqh>
+#include <Custom/v2/Logic/Open/Open001.mqh>
 
 const string EA_NAME = "strategy001";
 const long MAGIC_NUMBER = 1;
@@ -19,9 +19,6 @@ input int LONG_LONG_MA_PERIOD = 200;
 input int MACD_PERIOD1 = 12;
 input int MACD_PERIOD2 = 26;
 input int MACD_PERIOD3 = 9;
-
-LogicFactory __logicFactory;
-Logic __logic = __logicFactory.createLogic();
 
 ConfigFactory __configFactory;
 Config001 __config = __configFactory.create(
@@ -39,15 +36,21 @@ Config001 __config = __configFactory.create(
 );
 
 void initContext(Context001 &main, Context001 &sub, Config001 &config) {
-   ContextHelper helper;
-   helper.initContext001(main, sub, config);
+   ContextHelper::initContext001(main, sub, config);
+}
+
+void open(Context001 &contextMain, Context001 &contextSub, Config001 &config) {
+   Open001::open(contextMain, contextSub, config);
+}
+
+void close(Context001 &contextMain, Context001 &contextSub, Config001 &config) {
 }
 
 StrategyBuilder001<Config001, Context001> st(
    __config
    , initContext
-   , __logic.fnOpen
-   , __logic.fnClose
+   , open
+   , close
    , EA_NAME
    , MAGIC_NUMBER
 );
