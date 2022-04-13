@@ -10,11 +10,19 @@ public:
       : eaName(_eaName) {}
 
    void logRequest(MqlTradeRequest &request) {
-      // 後で書く
+      printf(
+         StringFormat(
+            "[INFO] 注文情報 - %s, price: %f, volume: %f, sl: %f, tp: %f"
+            , request.symbol
+            , request.price
+            , request.volume
+            , request.sl
+            , request.tp
+         )
+      );
    }
 
    void logResponse(MqlTradeResult &result) {
-      // 後で書く
    }
 
    void logWrite(ENUM_LOG_LEVEL logLevel, string message) {

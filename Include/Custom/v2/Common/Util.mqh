@@ -122,5 +122,43 @@ public:
       }
       return false;
    }
+   
+   static void logProfit(const MqlTradeTransaction &tran, const MqlTradeRequest &request, const MqlTradeResult &result) {
+
+      /*
+         TRADE_TRANSACTION_ORDER_ADD: 0
+         TRADE_TRANSACTION_ORDER_UPDATE: 1
+         TRADE_TRANSACTION_ORDER_DELETE: 2
+         TRADE_TRANSACTION_DEAL_ADD: 6
+         TRADE_TRANSACTION_DEAL_UPDATE: 7
+         TRADE_TRANSACTION_DEAL_DELETE: 8
+         TRADE_TRANSACTION_HISTORY_ADD: 3
+         TRADE_TRANSACTION_HISTORY_UPDATE: 4
+         TRADE_TRANSACTION_HISTORY_DELETE: 5
+         TRADE_TRANSACTION_POSITION: 9
+         TRADE_TRANSACTION_REQUEST: 10
+      */ 
+   
+      /*
+         DEAL_ENTRY_IN: 0
+         DEAL_ENTRY_OUT: 1
+         DEAL_ENTRY_INOUT: 2
+         DEAL_ENTRY_OUT_BY: 3
+      */
+   
+      if (tran.type == TRADE_TRANSACTION_DEAL_ADD) {
+         if (HistoryDealSelect(tran.deal)) {
+            ENUM_DEAL_ENTRY entry = (ENUM_DEAL_ENTRY)HistoryDealGetInteger(tran.deal, DEAL_ENTRY);
+            if (entry == DEAL_ENTRY_OUT) {
+               double profit = HistoryDealGetDouble(tran.deal, DEAL_PROFIT);
+               printf("profit: %f", profit);
+            }
+         }
+      }
+   }
+   
+   static double calcWinRatio() {
+      return TesterStatistics(STAT_PROFIT_TRADES) / TesterStatistics(STAT_TRADES) * 100;   
+   }
 
 };

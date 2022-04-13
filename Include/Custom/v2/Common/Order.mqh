@@ -8,11 +8,11 @@ class Order {
 public:
 
    static void createBuyRequest(MqlTradeRequest &request, double sl, double tp, double volume, long magic) {
-      Order::createNewOrder(request, ORDER_TYPE_BUY, SYMBOL_ASK, SYMBOL_BID, -sl, tp, volume, magic);
+      Order::createNewOrder(request, ORDER_TYPE_BUY, SYMBOL_ASK, SYMBOL_BID, sl, tp, volume, magic);
    }
 
    static void createSellRequest(MqlTradeRequest &request, double sl, double tp, double volume, long magic) {
-      Order::createNewOrder(request, ORDER_TYPE_SELL, SYMBOL_BID, SYMBOL_ASK, +sl, -sl, volume, magic);
+      Order::createNewOrder(request, ORDER_TYPE_SELL, SYMBOL_BID, SYMBOL_ASK, sl, tp, volume, magic);
    }
 
    static void createCloseRequest(MqlTradeRequest &request, long magicNumber) {
@@ -85,10 +85,10 @@ private:
       , double volume
       , long magicNumber
    ) {
-
+      double unit = Util::getUnit();
       double targetPrice = SymbolInfoDouble(Symbol(), targetSymbolInfo);
       double oppositePrice = SymbolInfoDouble(Symbol(), oppositeSymbolInfo);
-
+      
       request.action = TRADE_ACTION_DEAL;
       request.type = type;
       request.symbol = Symbol();
@@ -98,13 +98,24 @@ private:
       // 指定したボリュームを調達できない場合にどのように振る舞うかのモード
       // キャンセルする/可能な量のみでポジションを立てる/etc
       request.type_filling = ORDER_FILLING_IOC;
-      double unit = Util::getUnit();
 
       if (sl > 0) {
-         request.sl = oppositePrice + (sl * unit);
+         double adjust = 0;
+         if (type == ORDER_TYPE_BUY) {
+            adjust = - (sl * unit);
+         } else {
+            adjust = + (sl * unit);
+         }
+         request.sl = oppositePrice + adjust;
       }
       if (tp > 0) {
-         request.tp = oppositePrice + (tp * unit);
+         double adjust = 0;
+         if (type == ORDER_TYPE_BUY) {
+            adjust = + (tp * unit);
+         } else {
+            adjust = - (tp * unit);
+         }
+         request.tp = oppositePrice + adjust;
       }
 
       request.deviation = 3; // 許容スリッページ

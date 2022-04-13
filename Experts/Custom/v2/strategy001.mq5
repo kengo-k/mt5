@@ -67,3 +67,11 @@ void OnTick() {
 }
 
 void OnDeinit(const int reason) {}
+
+double OnTester() {
+   return Util::calcWinRatio();
+}
+
+void OnTradeTransaction(const MqlTradeTransaction &tran, const MqlTradeRequest &request, const MqlTradeResult &result) {
+   Util::logProfit(tran, request, result);   
+}

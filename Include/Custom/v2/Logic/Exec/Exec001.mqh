@@ -24,20 +24,16 @@ public:
          if (command == ENTRY_COMMAND_BUY) {
             Order::createBuyRequest(request, config.sl, config.tp, config.volume, config.magicNumber);
             logger.logRequest(request);
-
             bool isSended = OrderSend(request, result);
             logger.logResponse(result);
-
             Order::checkTradeResult(isSended, result);
          }
 
          if (command == ENTRY_COMMAND_SELL) {
             Order::createSellRequest(request, config.sl, config.tp, config.volume, config.magicNumber);
             logger.logRequest(request);
-
             bool isSended = OrderSend(request, result);
             logger.logResponse(result);
-
             Order::checkTradeResult(isSended, result);
          }
       }
