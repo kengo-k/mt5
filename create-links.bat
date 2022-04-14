@@ -16,3 +16,6 @@ set current_dir=%~dp0
 mklink /d D:\MQL5\Experts %current_dir%Experts\Custom
 mklink /d D:\MQL5\Include %current_dir%Include\Custom
 mklink /d D:\MQL5\Libraries %current_dir%Libraries\Custom
+mklink /d D:\MQL5\Tests %current_dir%Tests
+mklink /d D:\MQL5\Reports %current_dir%..\Reports
+
