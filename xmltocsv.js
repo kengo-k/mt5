@@ -56,20 +56,34 @@ function main(reportXml) {
 
   // create new file for writing
   var outputPath = dir + "\\report.csv";
-  var file = fs.CreateTextFile(outputPath, true, true);
+  var stream = new ActiveXObject("ADODB.Stream");
+  stream.Type = 2; // 1: binary, 2: text
+  stream.Charset = "utf-8";
+  stream.Open();
 
   // write row into output csv file
-  file.writeLine(columnMapping.join(","));
+  stream.WriteText(columnMapping.join(","), 1); // 1: add newline
   for (var i = 0; i < rowObjects.length; i++) {
     var rowObject = rowObjects[i];
     //WScript.Echo(rowObject.toString());
     // filter 0 trade data
     if (rowObject.Trades != "0") {
-      file.writeLine(rowObject.toString());
+      stream.WriteText(rowObject.toString(), 1);
     }
   }
 
-  file.close();
+  // remove utf-8 bomb
+  stream.Position = 0;
+  stream.Type = 1;
+  stream.Position = 3;
+  var bin = stream.Read();
+  stream.Close();
+  var stream2 = new ActiveXObject("ADODB.Stream");
+  stream2.Type = 1;
+  stream2.Open();
+  stream2.Write(bin);
+  stream2.SaveToFile(outputPath, 2); // 2: overwrite
+  stream2.Close();
 }
 
 var argc = WScript.Arguments.Count();
