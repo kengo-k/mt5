@@ -1,5 +1,5 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Common/Util.mqh>
+#include <Custom/v2/Common/Chart.mqh>
 #include <Custom/v2/Logic/Exec/Exec001.mqh>
 
 /**
@@ -26,13 +26,13 @@ public:
 
       ENUM_ENTRY_COMMAND command = ENTRY_COMMAND_NOOP;
       if (shortMA_latest > longMA_latest && longMA_latest > longlongMA_latest) {
-         if (Util::checkUpperBreak(macd_latest, macd_prev, signal_latest, signal_prev)) {
+         if (Chart::isUpperBreak(macd_latest, macd_prev, signal_latest, signal_prev)) {
             command =  ENTRY_COMMAND_BUY;
          }
       }
 
       if (shortMA_latest < longMA_latest && longMA_latest < longlongMA_latest) {
-         if (Util::checkLowerBreak(macd_latest, macd_prev, signal_latest, signal_prev)) {
+         if (Chart::isLowerBreak(macd_latest, macd_prev, signal_latest, signal_prev)) {
             command =  ENTRY_COMMAND_SELL;
          }
       }
