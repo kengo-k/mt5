@@ -1,5 +1,5 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Common/Util.mqh>
+#include <Custom/v2/Common/Position.mqh>
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Config/Config001.mqh>
 #include <Custom/v2/Context/Context001.mqh>
@@ -19,7 +19,7 @@ public:
       ZeroMemory(request);
       ZeroMemory(result);
 
-      if (!Util::hasPosition(config.magicNumber)) {
+      if (!Position::hasPosition(config.magicNumber)) {
 
          if (command == ENTRY_COMMAND_BUY) {
             Order::createBuyRequest(request, config.sl, config.tp, config.volume, config.magicNumber);

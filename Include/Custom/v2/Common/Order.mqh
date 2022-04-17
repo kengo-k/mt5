@@ -1,4 +1,5 @@
 #include <Custom/v2/Common/Util.mqh>
+#include <Custom/v2/Common/Position.mqh>
 
 /**
  * ポジション操作に関連するロジック
@@ -17,9 +18,9 @@ public:
 
    static void createCloseRequest(MqlTradeRequest &request, long magicNumber) {
 
-      ulong ticketNo = Util::getPositionTicket();
-      double volume = Util::getPositionVolume();
-      ENUM_POSITION_TYPE entryType = Util::getPositionType();
+      ulong ticketNo = Position::getTicket();
+      double volume = Position::getVolume();
+      ENUM_POSITION_TYPE entryType = Position::getType();
 
       // ポジション種別に応じて対応する決済の種別を設定 ex)ポジションが買いなら決済は売り
       ENUM_ORDER_TYPE closeType = ORDER_TYPE_BUY;
@@ -42,8 +43,8 @@ public:
 
    static void createSlTpRequest(MqlTradeRequest &request, double newSL, long magicNumber) {
 
-      ulong ticketNo = Util::getPositionTicket();
-      double tp = Util::getPositionTP();
+      ulong ticketNo = Position::getTicket();
+      double tp = Position::getTP();
 
       request.action = TRADE_ACTION_SLTP;
       request.position = ticketNo;

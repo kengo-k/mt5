@@ -1,6 +1,6 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Order.mqh>
-#include <Custom/v2/Common/Util.mqh>
+#include <Custom/v2/Common/Position.mqh>
 
 /**
  * 共通フレームワーク
@@ -43,7 +43,7 @@ public:
       }
 
       // ポジションを保持している場合ティックの動きを監視して、利益がでている場合は確定する
-      if (Util::hasPosition(this.magicNumber)) {
+      if (Position::hasPosition(this.magicNumber)) {
          this.fnClose(this.contextMain, this.contextSub, this.config);
       }
 
