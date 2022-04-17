@@ -2,8 +2,8 @@
  * エントリ:
  */
 #include <Custom/v2/Common/Logger.mqh>
-#include <Custom/v2/Config/Config001.mqh>
-#include <Custom/v2/Context/Context001.mqh>
+#include <Custom/v2/Config/Config002.mqh>
+#include <Custom/v2/Context/Context002.mqh>
 #include <Custom/v2/Context/ContextHelper.mqh>
 #include <Custom/v2/Builder/StrategyBuilder001.mqh>
 #include <Custom/v2/Logic/Open/Open003.mqh>
@@ -16,32 +16,28 @@ input double VOLUME = 0.1;
 input int LONG_MA_PERIOD = 100;
 input int LONG_LONG_MA_PERIOD = 200;
 
-Config001 __config = Config001Factory::create(
+Config002 __config = Config002Factory::create(
    EA_NAME
    , MAGIC_NUMBER
    , SL
    , TP
    , VOLUME
-   , -1
    , LONG_MA_PERIOD
    , LONG_LONG_MA_PERIOD
-   , -1
-   , -1
-   , -1
 );
 
-void initContext(Context001 &main, Context001 &sub, Config001 &config) {
+void initContext(Context002 &main, Context002 &sub, Config002 &config) {
    ContextHelper::initContext(main, sub, config);
 }
 
-void open(Context001 &contextMain, Context001 &contextSub, Config001 &config) {
+void open(Context002 &contextMain, Context002 &contextSub, Config002 &config) {
    Open003::open(contextMain, contextSub, config);
 }
 
-void close(Context001 &contextMain, Context001 &contextSub, Config001 &config) {
+void close(Context002 &contextMain, Context002 &contextSub, Config002 &config) {
 }
 
-StrategyBuilder001<Config001, Context001> st(
+StrategyBuilder001<Config002, Context002> st(
    __config
    , initContext
    , open

@@ -1,13 +1,15 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Chart.mqh>
-#include <Custom/v2/Logic/Exec/Exec001.mqh>
+#include <Custom/v2/Context/Context002.mqh>
+#include <Custom/v2/Config/Config002.mqh>
+#include <Custom/v2/Logic/Exec/Exec002.mqh>
 
 /**
  * エントリ処理
  */
 class Open002 {
 public:
-   static void open(Context001 &contextMain, Context001 &contextSub, Config001 &config) {
+   static void open(Context002 &contextMain, Context002 &contextSub, Config002 &config) {
             
       CopyBuffer(contextMain.longMaHandle, 0, 0, 3, contextMain.longMA);
       CopyBuffer(contextMain.longlongMaHandle, 0, 0, 3, contextMain.longlongMA);
@@ -32,6 +34,6 @@ public:
          }
       }
 
-      Exec001::exec(command, contextMain, contextSub, config);
+      Exec002::exec(command, contextMain, contextSub, config);
    }
 };
