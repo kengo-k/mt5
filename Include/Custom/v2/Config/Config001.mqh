@@ -19,9 +19,9 @@ struct Config001 {
    int macdPeriod[3];
 };
 
-class ConfigFactory {
+class Config001Factory {
 public:
-   Config001 create(
+   static Config001 create(
       string _eaName
       , long _magicNumber
       , double _sl

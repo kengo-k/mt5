@@ -16,8 +16,7 @@ input double VOLUME = 0.1;
 input int LONG_MA_PERIOD = 100;
 input int LONG_LONG_MA_PERIOD = 200;
 
-ConfigFactory __configFactory;
-Config001 __config = __configFactory.create(
+Config001 __config = Config001Factory::create(
    EA_NAME
    , MAGIC_NUMBER
    , SL
@@ -32,7 +31,7 @@ Config001 __config = __configFactory.create(
 );
 
 void initContext(Context001 &main, Context001 &sub, Config001 &config) {
-   ContextHelper::initContext001(main, sub, config);
+   ContextHelper::initContext(main, sub, config);
 }
 
 void open(Context001 &contextMain, Context001 &contextSub, Config001 &config) {
