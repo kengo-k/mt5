@@ -55,5 +55,25 @@ public:
    static double getCurrentPrice() {
       return PositionGetDouble(POSITION_PRICE_CURRENT);
    }
+   
+   /**
+    * ストップが移動して利益が確定されているかどうかを判定する
+    */
+   static bool isProfitFixed() {
+      bool fixed = false;
+      double openPrice = Position::getOpenPrice();
+      double sl = Position::getSL();
+      ENUM_POSITION_TYPE type = Position::getType();
+      if (type == POSITION_TYPE_BUY) {
+         if (sl > openPrice) {
+            fixed = true;
+         }
+      } else {
+         if (sl < openPrice) {
+            fixed = true;
+         }
+      }
+      return fixed;
+   }
 
 };

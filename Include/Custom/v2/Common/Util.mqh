@@ -81,7 +81,7 @@ public:
             ENUM_DEAL_ENTRY entry = (ENUM_DEAL_ENTRY)HistoryDealGetInteger(tran.deal, DEAL_ENTRY);
             if (entry == DEAL_ENTRY_OUT) {
                double profit = HistoryDealGetDouble(tran.deal, DEAL_PROFIT);
-               printf("profit: %f", profit);
+               printf("deal %d: profit=%f", tran.deal, profit);
             }
          }
       }
