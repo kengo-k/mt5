@@ -19,7 +19,7 @@ input int GRID_SIZE = 30;
 
 GridManager __gridManager(
    // グリッドのサイズ
-   GRID_SIZE, 
+   GRID_SIZE,
    // グリッドの基準価格を取得する年月
    "202101"
 );
@@ -40,7 +40,7 @@ Config004 __config = Config004Factory::create(
 
 Logger logger(__config.eaName);
 
-int OnInit() {   
+int OnInit() {
    string symbol = Symbol();
    string period = Util::getPeriodName(Period());
    double unit = Util::getUnit();
@@ -53,7 +53,7 @@ int mainBarCount = -1;
 int orderBarCount = -1;
 
 void OnTick() {
-   // ローソク足が新しく生成されているか数を確認
+
    int newMainBarCount = Bars(Symbol(), PERIOD_CURRENT);
    int newOrderBarCount = Bars(Symbol(), __config.orderPeriod);
    if (mainBarCount == -1) {
@@ -61,9 +61,9 @@ void OnTick() {
    }
    if (orderBarCount == -1) {
       orderBarCount = newOrderBarCount;
-   }   
+   }
    if (newMainBarCount > mainBarCount) {
-      createOrder();   
+      createOrder();
       mainBarCount = newMainBarCount;
    }
    if (newOrderBarCount > orderBarCount) {
@@ -86,28 +86,32 @@ void OnTradeTransaction(const MqlTradeTransaction &tran, const MqlTradeRequest &
  * 現在の価格から次のグリッドの価格を算出し新規オーダーを生成しキューに追加する
  */
 void createOrder() {
-   MqlRates ohlc = Chart::getLatestOHLC(PERIOD_CURRENT);
-   //printf("ohlc: %f, %f, %f, %f!!!!", ohlc.open, ohlc.high, ohlc.low, ohlc.close);
+
    CopyBuffer(__contextMain.longMaHandle, 0, 0, 2, __contextMain.longMA);
    CopyBuffer(__contextMain.longlongMaHandle, 0, 0, 2, __contextMain.longlongMA);
-   
+
    double longMa = __contextMain.longMA[0];
    double longlongMa = __contextMain.longlongMA[0];
-   
+
    ENUM_ENTRY_COMMAND command = ENTRY_COMMAND_NOOP;
    if (longMa > longlongMa) {
-      command = ENTRY_COMMAND_BUY;  
+      command = ENTRY_COMMAND_BUY;
    } else {
       command = ENTRY_COMMAND_SELL;
    }
-   
+
    // 次のグリッド価格を取得する
    double gridPrice = __gridManager.getTargetGridPrice(command);
    if (!__gridManager.isGridPriceUsed(gridPrice)) {
       OrderContainer* orderContainer = __gridManager.createOrderContainer();
+      // 指値注文(TP付き)のリクエストを生成する
       Order::createLimitRequest(command, orderContainer.request, gridPrice, __config.volume, -1, __config.tp, __config.magicNumber);
+      // 長期間約定しない注文が残り続けないように一定期間で自動で削除されるようにする
+      orderContainer.request.type_time = ORDER_TIME_SPECIFIED;
+      orderContainer.request.expiration = Util::addSec(Util::addDay(Util::toDate(TimeCurrent()), 8), -1);
+      // 注文をキューに入れる(注文処理用の時間足で処理される ※00:00前後は市場がcloseしているため時間をずらしながらリトライする)
       __gridManager.addOrder(orderContainer);
-   }   
+   }
 }
 
 /**
@@ -122,7 +126,7 @@ void sendOrder() {
       logger.logRequest(order.request);
       bool isSended = OrderSend(order.request, result);
       logger.logResponse(result, isSended);
-      
+
       bool isValid = false;
       if (result.retcode == TRADE_RETCODE_DONE) {
          isValid = true;
@@ -141,6 +145,6 @@ void sendOrder() {
       }
       if (isSended) {
          __gridManager.deleteOrder(i);
-      }      
+      }
    }
 }
