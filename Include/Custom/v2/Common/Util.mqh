@@ -6,6 +6,27 @@
 class Util {
 public:
 
+   static datetime getCurrentDate() {
+      datetime t = TimeCurrent();
+      t = toDate(t);
+      return t;
+   }
+
+   static datetime addDay(datetime t, int day) {
+      t = t + (60 * 60 * 24 * day);
+      return t;
+   }
+
+   static datetime addSec(datetime t, int sec) {
+      t = t + sec;
+      return t;
+   }
+
+   static datetime toDate(datetime t) {
+      string s = TimeToString(t, TIME_DATE);
+      return StringToTime(s);
+   }
+
    static double getUnit() {
       string symbol = Symbol();
       double unit = -1;
@@ -52,7 +73,7 @@ public:
       }
       return periodName;
    }
-   
+
    static void logProfit(const MqlTradeTransaction &tran, const MqlTradeRequest &request, const MqlTradeResult &result) {
 
       /*
@@ -67,15 +88,15 @@ public:
          TRADE_TRANSACTION_HISTORY_DELETE: 5
          TRADE_TRANSACTION_POSITION: 9
          TRADE_TRANSACTION_REQUEST: 10
-      */ 
-   
+      */
+
       /*
          DEAL_ENTRY_IN: 0
          DEAL_ENTRY_OUT: 1
          DEAL_ENTRY_INOUT: 2
          DEAL_ENTRY_OUT_BY: 3
       */
-   
+
       if (tran.type == TRADE_TRANSACTION_DEAL_ADD) {
          if (HistoryDealSelect(tran.deal)) {
             ENUM_DEAL_ENTRY entry = (ENUM_DEAL_ENTRY)HistoryDealGetInteger(tran.deal, DEAL_ENTRY);
@@ -86,9 +107,9 @@ public:
          }
       }
    }
-   
+
    static double calcWinRatio() {
-      return TesterStatistics(STAT_PROFIT_TRADES) / TesterStatistics(STAT_TRADES) * 100;   
+      return TesterStatistics(STAT_PROFIT_TRADES) / TesterStatistics(STAT_TRADES) * 100;
    }
 
 };
