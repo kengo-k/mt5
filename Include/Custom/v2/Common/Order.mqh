@@ -1,3 +1,4 @@
+#include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
 #include <Custom/v2/Common/Position.mqh>
 
@@ -53,7 +54,43 @@ public:
       request.tp = tp;
       request.magic = magicNumber;
    }
-
+   
+   static void createLimitRequest(ENUM_ENTRY_COMMAND command, MqlTradeRequest &request, double price, double volume, double sl, double tp, long magicNumber) {
+      
+      if (command == ENTRY_COMMAND_NOOP) {
+         return;
+      }
+      
+      printf("★★★★★★★price: %f, tpPips: %f", price, tp);
+      
+      double unit = Util::getUnit();
+      ENUM_ORDER_TYPE orderType;
+      if (command == ENTRY_COMMAND_BUY) {
+         orderType = ORDER_TYPE_BUY_STOP;
+         if (sl > 0) {
+            request.sl = price - (sl * unit);
+         }
+         if (tp > 0) {
+            request.tp = price + (tp * unit);
+         }
+      } else {
+         orderType = ORDER_TYPE_SELL_STOP;
+         if (sl > 0) {
+            request.sl = price + (sl * unit);
+         }
+         if (tp > 0) {
+            request.tp = price - (tp * unit);
+         }         
+      }
+      
+      request.action = TRADE_ACTION_PENDING;
+      request.price = price;
+      request.type = orderType;
+      request.symbol = Symbol();
+      request.volume = volume;
+      request.deviation = 3;
+      request.magic = magicNumber;
+   }
 
    static void checkTradeResult(bool isSended, MqlTradeResult &result) {
 

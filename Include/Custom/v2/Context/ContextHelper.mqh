@@ -3,6 +3,7 @@
 #include <Custom/v2/Config/Config001.mqh>
 #include <Custom/v2/Config/Config002.mqh>
 #include <Custom/v2/Config/Config003.mqh>
+#include <Custom/v2/Config/Config004.mqh>
 
 /**
  * コンテキスト初期化処理のヘルパーメソッド集
@@ -42,5 +43,14 @@ public:
          contextMain.longlongMaHandle = iMA(Symbol(), PERIOD_CURRENT, config.longlongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
       }   
    }
+   
+   static void initContext(Context002 &contextMain, Context002 &contextSub, Config004 &config) {
+      if (config.longMaPeriod > 0) {
+         contextMain.longMaHandle = iMA(Symbol(), PERIOD_CURRENT, config.longMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      }
+      if (config.longlongMaPeriod > 0) {
+         contextMain.longlongMaHandle = iMA(Symbol(), PERIOD_CURRENT, config.longlongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+      }   
+   }   
 
 };
