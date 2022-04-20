@@ -12,17 +12,30 @@ public:
    void logRequest(MqlTradeRequest &request) {
       printf(
          StringFormat(
-            "[INFO] 注文情報 - %s, price: %f, volume: %f, sl: %f, tp: %f"
+            "[INFO] 注文情報 - %s, price: %f, volume: %f, sl: %f, tp: %f, bid: %f, ask: %f, spread: %f"
             , request.symbol
             , request.price
             , request.volume
             , request.sl
             , request.tp
+            , SymbolInfoDouble(Symbol(), SYMBOL_BID)
+            , SymbolInfoDouble(Symbol(), SYMBOL_ASK)
+            , SymbolInfoDouble(Symbol(), SYMBOL_ASK) - SymbolInfoDouble(Symbol(), SYMBOL_BID)
          )
       );
    }
 
-   void logResponse(MqlTradeResult &result) {
+   void logResponse(MqlTradeResult &result, bool isSended) {
+      printf(
+         StringFormat(
+            "[INFO] 注文結果: sended?: %d, retcode=%d, request_id=%d, deal=%d, order=%d"
+            , isSended
+            , result.retcode
+            , result.request_id
+            , result.deal
+            , result.order
+         )
+      );   
    }
 
    void logWrite(ENUM_LOG_LEVEL logLevel, string message) {
