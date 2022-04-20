@@ -54,15 +54,13 @@ public:
       request.tp = tp;
       request.magic = magicNumber;
    }
-   
+
    static void createLimitRequest(ENUM_ENTRY_COMMAND command, MqlTradeRequest &request, double price, double volume, double sl, double tp, long magicNumber) {
-      
+
       if (command == ENTRY_COMMAND_NOOP) {
          return;
       }
-      
-      printf("★★★★★★★price: %f, tpPips: %f", price, tp);
-      
+
       double unit = Util::getUnit();
       ENUM_ORDER_TYPE orderType;
       if (command == ENTRY_COMMAND_BUY) {
@@ -80,9 +78,9 @@ public:
          }
          if (tp > 0) {
             request.tp = price - (tp * unit);
-         }         
+         }
       }
-      
+
       request.action = TRADE_ACTION_PENDING;
       request.price = price;
       request.type = orderType;
@@ -126,7 +124,7 @@ private:
       double unit = Util::getUnit();
       double targetPrice = SymbolInfoDouble(Symbol(), targetSymbolInfo);
       double oppositePrice = SymbolInfoDouble(Symbol(), oppositeSymbolInfo);
-      
+
       request.action = TRADE_ACTION_DEAL;
       request.type = type;
       request.symbol = Symbol();
