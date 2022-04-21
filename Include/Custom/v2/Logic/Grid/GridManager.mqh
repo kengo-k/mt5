@@ -60,7 +60,6 @@ public:
          ExpertRemove();
       }
       double price;
-      double basePrice = this.getGridBasePrice();
       if (command == ENTRY_COMMAND_BUY) {
          price = SymbolInfoDouble(Symbol(), SYMBOL_ASK);
       } else {
@@ -70,60 +69,52 @@ public:
       return gridPrice;
    }
 
-   double getGridBasePrice() {
-      datetime baseTime = StringToTime(StringFormat("%s01", this.baseTimeYYYYMM));
-      MqlRates prices[];
-      ArraySetAsSeries(prices, false);
-      CopyRates(Symbol(), PERIOD_MN1, baseTime, 1, prices);
-      return prices[0].close;
-   }
-
-   void processTransaction(const MqlTradeTransaction &tran, const MqlTradeRequest &request, const MqlTradeResult &result) {
-      // 指値注文の送信に成功した場合
-      if (tran.type == TRADE_TRANSACTION_ORDER_ADD) {
-         if (OrderSelect(tran.order)) {
-            double price = OrderGetDouble(ORDER_PRICE_OPEN);
-            string strPrice = DoubleToString(price, Digits());
-            this.gridOrders.Add(strPrice, tran.order);
-         }
-      }
-      // 指値注文が約定されポジションが建った場合
-      if (tran.type == TRADE_TRANSACTION_DEAL_ADD) {
-         ENUM_DEAL_ENTRY entry = (ENUM_DEAL_ENTRY)HistoryDealGetInteger(tran.deal, DEAL_ENTRY);
-         if (entry == DEAL_ENTRY_IN) {
-            if (HistoryDealSelect(tran.deal)) {
-               ulong orderTicket = HistoryDealGetInteger(tran.deal, DEAL_ORDER);
-               if (HistoryOrderSelect(orderTicket)) {
-                  ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE) HistoryOrderGetInteger(orderTicket, ORDER_TYPE);
-                  double price = HistoryOrderGetDouble(orderTicket, ORDER_PRICE_OPEN);
-                  string strPrice = DoubleToString(price, Digits());
-                  this.gridPositions.Add(strPrice, tran.deal);
-                  bool removed = this.gridOrders.Remove(strPrice);
+   bool isGridPriceUsed(ENUM_ENTRY_COMMAND command, double gridPrice) {
+      printf("grid %f, price is used?", gridPrice);
+      printf("----- check duplicate in position -----");
+      int posCount = PositionsTotal();
+      printf("position count: %d", posCount);
+      for (int i = 0; i < posCount; i++) {
+         ulong posTicket = PositionGetTicket(i);
+         ulong posId = PositionGetInteger(POSITION_IDENTIFIER);
+         if (posTicket) {
+            if (HistorySelectByPosition(posId)) {
+               int dealCount = HistoryDealsTotal();
+               printf("deal count: %d", dealCount);
+               for (int j = 0; j < dealCount; j++) {
+                  ulong dealTicket = HistoryDealGetTicket(j);
+                  printf("deal #%d", dealTicket);
+                  if (dealTicket) {
+                     ulong orderTicket = HistoryDealGetInteger(dealTicket, DEAL_ORDER);
+                     printf("order #%d from deal #%d", orderTicket, dealTicket);
+                     if (HistoryOrderSelect(orderTicket)) {
+                        double orderPrice = HistoryOrderGetDouble(orderTicket, ORDER_PRICE_OPEN);
+                        string strOrderPrice = DoubleToString(orderPrice, Digits());
+                        string strGridPrice = DoubleToString(gridPrice, Digits());
+                        printf("order price: %s, grid price: %s", strOrderPrice, strGridPrice);
+                        if (StringCompare(strOrderPrice, strGridPrice) == 0) {
+                           return true;
+                        }
+                     }
+                  }
                }
             }
          }
       }
-      // 注文が削除された場合※削除は注文が成立されたことによる削除と期限切れによる削除の場合がある
-      if (tran.type == TRADE_TRANSACTION_ORDER_DELETE) {
-         if (HistoryOrderSelect(tran.order)) {
-            ENUM_ORDER_STATE state = (ENUM_ORDER_STATE) HistoryOrderGetInteger(tran.order, ORDER_STATE);
-            if (state == ORDER_STATE_EXPIRED) {
-               ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE) HistoryOrderGetInteger(tran.order, ORDER_TYPE);
-               double price = HistoryOrderGetDouble(tran.order, ORDER_PRICE_OPEN);
-               string strPrice = DoubleToString(price, Digits());
-               bool removed = this.gridOrders.Remove(strPrice);
+      printf("----- check duplicate in order -----");
+      int orderCount = OrdersTotal();
+      printf("order count: %d", orderCount);
+      for (int i = 0; i < orderCount; i++) {
+         ulong orderTicket = OrderGetTicket(i);
+         if (orderTicket) {
+            double orderPrice = OrderGetDouble(ORDER_PRICE_OPEN);
+            string strOrderPrice = DoubleToString(orderPrice, Digits());
+            string strGridPrice = DoubleToString(gridPrice, Digits());            
+            printf("order price: %s, grid price: %s", strOrderPrice, strGridPrice);
+            if (StringCompare(strOrderPrice, strGridPrice) == 0) {
+               return true;
             }
          }
-      }
-   }
-
-   bool isGridPriceUsed(double gridPrice) {
-      string strGridPrice = DoubleToString(gridPrice, Digits());
-      if (
-         this.gridOrders.ContainsKey(strGridPrice)
-            || this.gridPositions.ContainsKey(strGridPrice)
-      ) {
-         return true;
       }
       return false;
    }
@@ -132,8 +123,6 @@ public:
 
 private:
    CArrayList<OrderContainer*> orderQueue;
-   CHashMap<string, ulong> gridOrders;
-   CHashMap<string, ulong> gridPositions;
    // 使用するグリッドのサイズ(pips)
    double gridSize;
    // グリッド作成の基準地点となる日付

@@ -78,10 +78,6 @@ double OnTester() {
    return Util::calcWinRatio();
 }
 
-void OnTradeTransaction(const MqlTradeTransaction &tran, const MqlTradeRequest &request, const MqlTradeResult &result) {
-   __gridManager.processTransaction(tran, request, result);
-}
-
 /**
  * 現在の価格から次のグリッドの価格を算出し新規オーダーを生成しキューに追加する
  */
@@ -102,7 +98,7 @@ void createOrder() {
 
    // 次のグリッド価格を取得する
    double gridPrice = __gridManager.getTargetGridPrice(command);
-   if (!__gridManager.isGridPriceUsed(gridPrice)) {
+   if (!__gridManager.isGridPriceUsed(command, gridPrice)) {
       OrderContainer* orderContainer = __gridManager.createOrderContainer();
       // 指値注文(TP付き)のリクエストを生成する
       Order::createLimitRequest(command, orderContainer.request, gridPrice, __config.volume, -1, __config.tp, __config.magicNumber);
