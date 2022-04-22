@@ -9,7 +9,7 @@
 #include <Custom/v2/Common/Chart.mqh>
 #include <Custom/v2/Logic/Grid/GridManager.mqh>
 
-const string EA_NAME = "strategy005";;
+const string EA_NAME = "strategy005";
 const long MAGIC_NUMBER = 1;
 input double VOLUME = 0.1;
 input double TP = 30;
@@ -98,16 +98,14 @@ void createOrder() {
 
    // 次のグリッド価格を取得する
    double gridPrice = __gridManager.getTargetGridPrice(command);
-   if (!__gridManager.isGridPriceUsed(command, gridPrice)) {
-      OrderContainer* orderContainer = __gridManager.createOrderContainer();
-      // 指値注文(TP付き)のリクエストを生成する
-      Order::createLimitRequest(command, orderContainer.request, gridPrice, __config.volume, -1, __config.tp, __config.magicNumber);
-      // 長期間約定しない注文が残り続けないように一定期間で自動で削除されるようにする
-      orderContainer.request.type_time = ORDER_TIME_SPECIFIED;
-      orderContainer.request.expiration = Util::addSec(Util::addDay(Util::toDate(TimeCurrent()), 8), -1);
-      // 注文をキューに入れる(注文処理用の時間足で処理される ※00:00前後は市場がcloseしているため時間をずらしながらリトライする)
-      __gridManager.addOrder(orderContainer);
-   }
+   OrderContainer* orderContainer = __gridManager.createOrderContainer();
+   // 指値注文(TP付き)のリクエストを生成する
+   Order::createLimitRequest(command, orderContainer.request, gridPrice, __config.volume, -1, __config.tp, __config.magicNumber);
+   // 長期間約定しない注文が残り続けないように一定期間で自動で削除されるようにする
+   orderContainer.request.type_time = ORDER_TIME_SPECIFIED;
+   orderContainer.request.expiration = Util::addSec(Util::addDay(Util::toDate(TimeCurrent()), 8), -1);
+   // 注文をキューに入れる(注文処理用の時間足で処理される ※00:00前後は市場がcloseしているため時間をずらしながらリトライする)
+   __gridManager.addOrder(orderContainer);
 }
 
 /**
@@ -117,17 +115,30 @@ void sendOrder() {
    MqlTradeResult result;
    int orderCount = __gridManager.getOrderCount();
    for (int i = orderCount - 1; i >= 0; i--) {
-      ZeroMemory(result);
+      // キューからリクエストを取得する
       OrderContainer *order = __gridManager.getOrder(i);
+      double price = order.request.price;
+      ENUM_ORDER_TYPE type = order.request.type;
+      // リクエストの価格がすでに使われている場合(買い/売りそれぞれ同時に一つまで)は
+      // キューから削除し発注せずに終了する
+      if (__gridManager.isGridPriceUsed(type, price)) {
+         __gridManager.deleteOrder(i);
+         continue;
+      }
+      // 発注処理
+      ZeroMemory(result);
       logger.logRequest(order.request);
       bool isSended = OrderSend(order.request, result);
       logger.logResponse(result, isSended);
-
+      // 発注結果確認処理
+      // ・成功時はキューから削除。
+      // ・失敗した場合は次回の送信まで持ち越し
+      // ・致命的エラーの場合はシステム終了
       bool isValid = false;
       if (result.retcode == TRADE_RETCODE_DONE) {
          isValid = true;
       }
-      // 市場が開いてない場合は問題なしなのでそのまま通す
+      // 市場が開いてない場合は問題なしなのでパスする
       if (result.retcode == TRADE_RETCODE_MARKET_CLOSED) {
          isValid = true;
       }
@@ -139,8 +150,7 @@ void sendOrder() {
       if (!isValid) {
          ExpertRemove();
       }
-      if (isSended) {
-         __gridManager.deleteOrder(i);
-      }
+
+      __gridManager.deleteOrder(i);
    }
 }

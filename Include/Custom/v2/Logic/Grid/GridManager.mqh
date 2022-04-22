@@ -69,7 +69,7 @@ public:
       return gridPrice;
    }
 
-   bool isGridPriceUsed(ENUM_ENTRY_COMMAND command, double gridPrice) {
+   bool isGridPriceUsed(ENUM_ORDER_TYPE targetType, double gridPrice) {
       printf("grid %f, price is used?", gridPrice);
       printf("----- check duplicate in position -----");
       int posCount = PositionsTotal();
@@ -88,12 +88,15 @@ public:
                      ulong orderTicket = HistoryDealGetInteger(dealTicket, DEAL_ORDER);
                      printf("order #%d from deal #%d", orderTicket, dealTicket);
                      if (HistoryOrderSelect(orderTicket)) {
+                        ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE) HistoryOrderGetInteger(orderTicket, ORDER_TYPE);
                         double orderPrice = HistoryOrderGetDouble(orderTicket, ORDER_PRICE_OPEN);
                         string strOrderPrice = DoubleToString(orderPrice, Digits());
                         string strGridPrice = DoubleToString(gridPrice, Digits());
                         printf("order price: %s, grid price: %s", strOrderPrice, strGridPrice);
                         if (StringCompare(strOrderPrice, strGridPrice) == 0) {
-                           return true;
+                           if (targetType == orderType) {
+                              return true;
+                           }
                         }
                      }
                   }
@@ -107,12 +110,15 @@ public:
       for (int i = 0; i < orderCount; i++) {
          ulong orderTicket = OrderGetTicket(i);
          if (orderTicket) {
+            ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE) OrderGetInteger(ORDER_TYPE);
             double orderPrice = OrderGetDouble(ORDER_PRICE_OPEN);
             string strOrderPrice = DoubleToString(orderPrice, Digits());
-            string strGridPrice = DoubleToString(gridPrice, Digits());            
+            string strGridPrice = DoubleToString(gridPrice, Digits());
             printf("order price: %s, grid price: %s", strOrderPrice, strGridPrice);
             if (StringCompare(strOrderPrice, strGridPrice) == 0) {
-               return true;
+               if (targetType == orderType) {
+                  return true;
+               }
             }
          }
       }
