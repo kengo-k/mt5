@@ -70,29 +70,22 @@ public:
    }
 
    bool isGridPriceUsed(ENUM_ORDER_TYPE targetType, double gridPrice) {
-      printf("grid %f, price is used?", gridPrice);
-      printf("----- check duplicate in position -----");
       int posCount = PositionsTotal();
-      printf("position count: %d", posCount);
       for (int i = 0; i < posCount; i++) {
          ulong posTicket = PositionGetTicket(i);
          ulong posId = PositionGetInteger(POSITION_IDENTIFIER);
          if (posTicket) {
             if (HistorySelectByPosition(posId)) {
                int dealCount = HistoryDealsTotal();
-               printf("deal count: %d", dealCount);
                for (int j = 0; j < dealCount; j++) {
                   ulong dealTicket = HistoryDealGetTicket(j);
-                  printf("deal #%d", dealTicket);
                   if (dealTicket) {
                      ulong orderTicket = HistoryDealGetInteger(dealTicket, DEAL_ORDER);
-                     printf("order #%d from deal #%d", orderTicket, dealTicket);
                      if (HistoryOrderSelect(orderTicket)) {
                         ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE) HistoryOrderGetInteger(orderTicket, ORDER_TYPE);
                         double orderPrice = HistoryOrderGetDouble(orderTicket, ORDER_PRICE_OPEN);
                         string strOrderPrice = DoubleToString(orderPrice, Digits());
                         string strGridPrice = DoubleToString(gridPrice, Digits());
-                        printf("order price: %s, grid price: %s", strOrderPrice, strGridPrice);
                         if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                            if (targetType == orderType) {
                               return true;
@@ -104,9 +97,7 @@ public:
             }
          }
       }
-      printf("----- check duplicate in order -----");
       int orderCount = OrdersTotal();
-      printf("order count: %d", orderCount);
       for (int i = 0; i < orderCount; i++) {
          ulong orderTicket = OrderGetTicket(i);
          if (orderTicket) {
@@ -114,7 +105,6 @@ public:
             double orderPrice = OrderGetDouble(ORDER_PRICE_OPEN);
             string strOrderPrice = DoubleToString(orderPrice, Digits());
             string strGridPrice = DoubleToString(gridPrice, Digits());
-            printf("order price: %s, grid price: %s", strOrderPrice, strGridPrice);
             if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                if (targetType == orderType) {
                   return true;
