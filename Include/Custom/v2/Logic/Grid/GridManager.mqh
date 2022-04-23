@@ -4,54 +4,11 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
 
-class OrderContainer {
-public:
-   MqlTradeRequest request;
-};
-
 class GridManager {
 public:
 
-   GridManager(
-      double _gridSize
-      , string _baseTimeYYYYMM
-   ): gridSize(_gridSize)
-   , baseTimeYYYYMM(_baseTimeYYYYMM) {
-
-   }
-
-   ~GridManager() {
-      printf("destruct!!");
-   }
-
-   OrderContainer* createOrderContainer() {
-      return new OrderContainer();
-   }
-
-   void addOrder(OrderContainer *order) {
-      this.orderQueue.Add(order);
-   }
-
-   int getOrderCount() {
-      return this.orderQueue.Count();
-   }
-
-   OrderContainer* getOrder(int index) {
-      OrderContainer* order;
-      this.orderQueue.TryGetValue(index, order);
-      return order;
-   }
-
-   bool deleteOrder(int index) {
-      if (this.orderQueue.Count() > 0) {
-         OrderContainer *order;
-         this.orderQueue.TryGetValue(index, order);
-         this.orderQueue.RemoveAt(index);
-         delete order;
-         return true;
-      } else {
-         return false;
-      }
+   GridManager(double _gridSize)
+      : gridSize(_gridSize) {
    }
 
    double getTargetGridPrice(ENUM_ENTRY_COMMAND command) {
@@ -117,12 +74,9 @@ public:
 
 
 
-private:
-   CArrayList<OrderContainer*> orderQueue;
+private:   
    // 使用するグリッドのサイズ(pips)
    double gridSize;
-   // グリッド作成の基準地点となる日付
-   string baseTimeYYYYMM;
 
    double getTargetGridPrice(ENUM_ENTRY_COMMAND command, double basePrice, double currentPrice) {
       double unit = Util::getUnit();
