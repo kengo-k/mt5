@@ -17,9 +17,11 @@ public:
       Order::createNewOrder(request, ORDER_TYPE_SELL, SYMBOL_BID, SYMBOL_ASK, sl, tp, volume, magic);
    }
 
-   static void createCloseRequest(MqlTradeRequest &request, long magicNumber) {
+   static void createCloseRequest(MqlTradeRequest &request, long positionTicket, long magicNumber) {
 
-      ulong ticketNo = Position::getTicket();
+      if (!PositionSelectByTicket(positionTicket)) {
+         ExpertRemove();
+      }
       double volume = Position::getVolume();
       ENUM_POSITION_TYPE entryType = Position::getType();
 
@@ -32,7 +34,7 @@ public:
       }
 
       request.action = TRADE_ACTION_DEAL;
-      request.position = ticketNo;
+      request.position = positionTicket;
       request.symbol = Symbol();
       request.volume = volume;
       request.deviation = 3;
