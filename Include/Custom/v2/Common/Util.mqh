@@ -21,6 +21,13 @@ public:
       t = t + sec;
       return t;
    }
+   
+   static int getDiffDay(datetime d1, datetime d2) {
+      long diffSec = d1 - d2;
+      int oneDay = 60 * 60 * 24;
+      int diffDay = (int) MathFloor(diffSec / oneDay);
+      return diffDay;
+   }
 
    static datetime toDate(datetime t) {
       string s = TimeToString(t, TIME_DATE);
