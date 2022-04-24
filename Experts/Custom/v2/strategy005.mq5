@@ -8,6 +8,7 @@
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Common/Chart.mqh>
 #include <Custom/v2/Logic/Grid/GridManager.mqh>
+#include <Custom/v2/Logic/RequestContainer.mqh>
 
 const string EA_NAME = "strategy005";
 const long MAGIC_NUMBER = 1;
@@ -17,13 +18,8 @@ input int LONG_MA_PERIOD = 100;
 input int LONG_LONG_MA_PERIOD = 200;
 input int GRID_SIZE = 30;
 
-GridManager __gridManager(
-   // グリッドのサイズ
-   GRID_SIZE,
-   // グリッドの基準価格を取得する年月
-   "202101"
-);
-
+GridManager __gridManager(GRID_SIZE);
+RequestContainer __requestContainer;
 Context002 __contextMain;
 Context002 __contextSub;
 
@@ -98,14 +94,14 @@ void createOrder() {
 
    // 次のグリッド価格を取得する
    double gridPrice = __gridManager.getTargetGridPrice(command);
-   OrderContainer* orderContainer = __gridManager.createOrderContainer();
+   Request* req = RequestContainer::createRequest();
    // 指値注文(TP付き)のリクエストを生成する
-   Order::createLimitRequest(command, orderContainer.request, gridPrice, __config.volume, -1, __config.tp, __config.magicNumber);
+   Order::createLimitRequest(command, req.item, gridPrice, __config.volume, -1, __config.tp, __config.magicNumber);
    // 長期間約定しない注文が残り続けないように一定期間で自動で削除されるようにする
-   orderContainer.request.type_time = ORDER_TIME_SPECIFIED;
-   orderContainer.request.expiration = Util::addSec(Util::addDay(Util::toDate(TimeCurrent()), 8), -1);
+   req.item.type_time = ORDER_TIME_SPECIFIED;
+   req.item.expiration = Util::addSec(Util::addDay(Util::toDate(TimeCurrent()), 8), -1);
    // 注文をキューに入れる(注文処理用の時間足で処理される ※00:00前後は市場がcloseしているため時間をずらしながらリトライする)
-   __gridManager.addOrder(orderContainer);
+   __requestContainer.add(req);
 }
 
 /**
@@ -113,22 +109,22 @@ void createOrder() {
  */
 void sendOrder() {
    MqlTradeResult result;
-   int orderCount = __gridManager.getOrderCount();
-   for (int i = orderCount - 1; i >= 0; i--) {
+   int reqCount = __requestContainer.count();
+   for (int i = reqCount - 1; i >= 0; i--) {
       // キューからリクエストを取得する
-      OrderContainer *order = __gridManager.getOrder(i);
-      double price = order.request.price;
-      ENUM_ORDER_TYPE type = order.request.type;
+      Request *req = __requestContainer.get(i);
+      double price = req.item.price;
+      ENUM_ORDER_TYPE type = req.item.type;
       // リクエストの価格がすでに使われている場合(買い/売りそれぞれ同時に一つまで)は
       // キューから削除し発注せずに終了する
       if (__gridManager.isGridPriceUsed(type, price)) {
-         __gridManager.deleteOrder(i);
+         __requestContainer.remove(i);
          continue;
       }
       // 発注処理
       ZeroMemory(result);
-      logger.logRequest(order.request);
-      bool isSended = OrderSend(order.request, result);
+      logger.logRequest(req.item);
+      bool isSended = OrderSend(req.item, result);
       logger.logResponse(result, isSended);
       // 発注結果確認処理
       // ・成功時はキューから削除。
@@ -151,6 +147,6 @@ void sendOrder() {
          ExpertRemove();
       }
 
-      __gridManager.deleteOrder(i);
+      __requestContainer.remove(i);
    }
 }
