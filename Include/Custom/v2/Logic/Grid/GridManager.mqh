@@ -26,7 +26,7 @@ public:
       return gridPrice;
    }
 
-   bool isGridPriceUsed(ENUM_ORDER_TYPE targetType, double gridPrice) {
+   bool isGridPriceUsed(ENUM_ORDER_TYPE targetType, double gridPrice, long magicNumber = -1) {
       int posCount = PositionsTotal();
       for (int i = 0; i < posCount; i++) {
          ulong posTicket = PositionGetTicket(i);
@@ -41,11 +41,14 @@ public:
                      if (HistoryOrderSelect(orderTicket)) {
                         ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE) HistoryOrderGetInteger(orderTicket, ORDER_TYPE);
                         double orderPrice = HistoryOrderGetDouble(orderTicket, ORDER_PRICE_OPEN);
+                        long orderMagicNumber = HistoryOrderGetInteger(orderTicket, ORDER_MAGIC);
                         string strOrderPrice = DoubleToString(orderPrice, Digits());
                         string strGridPrice = DoubleToString(gridPrice, Digits());
                         if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                            if (targetType == orderType) {
-                              return true;
+                              if (magicNumber < 0 || magicNumber == orderMagicNumber) {
+                                 return true;                              
+                              }
                            }
                         }
                      }
@@ -60,11 +63,14 @@ public:
          if (orderTicket) {
             ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE) OrderGetInteger(ORDER_TYPE);
             double orderPrice = OrderGetDouble(ORDER_PRICE_OPEN);
+            long orderMagicNumber = OrderGetInteger(ORDER_MAGIC);
             string strOrderPrice = DoubleToString(orderPrice, Digits());
             string strGridPrice = DoubleToString(gridPrice, Digits());
             if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                if (targetType == orderType) {
-                  return true;
+                  if (magicNumber < 0 || magicNumber == orderMagicNumber) {
+                     return true;
+                  }
                }
             }
          }
