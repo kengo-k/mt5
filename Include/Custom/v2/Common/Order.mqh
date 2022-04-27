@@ -44,16 +44,19 @@ public:
       request.type_filling = ORDER_FILLING_IOC;
    }
 
-   static void createSlTpRequest(MqlTradeRequest &request, double newSL, long magicNumber) {
+   static void createSlTpRequest(MqlTradeRequest &request, double sl, double tp, long magicNumber) {
 
       ulong ticketNo = Position::getTicket();
-      double tp = Position::getTP();
 
       request.action = TRADE_ACTION_SLTP;
       request.position = ticketNo;
       request.symbol = Symbol();
-      request.sl = newSL;
-      request.tp = tp;
+      if (sl > 0) {
+         request.sl = sl;
+      }
+      if (tp > 0) {
+         request.tp = tp;
+      }
       request.magic = magicNumber;
    }
 
