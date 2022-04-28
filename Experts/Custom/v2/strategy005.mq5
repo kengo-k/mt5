@@ -3,6 +3,7 @@
  * 損切り等一切無しのシンプルストラテジー
  */
 #include <Custom/v2/Common/Logger.mqh>
+#include <Custom/v2/Common/Util.mqh>
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Common/Chart.mqh>
 #include <Custom/v2/Common/Bar.mqh>
