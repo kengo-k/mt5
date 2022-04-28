@@ -9,7 +9,7 @@
 #include <Custom/v2/Common/Bar.mqh>
 #include <Custom/v2/Logic/RequestContainer.mqh>
 
-const string EA_NAME = "strategy009";
+const string EA_NAME = "strategy901";
 const long MAGIC_NUMBER = 1;
 input double VOLUME = 0.1;
 input int MA_PERIOD = 25;
