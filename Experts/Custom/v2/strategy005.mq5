@@ -17,7 +17,7 @@ const long MAGIC_NUMBER = 1;
 input double VOLUME = 0.1;
 
 // グリッドトレードは基本損切りを入れないが一応パラメーターとして用意しておく。使用する場合はプラスの値を指定
-input double SL = -1; 
+input double SL = -1;
 
 input double TP = 25;
 input int MA_PERIOD = 5;
@@ -81,6 +81,10 @@ void OnTick() {
 
 void OnDeinit(const int reason) {
    delete __LOGGER__;
+}
+
+double OnTester() {
+   return Util::calcWinRatio();
 }
 
 /**
