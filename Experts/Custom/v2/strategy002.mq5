@@ -12,7 +12,7 @@
 
 Logger *__LOGGER__;
 
-const string EA_NAME = "strategy006";
+const string EA_NAME = "strategy002";
 const long MAGIC_NUMBER = 1;
 
 input double VOLUME = 0.1;
