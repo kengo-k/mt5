@@ -8,9 +8,13 @@
 #include <Custom/v2/Common/Chart.mqh>
 #include <Custom/v2/Common/Bar.mqh>
 #include <Custom/v2/Logic/RequestContainer.mqh>
+#include <Custom/v2/Logic/Grid/GridManager.mqh>
+
+Logger *__LOGGER__;
 
 const string EA_NAME = "strategy901";
 const long MAGIC_NUMBER = 1;
+
 input double VOLUME = 0.1;
 input int MA_PERIOD = 25;
 input int TP = 200;
@@ -18,7 +22,6 @@ input int TP = 200;
 class Config {
 public:
 
-   // 取引量
    double volume;
    int maPeriod;
    int tp;
@@ -35,8 +38,7 @@ public:
    double ma[];
 };
 
-
-Logger logger(EA_NAME);
+GridManager __gridManager(0);
 Config __config;
 Context __context;
 
@@ -54,6 +56,7 @@ Bar __createCloseOrderBar(PERIOD_CURRENT);
 Bar __sendCloseOrderBar(PERIOD_M5);
 
 int OnInit() {
+   __LOGGER__ = new Logger(EA_NAME);
    __context.maHandle = iMA(Symbol(), PERIOD_CURRENT, __config.maPeriod, 0, MODE_SMA, PRICE_CLOSE);
    return(INIT_SUCCEEDED);
 }
@@ -63,6 +66,10 @@ void OnTick() {
    __sendCloseOrderBar.onBarCreated(sendCloseOrder);
    __createNewOrderBar.onBarCreated(createNewOrder);
    __sendNewOrderBar.onBarCreated(sendNewOrder);
+}
+
+void OnDeinit(const int reason) {
+   delete __LOGGER__;
 }
 
 /**
@@ -90,40 +97,6 @@ ENUM_ENTRY_COMMAND getNextCommand() {
       command = ENTRY_COMMAND_SELL;
    }
    return command;
-}
-
-void sendOrder(RequestContainer &orderQueue) {
-   MqlTradeResult result;
-   int orderCount = orderQueue.count();
-   for (int i = orderCount - 1; i >= 0; i--) {
-      // キューからリクエストを取得する
-      Request *req = orderQueue.get(i);
-      double price = req.item.price;
-      ENUM_ORDER_TYPE type = req.item.type;
-
-      ZeroMemory(result);
-      logger.logRequest(req.item);
-      bool isSended = OrderSend(req.item, result);
-      logger.logResponse(result, isSended);
-     
-      bool isValid = false;
-      if (result.retcode == TRADE_RETCODE_DONE) {
-         orderQueue.remove(i);         
-         isValid = true;
-      }
-      // 市場が開いてない場合は問題なしなのでパスする
-      if (result.retcode == TRADE_RETCODE_MARKET_CLOSED) {
-         isValid = true;
-      }
-      // 現在値とグリッド価格が近すぎる場合は注文が通らないことが起こり得るのでパスする
-      if (result.retcode == TRADE_RETCODE_INVALID_PRICE) {
-         isValid = true;
-      }
-      // 想定外のエラーのため念のためシステム停止
-      if (!isValid) {
-         ExpertRemove();
-      }
-   }
 }
 
 /**
@@ -163,7 +136,7 @@ void createNewOrder() {
  * 新規注文キューを処理して新規注文リクエストを送信する
  */
 void sendNewOrder() {
-   sendOrder(__newOrderQueue);
+   __gridManager.sendOrdersFromQueue(__newOrderQueue, false);
 }
 
 void createCloseOrder() {
@@ -189,5 +162,5 @@ void createCloseOrder() {
 }
 
 void sendCloseOrder() {
-   sendOrder(__closeOrderQueue);
+   __gridManager.sendOrdersFromQueue(__closeOrderQueue, false);
 }
