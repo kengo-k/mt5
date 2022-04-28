@@ -12,7 +12,7 @@ public:
    void logRequest(MqlTradeRequest &request) {
       printf(
          StringFormat(
-            "[INFO] 注文情報 - %s, price: %f, volume: %f, sl: %f, tp: %f, bid: %f, ask: %f, spread: %f"
+            "★★★ [INFO] 注文情報 - %s, price: %f, volume: %f, sl: %f, tp: %f, bid: %f, ask: %f, spread: %f"
             , request.symbol
             , request.price
             , request.volume
@@ -28,19 +28,40 @@ public:
    void logResponse(MqlTradeResult &result, bool isSended) {
       printf(
          StringFormat(
-            "[INFO] 注文結果: sended?: %d, retcode=%d, request_id=%d, deal=%d, order=%d"
+            "★★★ [INFO] 注文結果: sended?: %d, retcode=%d, request_id=%d, deal=%d, order=%d"
             , isSended
             , result.retcode
             , result.request_id
             , result.deal
             , result.order
          )
-      );   
+      );
    }
 
    void logWrite(ENUM_LOG_LEVEL logLevel, string message) {
-      printf("[INFO] %s", message);
+      printf("★★★ [INFO] %s", message);
    }
 private:
    string eaName;
+};
+
+extern Logger *__LOGGER__;
+
+class LoggerFacade {
+public:
+   void logRequest(MqlTradeRequest &request) {
+      if (__LOGGER__ != NULL) {
+         __LOGGER__.logRequest(request);
+      }
+   }
+   void logResponse(MqlTradeResult &result, bool isSended) {
+      if (__LOGGER__ != NULL) {
+         __LOGGER__.logResponse(result, isSended);
+      }
+   }
+   void logWrite(ENUM_LOG_LEVEL logLevel, string message) {
+      if (__LOGGER__ != NULL) {
+         __LOGGER__.logWrite(logLevel, message);
+      }
+   }
 };
