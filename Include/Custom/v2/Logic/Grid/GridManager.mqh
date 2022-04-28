@@ -80,18 +80,24 @@ public:
       return false;
    }
    
-   void sendOrdersFromQueue(RequestContainer &orderQueue) {
+   /**
+    * リクエストキュー内のすべてのリクエストを使用して発注を行う
+    * 
+    * orderQueue リクエストキュー
+    * isGridPriceChecked true: 注文価格がすでに発注済みの場合に発注を行わない false: 常に発注を行う
+    */
+   void sendOrdersFromQueue(RequestContainer &orderQueue, bool isGridPriceChecked = true) {
       LoggerFacade logger;
       int reqCount = orderQueue.count();
       for (int i = reqCount - 1; i >= 0; i--) {
          // キューからリクエストを取得する
          Request *req = orderQueue.get(i);
 
-         // リクエストの価格がすでに使われている場合(買い/売りそれぞれ同時に一つまで)は
-         // キューから削除し発注せずに終了する
+         // リクエストの価格がすでに使われている場合(買い/売りそれぞれ同時に一つまで)はキューから削除し発注せずに終了する
+         // ※価格チェックを行う場合のみ
          ENUM_ORDER_TYPE type = req.item.type;
          double price = req.item.price;
-         if (this.isGridPriceUsed(type, price)) {
+         if (isGridPriceChecked && this.isGridPriceUsed(type, price)) {
             orderQueue.remove(i);
             continue;
          }
