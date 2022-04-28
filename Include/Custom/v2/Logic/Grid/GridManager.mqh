@@ -1,8 +1,10 @@
 #include <Generic/Queue.mqh>
 #include <Generic/ArrayList.mqh>
 #include <Generic/HashMap.mqh>
+#include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
+#include <Custom/v2/Logic/RequestContainer.mqh>
 
 class GridManager {
 public:
@@ -76,6 +78,54 @@ public:
          }
       }
       return false;
+   }
+   
+   void sendOrdersFromQueue(RequestContainer &orderQueue) {
+      LoggerFacade logger;
+      int reqCount = orderQueue.count();
+      for (int i = reqCount - 1; i >= 0; i--) {
+         // キューからリクエストを取得する
+         Request *req = orderQueue.get(i);
+
+         // リクエストの価格がすでに使われている場合(買い/売りそれぞれ同時に一つまで)は
+         // キューから削除し発注せずに終了する
+         ENUM_ORDER_TYPE type = req.item.type;
+         double price = req.item.price;
+         if (this.isGridPriceUsed(type, price)) {
+            orderQueue.remove(i);
+            continue;
+         }
+         
+         // 発注処理
+         MqlTradeResult result;
+         logger.logRequest(req.item);
+         bool isSended = OrderSend(req.item, result);
+         logger.logResponse(result, isSended);
+         
+         // 発注結果確認処理
+         // ・成功時はキューから削除。
+         // ・失敗した場合は次回の送信まで持ち越し
+         // ・致命的エラーの場合はシステム終了
+         bool isValid = false;
+         if (result.retcode == TRADE_RETCODE_DONE) {
+            orderQueue.remove(i);
+            isValid = true;
+         }
+         // 市場が開いてない場合は問題なしなのでパスする
+         if (result.retcode == TRADE_RETCODE_MARKET_CLOSED) {
+            isValid = true;
+         }
+         // 現在値とグリッド価格が近すぎる場合は注文が通らないことが起こり得るのでパスする
+         if (result.retcode == TRADE_RETCODE_INVALID_PRICE) {
+            orderQueue.remove(i);
+            continue;
+         }
+         
+         // 想定外のエラーのため念のためシステム停止
+         if (!isValid) {
+            ExpertRemove();
+         }
+      }
    }
 
 

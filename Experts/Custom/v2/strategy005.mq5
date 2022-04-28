@@ -1,77 +1,79 @@
 /**
- * エントリ:
+ * グリッドトレードの
+ * 損切り等一切無しのシンプルストラテジー
  */
 #include <Custom/v2/Common/Logger.mqh>
-#include <Custom/v2/Config/Config004.mqh>
-#include <Custom/v2/Context/Context002.mqh>
-#include <Custom/v2/Context/ContextHelper.mqh>
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Common/Chart.mqh>
+#include <Custom/v2/Common/Bar.mqh>
 #include <Custom/v2/Logic/Grid/GridManager.mqh>
 #include <Custom/v2/Logic/RequestContainer.mqh>
 
+Logger *__LOGGER__;
+
 const string EA_NAME = "strategy005";
 const long MAGIC_NUMBER = 1;
+
 input double VOLUME = 0.1;
 input double TP = 30;
-input int LONG_MA_PERIOD = 100;
-input int LONG_LONG_MA_PERIOD = 200;
+input int MA_PERIOD = 100;
+input int LONG_MA_PERIOD = 200;
 input int GRID_SIZE = 30;
 
-GridManager __gridManager(GRID_SIZE);
-RequestContainer __requestContainer;
-Context002 __contextMain;
-Context002 __contextSub;
+class Config {
+public:
+   // 取引量
+   double volume;
+   // 利益目標(pips)
+   double tp;
+   // 長期MA期間
+   int maPeriod;
+   // 超長期MA期間
+   int longMaPeriod;
+   // グリッドの大きさ(pips)
+   int gridSize;
+   // 発注に使用する時間足
+   ENUM_TIMEFRAMES orderPeriod;
 
-Config004 __config = Config004Factory::create(
-   EA_NAME
-   , MAGIC_NUMBER
-   , VOLUME
-   , TP
-   , LONG_MA_PERIOD
-   , LONG_LONG_MA_PERIOD
-   , 30
-   , PERIOD_M1
-);
+   Config():
+      volume(VOLUME)
+      , tp(TP)
+      , maPeriod(MA_PERIOD)
+      , longMaPeriod(LONG_MA_PERIOD)
+      , gridSize(GRID_SIZE)
+      , orderPeriod(PERIOD_M1) {}
+};
 
-Logger logger(__config.eaName);
+class Context {
+public:
+   int maHandle;
+   int longMaHandle;
+   double ma[];
+   double longMa[];
+};
+
+Config __config;
+Context __context;
+RequestContainer __orderQueue;
+GridManager __gridManager(__config.gridSize);
+
+Bar __mainBar(PERIOD_CURRENT);
+Bar __orderBar(__config.orderPeriod);
 
 int OnInit() {
-   string symbol = Symbol();
-   string period = Util::getPeriodName(Period());
-   double unit = Util::getUnit();
-   logger.logWrite(LOG_LEVEL_INFO, StringFormat("%s start. %s, %s, unit: %f", EA_NAME, symbol, period, unit));
-   ContextHelper::initContext(__contextMain, __contextSub, __config);
+   __LOGGER__ = new Logger(EA_NAME);
+   __context.maHandle = iMA(Symbol(), PERIOD_CURRENT, __config.maPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   __context.longMaHandle = iMA(Symbol(), PERIOD_CURRENT, __config.longMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    return(INIT_SUCCEEDED);
 }
 
-int mainBarCount = -1;
-int orderBarCount = -1;
-
 void OnTick() {
-
-   int newMainBarCount = Bars(Symbol(), PERIOD_CURRENT);
-   int newOrderBarCount = Bars(Symbol(), __config.orderPeriod);
-   if (mainBarCount == -1) {
-      mainBarCount = newMainBarCount;
-   }
-   if (orderBarCount == -1) {
-      orderBarCount = newOrderBarCount;
-   }
-   if (newMainBarCount > mainBarCount) {
-      createOrder();
-      mainBarCount = newMainBarCount;
-   }
-   if (newOrderBarCount > orderBarCount) {
-      sendOrder();
-      orderBarCount = newOrderBarCount;
-   }
+   __mainBar.onBarCreated(createOrder);
+   __orderBar.onBarCreated(sendOrders);
 }
 
-void OnDeinit(const int reason) {}
-
-double OnTester() {
-   return Util::calcWinRatio();
+void OnDeinit(const int reason) {
+   delete __LOGGER__;
 }
 
 /**
@@ -79,14 +81,14 @@ double OnTester() {
  */
 void createOrder() {
 
-   CopyBuffer(__contextMain.longMaHandle, 0, 0, 2, __contextMain.longMA);
-   CopyBuffer(__contextMain.longlongMaHandle, 0, 0, 2, __contextMain.longlongMA);
+   CopyBuffer(__context.maHandle, 0, 0, 2, __context.ma);
+   CopyBuffer(__context.longMaHandle, 0, 0, 2, __context.longMa);
 
-   double longMa = __contextMain.longMA[0];
-   double longlongMa = __contextMain.longlongMA[0];
+   double ma = __context.ma[0];
+   double longMa = __context.longMa[0];
 
    ENUM_ENTRY_COMMAND command = ENTRY_COMMAND_NOOP;
-   if (longMa > longlongMa) {
+   if (ma > longMa) {
       command = ENTRY_COMMAND_BUY;
    } else {
       command = ENTRY_COMMAND_SELL;
@@ -94,59 +96,22 @@ void createOrder() {
 
    // 次のグリッド価格を取得する
    double gridPrice = __gridManager.getTargetGridPrice(command);
-   Request* req = RequestContainer::createRequest();
+
    // 指値注文(TP付き)のリクエストを生成する
-   Order::createLimitRequest(command, req.item, gridPrice, __config.volume, -1, __config.tp, __config.magicNumber);
+   Request* req = RequestContainer::createRequest();
+   Order::createLimitRequest(command, req.item, gridPrice, __config.volume, -1, __config.tp, MAGIC_NUMBER);
+
    // 長期間約定しない注文が残り続けないように一定期間で自動で削除されるようにする
    req.item.type_time = ORDER_TIME_SPECIFIED;
    req.item.expiration = Util::addSec(Util::addDay(Util::toDate(TimeCurrent()), 8), -1);
-   // 注文をキューに入れる(注文処理用の時間足で処理される ※00:00前後は市場がcloseしているため時間をずらしながらリトライする)
-   __requestContainer.add(req);
+
+   // 注文をキューに入れる(後段の注文処理用の時間足で処理される ※00:00前後は市場がcloseしているため時間をずらしながらリトライする)
+   __orderQueue.add(req);
 }
 
 /**
  * 生成したオーダーのキューからリクエストを送信する
  */
-void sendOrder() {
-   MqlTradeResult result;
-   int reqCount = __requestContainer.count();
-   for (int i = reqCount - 1; i >= 0; i--) {
-      // キューからリクエストを取得する
-      Request *req = __requestContainer.get(i);
-      double price = req.item.price;
-      ENUM_ORDER_TYPE type = req.item.type;
-      // リクエストの価格がすでに使われている場合(買い/売りそれぞれ同時に一つまで)は
-      // キューから削除し発注せずに終了する
-      if (__gridManager.isGridPriceUsed(type, price)) {
-         __requestContainer.remove(i);
-         continue;
-      }
-      // 発注処理
-      ZeroMemory(result);
-      logger.logRequest(req.item);
-      bool isSended = OrderSend(req.item, result);
-      logger.logResponse(result, isSended);
-      // 発注結果確認処理
-      // ・成功時はキューから削除。
-      // ・失敗した場合は次回の送信まで持ち越し
-      // ・致命的エラーの場合はシステム終了
-      bool isValid = false;
-      if (result.retcode == TRADE_RETCODE_DONE) {
-         isValid = true;
-      }
-      // 市場が開いてない場合は問題なしなのでパスする
-      if (result.retcode == TRADE_RETCODE_MARKET_CLOSED) {
-         isValid = true;
-      }
-      // 現在値とグリッド価格が近すぎる場合は注文が通らないことが起こり得るのでパスする
-      if (result.retcode == TRADE_RETCODE_INVALID_PRICE) {
-         isValid = true;
-      }
-      // 想定外のエラーのため念のためシステム停止
-      if (!isValid) {
-         ExpertRemove();
-      }
-
-      __requestContainer.remove(i);
-   }
+void sendOrders() {
+   __gridManager.sendOrdersFromQueue(__orderQueue);
 }
