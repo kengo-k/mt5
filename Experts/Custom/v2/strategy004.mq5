@@ -10,7 +10,7 @@
 #include <Custom/v2/Logic/RequestContainer.mqh>
 #include <Custom/v2/Logic/Grid/GridManager.mqh>
 
-const string EA_NAME = "strategy007";
+const string EA_NAME = "strategy004";
 const long MAGIC_NUMBER = 1;
 input double VOLUME = 0.1;
 input int LONG_MA_PERIOD = 5;
