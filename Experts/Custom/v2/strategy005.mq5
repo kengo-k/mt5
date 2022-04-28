@@ -1,6 +1,5 @@
 /**
- * グリッドトレードの
- * 損切り等一切無しのシンプルストラテジー
+ * 余計なアレンジなしのシンプルグリッドトレード
  */
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Util.mqh>
@@ -16,6 +15,10 @@ const string EA_NAME = "strategy005";
 const long MAGIC_NUMBER = 1;
 
 input double VOLUME = 0.1;
+
+// グリッドトレードは基本損切りを入れないが一応パラメーターとして用意しておく。使用する場合はプラスの値を指定
+input double SL = -1; 
+
 input double TP = 25;
 input int MA_PERIOD = 5;
 input int LONG_MA_PERIOD = 15;
@@ -25,6 +28,8 @@ class Config {
 public:
    // 取引量
    double volume;
+   // 損切り目標(pips)
+   double sl;
    // 利益目標(pips)
    double tp;
    // 長期MA期間
@@ -38,6 +43,7 @@ public:
 
    Config():
       volume(VOLUME)
+      , sl(SL)
       , tp(TP)
       , maPeriod(MA_PERIOD)
       , longMaPeriod(LONG_MA_PERIOD)
@@ -100,7 +106,7 @@ void createOrder() {
 
    // 指値注文(TP付き)のリクエストを生成する
    Request* req = RequestContainer::createRequest();
-   Order::createLimitRequest(command, req.item, gridPrice, __config.volume, -1, __config.tp, MAGIC_NUMBER);
+   Order::createLimitRequest(command, req.item, gridPrice, __config.volume, __config.sl, __config.tp, MAGIC_NUMBER);
 
    // 長期間約定しない注文が残り続けないように一定期間で自動で削除されるようにする
    req.item.type_time = ORDER_TIME_SPECIFIED;
