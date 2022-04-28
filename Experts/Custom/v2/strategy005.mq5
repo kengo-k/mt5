@@ -16,10 +16,10 @@ const string EA_NAME = "strategy005";
 const long MAGIC_NUMBER = 1;
 
 input double VOLUME = 0.1;
-input double TP = 30;
-input int MA_PERIOD = 100;
-input int LONG_MA_PERIOD = 200;
-input int GRID_SIZE = 30;
+input double TP = 25;
+input int MA_PERIOD = 5;
+input int LONG_MA_PERIOD = 15;
+input int GRID_SIZE = 10;
 
 class Config {
 public:
