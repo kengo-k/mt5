@@ -40,11 +40,19 @@ public:
       }
       return isIn;
    }
+
+   static MqlRates getCurrentOHLC(ENUM_TIMEFRAMES period) {
+      return getOHLC(period, 1);
+   }
    
    static MqlRates getLatestOHLC(ENUM_TIMEFRAMES period) {
+      return getOHLC(period, 2);
+   }
+   
+   static MqlRates getOHLC(ENUM_TIMEFRAMES period, int count) {
       MqlRates prices[];
       ArraySetAsSeries(prices, false);
-      CopyRates(Symbol(), period, 0, 2, prices);
-      return prices[0];
+      CopyRates(Symbol(), period, 0, count, prices);
+      return prices[0];   
    }
 };
