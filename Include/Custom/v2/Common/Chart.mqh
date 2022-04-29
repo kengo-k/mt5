@@ -3,7 +3,7 @@
  */
 class Chart {
 public:
-   
+
    static bool isUpperBreak(double mainLatest, double mainPrev, double otherLatest, double otherPrev) {
       if (mainLatest >= mainPrev
             && mainLatest > otherLatest
@@ -12,7 +12,7 @@ public:
       }
       return false;
    }
-   
+
    static bool isLowerBreak(double mainLatest, double mainPrev, double otherLatest, double otherPrev) {
       if (mainLatest <= mainPrev
             && mainLatest < otherLatest
@@ -21,7 +21,7 @@ public:
       }
       return false;
    }
-   
+
    /**
     * 価格targetがローソク足のOpen-Closeの範囲に収まっているかどうか判定する
     */
@@ -44,15 +44,15 @@ public:
    static MqlRates getCurrentOHLC(ENUM_TIMEFRAMES period) {
       return getOHLC(period, 1);
    }
-   
+
    static MqlRates getLatestOHLC(ENUM_TIMEFRAMES period) {
       return getOHLC(period, 2);
    }
-   
+
    static MqlRates getOHLC(ENUM_TIMEFRAMES period, int count) {
       MqlRates prices[];
       ArraySetAsSeries(prices, false);
       CopyRates(Symbol(), period, 0, count, prices);
-      return prices[0];   
+      return prices[0];
    }
 };

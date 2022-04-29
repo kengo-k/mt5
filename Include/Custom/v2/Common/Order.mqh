@@ -9,12 +9,12 @@ class Order {
 
 public:
 
-   static void createBuyRequest(MqlTradeRequest &request, double sl, double tp, double volume, long magic) {
-      Order::createNewOrder(request, ORDER_TYPE_BUY, SYMBOL_ASK, SYMBOL_BID, sl, tp, volume, magic);
+   static void createBuyRequest(MqlTradeRequest &request, double sl, double tp, double volume, long magic, bool usePips = true) {
+      Order::createNewOrder(request, ORDER_TYPE_BUY, SYMBOL_ASK, SYMBOL_BID, sl, tp, volume, magic, usePips);
    }
 
-   static void createSellRequest(MqlTradeRequest &request, double sl, double tp, double volume, long magic) {
-      Order::createNewOrder(request, ORDER_TYPE_SELL, SYMBOL_BID, SYMBOL_ASK, sl, tp, volume, magic);
+   static void createSellRequest(MqlTradeRequest &request, double sl, double tp, double volume, long magic, bool usePips = true) {
+      Order::createNewOrder(request, ORDER_TYPE_SELL, SYMBOL_BID, SYMBOL_ASK, sl, tp, volume, magic, usePips);
    }
 
    static void createCloseRequest(MqlTradeRequest &request, long positionTicket, long magicNumber) {
@@ -125,6 +125,7 @@ private:
       , double tp
       , double volume
       , long magicNumber
+      , bool usePips
    ) {
       double unit = Util::getUnit();
       double targetPrice = SymbolInfoDouble(Symbol(), targetSymbolInfo);
@@ -141,22 +142,30 @@ private:
       request.type_filling = ORDER_FILLING_IOC;
 
       if (sl > 0) {
-         double adjust = 0;
-         if (type == ORDER_TYPE_BUY) {
-            adjust = - (sl * unit);
+         if (usePips) {
+            double adjust = 0;
+            if (type == ORDER_TYPE_BUY) {
+               adjust = - (sl * unit);
+            } else {
+               adjust = + (sl * unit);
+            }
+            request.sl = oppositePrice + adjust;
          } else {
-            adjust = + (sl * unit);
+            request.sl = sl;
          }
-         request.sl = oppositePrice + adjust;
       }
       if (tp > 0) {
-         double adjust = 0;
-         if (type == ORDER_TYPE_BUY) {
-            adjust = + (tp * unit);
+         if (usePips) {
+            double adjust = 0;
+            if (type == ORDER_TYPE_BUY) {
+               adjust = + (tp * unit);
+            } else {
+               adjust = - (tp * unit);
+            }
+            request.tp = oppositePrice + adjust;
          } else {
-            adjust = - (tp * unit);
+            request.tp = tp;
          }
-         request.tp = oppositePrice + adjust;
       }
 
       request.deviation = 3; // 許容スリッページ
