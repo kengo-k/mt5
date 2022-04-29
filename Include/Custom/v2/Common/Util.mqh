@@ -21,12 +21,26 @@ public:
       t = t + sec;
       return t;
    }
-   
+
    static int getDiffDay(datetime d1, datetime d2) {
       long diffSec = d1 - d2;
       int oneDay = 60 * 60 * 24;
       int diffDay = (int) MathFloor(diffSec / oneDay);
       return diffDay;
+   }
+
+   static bool isSameMonth(datetime d1, datetime d2) {
+      MqlDateTime t1, t2;
+      TimeToStruct(d1, t1);
+      TimeToStruct(d2, t2);
+      return t1.year == t2.year && t1.mon == t2.mon;
+   }
+
+   static string getCurrentMonth() {
+      MqlDateTime t;
+      datetime current = TimeCurrent();
+      TimeToStruct(current, t);
+      return StringFormat("%d%d", t.year, t.mon);
    }
 
    static datetime toDate(datetime t) {
