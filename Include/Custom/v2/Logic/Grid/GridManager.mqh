@@ -126,6 +126,11 @@ public:
             orderQueue.remove(i);
             continue;
          }
+         if (result.retcode == TRADE_RETCODE_INVALID) {
+            orderQueue.remove(i);
+            continue;         
+         }
+         
          
          // 想定外のエラーのため念のためシステム停止
          if (!isValid) {
