@@ -10,19 +10,66 @@ public:
       : eaName(_eaName) {}
 
    void logRequest(MqlTradeRequest &request) {
-      printf(
-         StringFormat(
-            "★★★ [INFO] 注文情報 - %s, price: %f, volume: %f, sl: %f, tp: %f, bid: %f, ask: %f, spread: %f"
-            , request.symbol
-            , request.price
-            , request.volume
-            , request.sl
-            , request.tp
-            , SymbolInfoDouble(Symbol(), SYMBOL_BID)
-            , SymbolInfoDouble(Symbol(), SYMBOL_ASK)
-            , SymbolInfoDouble(Symbol(), SYMBOL_ASK) - SymbolInfoDouble(Symbol(), SYMBOL_BID)
-         )
-      );
+      if (request.action == TRADE_ACTION_DEAL) {
+         if (request.position > 0) {
+            printf(
+               StringFormat(
+                  "★★★ [INFO] 注文(決済) - %s, position: #%d"
+                  , Symbol()
+                  , request.position
+               )
+            );
+         } else {
+            printf(
+               StringFormat(
+                  "★★★ [INFO] 注文(成行) - %s, price: %f, volume: %f, sl: %f, tp: %f, bid: %f, ask: %f, spread: %f"
+                  , Symbol()
+                  , request.price
+                  , request.volume
+                  , request.sl
+                  , request.tp
+                  , SymbolInfoDouble(Symbol(), SYMBOL_BID)
+                  , SymbolInfoDouble(Symbol(), SYMBOL_ASK)
+                  , SymbolInfoDouble(Symbol(), SYMBOL_ASK) - SymbolInfoDouble(Symbol(), SYMBOL_BID)
+               )
+            );
+         }
+      } else if (request.action == TRADE_ACTION_PENDING) {
+         printf(
+            StringFormat(
+               "★★★ [INFO] 注文(指値) - %s, price: %f, volume: %f, sl: %f, tp: %f, bid: %f, ask: %f, spread: %f"
+               , Symbol()
+               , request.price
+               , request.volume
+               , request.sl
+               , request.tp
+               , SymbolInfoDouble(Symbol(), SYMBOL_BID)
+               , SymbolInfoDouble(Symbol(), SYMBOL_ASK)
+               , SymbolInfoDouble(Symbol(), SYMBOL_ASK) - SymbolInfoDouble(Symbol(), SYMBOL_BID)
+            )
+         );
+      } else if (request.action == TRADE_ACTION_SLTP) {
+         printf(
+            StringFormat(
+               "★★★ [INFO] 注文(SLTP) - %s, position: #%d, sl: %f, tp: %f, bid: %f, ask: %f, spread: %f"
+               , Symbol()
+               , request.position
+               , request.sl
+               , request.tp
+               , SymbolInfoDouble(Symbol(), SYMBOL_BID)
+               , SymbolInfoDouble(Symbol(), SYMBOL_ASK)
+               , SymbolInfoDouble(Symbol(), SYMBOL_ASK) - SymbolInfoDouble(Symbol(), SYMBOL_BID)
+            )
+         );
+      } else if (request.action == TRADE_ACTION_REMOVE) {
+         printf(
+            StringFormat(
+               "★★★ [INFO] 注文(キャンセル) - %s, order: #%d"
+               , Symbol()
+               , request.order
+            )
+         );
+      }
    }
 
    void logResponse(MqlTradeResult &result, bool isSended) {
