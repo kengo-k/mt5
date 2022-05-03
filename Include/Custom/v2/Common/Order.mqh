@@ -44,12 +44,10 @@ public:
       request.type_filling = ORDER_FILLING_IOC;
    }
 
-   static void createSlTpRequest(MqlTradeRequest &request, double sl, double tp, long magicNumber) {
-
-      ulong ticketNo = Position::getTicket();
+   static void createSlTpRequest(MqlTradeRequest &request, long positionTicket, double sl, double tp, long magicNumber) {
 
       request.action = TRADE_ACTION_SLTP;
-      request.position = ticketNo;
+      request.position = positionTicket;
       request.symbol = Symbol();
       if (sl > 0) {
          request.sl = sl;
@@ -93,6 +91,11 @@ public:
       request.volume = volume;
       request.deviation = 3;
       request.magic = magicNumber;
+   }
+
+   static void createCancelRequest(MqlTradeRequest &request, long orderTicket) {
+      request.action = TRADE_ACTION_REMOVE;
+      request.order = orderTicket;
    }
 
    static void checkTradeResult(bool isSended, MqlTradeResult &result) {
