@@ -29,6 +29,7 @@ public:
    }
 
    bool isGridPriceUsed(ENUM_ORDER_TYPE targetType, double gridPrice, long magicNumber = -1) {
+      LoggerFacade logger;
       int posCount = PositionsTotal();
       for (int i = 0; i < posCount; i++) {
          ulong posTicket = PositionGetTicket(i);
@@ -49,6 +50,7 @@ public:
                         if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                            if (targetType == orderType) {
                               if (magicNumber < 0 || magicNumber == orderMagicNumber) {
+                                 logger.logWrite(LOG_LEVEL_INFO, StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber));
                                  return true;                              
                               }
                            }
@@ -71,6 +73,7 @@ public:
             if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                if (targetType == orderType) {
                   if (magicNumber < 0 || magicNumber == orderMagicNumber) {
+                     logger.logWrite(LOG_LEVEL_INFO, StringFormat("grid price %s is already exists in %s order #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), orderTicket, magicNumber));
                      return true;
                   }
                }
@@ -86,7 +89,7 @@ public:
     * orderQueue リクエストキュー
     * isGridPriceChecked true: 注文価格がすでに発注済みの場合に発注を行わない false: 常に発注を行う
     */
-   void sendOrdersFromQueue(RequestContainer &orderQueue, bool isGridPriceChecked = true) {
+   void sendOrdersFromQueue(RequestContainer &orderQueue, long magicNumber = -1, bool isGridPriceChecked = true) {
       LoggerFacade logger;
       int reqCount = orderQueue.count();
       for (int i = reqCount - 1; i >= 0; i--) {
@@ -97,14 +100,14 @@ public:
          // ※価格チェックを行う場合のみ
          ENUM_ORDER_TYPE type = req.item.type;
          double price = req.item.price;
-         if (isGridPriceChecked && this.isGridPriceUsed(type, price)) {
+         if (isGridPriceChecked && this.isGridPriceUsed(type, price, magicNumber)) {
             orderQueue.remove(i);
             continue;
          }
          
          // 発注処理
          MqlTradeResult result;
-         logger.logRequest(req.item);
+         logger.logRequest(req);
          bool isSended = OrderSend(req.item, result);
          logger.logResponse(result, isSended);
          
@@ -160,6 +163,14 @@ private:
          ret = basePrice + ((ratio * this.gridSize) * unit);
       }
       return ret;
+   }
+   
+   string getOrderTypeText(ENUM_ORDER_TYPE orderType) {
+      if (orderType == ORDER_TYPE_BUY_STOP) {
+         return "BUY";
+      } else {
+         return "SELL";
+      }
    }
 
 };
