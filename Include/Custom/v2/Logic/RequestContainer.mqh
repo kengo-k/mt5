@@ -1,21 +1,24 @@
 #include <Generic/ArrayList.mqh>
-
-class Request {
-public:
-   MqlTradeRequest item;
-};
+#include <Custom/v2/Common/Logger.mqh>
+#include <Custom/v2/Common/Request.mqh>
 
 /**
  * 注文を管理するデータコンテナ
  */
 class RequestContainer {
 public:
-   
+
    static Request* createRequest() {
-      return new Request();
+      static ulong seq = 1;
+      Request *req = new Request();
+      req.requestId = seq;
+      seq++;
+      return req;
    }
 
    void add(Request *request) {
+      LoggerFacade logger;
+      logger.logWrite(LOG_LEVEL_INFO, StringFormat("create request #%d", request.requestId));
       this.queue.Add(request);
    }
 
@@ -39,8 +42,8 @@ public:
       } else {
          return false;
       }
-   }   
-   
+   }
+
 private:
    CArrayList<Request*> queue;
 };
