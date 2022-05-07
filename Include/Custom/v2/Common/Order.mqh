@@ -1,6 +1,7 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
 #include <Custom/v2/Common/Position.mqh>
+#include <Custom/v2/Common/PosInfo.mqh>
 
 /**
  * ポジション操作に関連するロジック
@@ -22,8 +23,10 @@ public:
       if (!PositionSelectByTicket(positionTicket)) {
          ExpertRemove();
       }
-      double volume = Position::getVolume();
-      ENUM_POSITION_TYPE entryType = Position::getType();
+      PosInfo p;
+      Position::setPosInfo(&p);
+      double volume = p.volume;
+      ENUM_POSITION_TYPE entryType = p.positionType;
 
       // ポジション種別に応じて対応する決済の種別を設定 ex)ポジションが買いなら決済は売り
       ENUM_ORDER_TYPE closeType = ORDER_TYPE_BUY;

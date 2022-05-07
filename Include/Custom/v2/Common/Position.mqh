@@ -1,79 +1,23 @@
-/**
- * ポジション関連のユーティリティメソッド
- */
+#include <Custom/v2/Common/PosInfo.mqh>
+
+// ポジション関連のメソッド集
 class Position {
 public:
 
-   static bool hasPosition(long magicNumber) {
-      int posCount = 0;
-      for (int i = 0; i < PositionsTotal(); i++) {
-         string symbol = PositionGetSymbol(i);
-         if (StringLen(symbol) > 0) {
-            long magic = PositionGetInteger(POSITION_MAGIC);
-            if (magic == magicNumber) {
-               posCount++;
-            }
-         }
-      }
-      if (posCount == 0) {
-         return false;
-      } else if (posCount == 1) {
-         return true;
-      } else {
-         // ポジションは同時に複数持たない方針であるため
-         // ポジション数が1でも0でもない場合は何らかの不具合であるため即座に処理を終了させる
-         printf("ポジション数が不正です");
-         ExpertRemove();
-         return false;
+   static void setPosInfo(PosInfo *posInfo) {
+      posInfo.magicNumber = PositionGetInteger(POSITION_MAGIC);
+      posInfo.positionTicket = PositionGetInteger(POSITION_TICKET);
+      posInfo.positionType = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
+      posInfo.volume = PositionGetDouble(POSITION_VOLUME);
+      double profit = PositionGetDouble(POSITION_PROFIT);
+      double swap = PositionGetDouble(POSITION_SWAP);
+      posInfo.profitAndSwap = profit + swap;
+      posInfo.swap = swap;
+   }
+
+   static void setPosInfo(PosInfo *posInfo, ulong positionTicket) {
+      if (PositionSelectByTicket(positionTicket)) {
+         Position::setPosInfo(posInfo);
       }
    }
-
-   static ENUM_POSITION_TYPE getType() {
-      return (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
-   }
-
-   static ulong getTicket() {
-      return PositionGetInteger(POSITION_TICKET);
-   }
-
-   static double getVolume() {
-      return PositionGetDouble(POSITION_VOLUME);
-   }
-
-   static double getSL() {
-      return PositionGetDouble(POSITION_SL);
-   }
-
-   static double getTP() {
-      return PositionGetDouble(POSITION_TP);
-   }
-
-   static double getOpenPrice() {
-      return PositionGetDouble(POSITION_PRICE_OPEN);
-   }
-
-   static double getCurrentPrice() {
-      return PositionGetDouble(POSITION_PRICE_CURRENT);
-   }
-   
-   /**
-    * ストップが移動して利益が確定されているかどうかを判定する
-    */
-   static bool isProfitFixed() {
-      bool fixed = false;
-      double openPrice = Position::getOpenPrice();
-      double sl = Position::getSL();
-      ENUM_POSITION_TYPE type = Position::getType();
-      if (type == POSITION_TYPE_BUY) {
-         if (sl > openPrice) {
-            fixed = true;
-         }
-      } else {
-         if (sl < openPrice) {
-            fixed = true;
-         }
-      }
-      return fixed;
-   }
-
 };
