@@ -50,7 +50,7 @@ public:
                         if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                            if (targetType == orderType) {
                               if (magicNumber < 0 || magicNumber == orderMagicNumber) {
-                                 logger.logWrite(LOG_LEVEL_INFO, StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber));
+                                 logger.logDebug(StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber));
                                  return true;                              
                               }
                            }
@@ -73,7 +73,7 @@ public:
             if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                if (targetType == orderType) {
                   if (magicNumber < 0 || magicNumber == orderMagicNumber) {
-                     logger.logWrite(LOG_LEVEL_INFO, StringFormat("grid price %s is already exists in %s order #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), orderTicket, magicNumber));
+                     logger.logDebug(StringFormat("grid price %s is already exists in %s order #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), orderTicket, magicNumber));
                      return true;
                   }
                }
