@@ -51,7 +51,7 @@ public:
                            if (targetType == orderType) {
                               if (magicNumber < 0 || magicNumber == orderMagicNumber) {
                                  logger.logDebug(StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber));
-                                 return true;                              
+                                 return true;
                               }
                            }
                         }
@@ -82,10 +82,10 @@ public:
       }
       return false;
    }
-   
+
    /**
     * リクエストキュー内のすべてのリクエストを使用して発注を行う
-    * 
+    *
     * orderQueue リクエストキュー
     * isGridPriceChecked true: 注文価格がすでに発注済みの場合に発注を行わない false: 常に発注を行う
     */
@@ -104,13 +104,13 @@ public:
             orderQueue.remove(i);
             continue;
          }
-         
+
          // 発注処理
          MqlTradeResult result;
          logger.logRequest(req);
          bool isSended = OrderSend(req.item, result);
          logger.logResponse(result, isSended);
-         
+
          // 発注結果確認処理
          // ・成功時はキューから削除。
          // ・失敗した場合は次回の送信まで持ち越し
@@ -131,10 +131,10 @@ public:
          }
          if (result.retcode == TRADE_RETCODE_INVALID) {
             orderQueue.remove(i);
-            continue;         
+            continue;
          }
-         
-         
+
+
          // 想定外のエラーのため念のためシステム停止
          if (!isValid) {
             ExpertRemove();
@@ -144,7 +144,7 @@ public:
 
 
 
-private:   
+private:
    // 使用するグリッドのサイズ(pips)
    double gridSize;
 
@@ -164,7 +164,7 @@ private:
       }
       return ret;
    }
-   
+
    string getOrderTypeText(ENUM_ORDER_TYPE orderType) {
       if (orderType == ORDER_TYPE_BUY_STOP) {
          return "BUY";
