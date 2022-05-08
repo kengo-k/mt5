@@ -2,7 +2,6 @@
  * グリッドトレードのバリエーション形(008修正版)
  * ・ヘッジする方向を固定ではなくトレンド判定により切り替える
  */
-#include <Generic/ArrayList.mqh>
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
@@ -263,16 +262,15 @@ void addHedgePositionCloseOrders(Summary &mainSummary, Summary &hedgeSummary) {
       }
    }
 
-
    PosInfoComparer sortAsc(true);
    PosInfoComparer sortDesc(false);
 
    logger.logDebug(StringFormat("main position summary: buy(%d)=%f, sell(%d)=%f", mainSummary.buyCount, mainSummary.buy, mainSummary.sellCount, mainSummary.sell), true);
    logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
-   logger.logDebug(StringFormat("buy main: %s", getPositionListString(&buyMainList)), true);
-   logger.logDebug(StringFormat("sell main: %s", getPositionListString(&sellMainList)), true);
-   logger.logDebug(StringFormat("buy hedge: %s", getPositionListString(&buyHedgeList)), true);
-   logger.logDebug(StringFormat("sell hedge: %s", getPositionListString(&sellHedgeList)), true);
+   logger.logDebug(StringFormat("buy main: %s", Position::getPositionListString(&buyMainList)), true);
+   logger.logDebug(StringFormat("sell main: %s", Position::getPositionListString(&sellMainList)), true);
+   logger.logDebug(StringFormat("buy hedge: %s", Position::getPositionListString(&buyHedgeList)), true);
+   logger.logDebug(StringFormat("sell hedge: %s", Position::getPositionListString(&sellHedgeList)), true);
 
    double hedgeSum = hedgeSummary.sell;
    double oppositeSum = 0;
@@ -315,36 +313,10 @@ void addHedgePositionCloseOrders(Summary &mainSummary, Summary &hedgeSummary) {
       __closeOrderQueue.add(req);
    }
 
-   deletePositionList(&buyHedgeList);
-   deletePositionList(&sellHedgeList);
-   deletePositionList(&buyMainList);
-   deletePositionList(&sellMainList);
-}
-
-string getPositionListString(CArrayList<PosInfo*> *list) {
-   string str = "[";
-   int count = list.Count();
-   for (int i = 0; i < count; i++) {
-      PosInfo *p;
-      list.TryGetValue(i, p);
-      if (i != 0) {
-         StringAdd(str, ", ");
-      }
-      string ps = DoubleToString(p.profitAndSwap, Digits());
-      string s = DoubleToString(p.swap, Digits());
-      StringAdd(str, StringFormat("%s(%s)#%d", ps, s, p.positionTicket));
-   }
-   str = str + "]";
-   return str;
-}
-
-void deletePositionList(CArrayList<PosInfo*> *list) {
-   int count = list.Count();
-   for (int i = 0; i < count; i++) {
-      PosInfo *p;
-      list.TryGetValue(i, p);
-      delete p;
-   }
+   Position::deletePositionList(&buyHedgeList);
+   Position::deletePositionList(&sellHedgeList);
+   Position::deletePositionList(&buyMainList);
+   Position::deletePositionList(&sellMainList);
 }
 
 void sendMainOrders() {
