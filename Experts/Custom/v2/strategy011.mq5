@@ -143,15 +143,10 @@ void createOrder() {
    }
    __latestHedgeDirection = hedgeDirection;
 
-   PositionSummary mainSummary;
-   PositionSummary hedgeSummary;
-   Position::summaryPosition(mainSummary, MAGIC_NUMBER_MAIN);
-   Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
-
    logger.logDebug(StringFormat("command: %d", command), true);
    logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection), true);
 
-   addHedgePositionCloseOrders(mainSummary, hedgeSummary);
+   addHedgePositionCloseOrders();
 
    if (command != hedgeDirection) {
       addAllPendingOrderCancelOrders();
@@ -216,9 +211,17 @@ ENUM_ENTRY_COMMAND getHedgeDirection() {
    return direction;
 }
 
-void addHedgePositionCloseOrders(PositionSummary &mainSummary, PositionSummary &hedgeSummary) {
+void addHedgePositionCloseOrders() {
 
    LoggerFacade logger;
+
+   PositionSummary mainSummary;
+   PositionSummary hedgeSummary;
+   Position::summaryPosition(mainSummary, MAGIC_NUMBER_MAIN);
+   Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
+
+   logger.logDebug(StringFormat("main position summary: buy(%d)=%f, sell(%d)=%f", mainSummary.buyCount, mainSummary.buy, mainSummary.sellCount, mainSummary.sell), true);
+   logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
 
    CArrayList<PosInfo*> closePosList;
    CArrayList<PosInfo*> buyHedgeList;
@@ -254,8 +257,6 @@ void addHedgePositionCloseOrders(PositionSummary &mainSummary, PositionSummary &
    PosInfoComparer sortAsc(true);
    PosInfoComparer sortDesc(false);
 
-   logger.logDebug(StringFormat("main position summary: buy(%d)=%f, sell(%d)=%f", mainSummary.buyCount, mainSummary.buy, mainSummary.sellCount, mainSummary.sell), true);
-   logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
    logger.logDebug(StringFormat("buy main: %s", Position::getPositionListString(&buyMainList)), true);
    logger.logDebug(StringFormat("sell main: %s", Position::getPositionListString(&sellMainList)), true);
    logger.logDebug(StringFormat("buy hedge: %s", Position::getPositionListString(&buyHedgeList)), true);
