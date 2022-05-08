@@ -4,7 +4,7 @@
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
-#include <Custom/v2/Logic/RequestContainer.mqh>
+#include <Custom/v2/Common/RequestContainer.mqh>
 
 class GridManager {
 public:

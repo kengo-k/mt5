@@ -13,8 +13,8 @@
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Common/Chart.mqh>
 #include <Custom/v2/Common/Bar.mqh>
-#include <Custom/v2/Logic/Grid/GridManager.mqh>
-#include <Custom/v2/Logic/RequestContainer.mqh>
+#include <Custom/v2/Common/GridManager.mqh>
+#include <Custom/v2/Common/RequestContainer.mqh>
 
 Logger *__LOGGER__;
 
