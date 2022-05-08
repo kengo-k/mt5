@@ -3,7 +3,6 @@
  * ・ヘッジする方向を固定ではなくトレンド判定により切り替える
  */
 #include <Generic/ArrayList.mqh>
-#include <Generic/Interfaces/IComparer.mqh>
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
@@ -228,22 +227,6 @@ ENUM_ENTRY_COMMAND getHedgeDirection() {
 
    return direction;
 }
-
-class PosInfoComparer : public IComparer<PosInfo*> {
-public:
-   bool asc;
-   PosInfoComparer(bool _asc) {
-      this.asc = _asc;
-   }
-   int Compare(PosInfo* a, PosInfo* b) {
-      if (this.asc) {
-         return a.profitAndSwap < b.profitAndSwap ? -1 : 1;
-      } else {
-         return a.profitAndSwap > b.profitAndSwap ? -1 : 1;
-      }
-
-   }
-};
 
 void addHedgePositionCloseOrders(Summary &mainSummary, Summary &hedgeSummary) {
 
