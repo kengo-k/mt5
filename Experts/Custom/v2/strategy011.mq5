@@ -27,8 +27,8 @@ const long MAGIC_NUMBER_HEDGE = 2;
 
 input double TP = 20;
 input double TOTAL_HEDGE_TP = 200;
-input ENUM_TIMEFRAMES CREATE_ORDER_PERIOD = PERIOD_H1;
-input ENUM_TIMEFRAMES HEDGE_DIRECTION_PERIOD = PERIOD_D1;
+input ENUM_TIMEFRAMES CREATE_ORDER_TIMEFRAME = PERIOD_H1;
+input ENUM_TIMEFRAMES HEDGE_DIRECTION_TIMEFRAME = PERIOD_D1;
 input int ORDER_MA_PERIOD = 5;
 input int ORDER_LONG_MA_PERIOD = 15;
 input int HEDGE_MA_PERIOD = 5;
@@ -40,9 +40,9 @@ class Config {
 public:
    double tp;
    double totalHedgeTp;
-   ENUM_TIMEFRAMES createOrderPeriod;
-   ENUM_TIMEFRAMES sendOrderPeriod;
-   ENUM_TIMEFRAMES hedgeDirectionPeriod;
+   ENUM_TIMEFRAMES createOrderTimeframe;
+   ENUM_TIMEFRAMES sendOrderTimeframe;
+   ENUM_TIMEFRAMES hedgeDirectionTimeframe;
    int orderMaPeriod;
    int orderLongMaPeriod;
    int hedgeMaPeriod;
@@ -53,9 +53,9 @@ public:
    Config():
       tp(TP)
       , totalHedgeTp(TOTAL_HEDGE_TP)
-      , createOrderPeriod(CREATE_ORDER_PERIOD)
-      , sendOrderPeriod(PERIOD_M1)
-      , hedgeDirectionPeriod(HEDGE_DIRECTION_PERIOD)
+      , createOrderTimeframe(CREATE_ORDER_TIMEFRAME)
+      , sendOrderTimeframe(PERIOD_M1)
+      , hedgeDirectionTimeframe(HEDGE_DIRECTION_TIMEFRAME)
       , orderMaPeriod(ORDER_MA_PERIOD)
       , orderLongMaPeriod(ORDER_LONG_MA_PERIOD)
       , hedgeMaPeriod(HEDGE_MA_PERIOD)
@@ -93,11 +93,11 @@ RequestContainer __cancelOrderQueue;
 GridManager __orderGrid(__config.orderGridSize);
 GridManager __hedgeGrid(__config.hedgeGridSize);
 
-Bar __createOrderBar(__config.createOrderPeriod);
-Bar __sendMainOrderBar(__config.sendOrderPeriod);
-Bar __sendHedgeOrderBar(__config.sendOrderPeriod);
-Bar __sendCloseOrderBar(__config.sendOrderPeriod);
-Bar __sendCancelOrderBar(__config.sendOrderPeriod);
+Bar __createOrderBar(__config.createOrderTimeframe);
+Bar __sendMainOrderBar(__config.sendOrderTimeframe);
+Bar __sendHedgeOrderBar(__config.sendOrderTimeframe);
+Bar __sendCloseOrderBar(__config.sendOrderTimeframe);
+Bar __sendCancelOrderBar(__config.sendOrderTimeframe);
 
 ENUM_ENTRY_COMMAND __latestHedgeDirection = ENTRY_COMMAND_NOOP;
 ENUM_HEDGE_MODE __hedgeMode = HEDGE_MODE_MAIN;
@@ -105,10 +105,10 @@ ENUM_HEDGE_MODE __hedgeMode = HEDGE_MODE_MAIN;
 int OnInit() {
    __LOGGER__ = new Logger(EA_NAME);
    __LOGGER__.setLogLevel(LOG_LEVEL_INFO);
-   __context.orderMaHandle = iMA(Symbol(), __config.createOrderPeriod, __config.orderMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
-   __context.orderLongMaHandle = iMA(Symbol(), __config.createOrderPeriod, __config.orderLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
-   __context.hedgeMaHandle = iMA(Symbol(), __config.hedgeDirectionPeriod, __config.hedgeMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
-   __context.hedgeLongMaHandle = iMA(Symbol(), __config.hedgeDirectionPeriod, __config.hedgeLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   __context.orderMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   __context.orderLongMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   __context.hedgeMaHandle = iMA(Symbol(), __config.hedgeDirectionTimeframe, __config.hedgeMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+   __context.hedgeLongMaHandle = iMA(Symbol(), __config.hedgeDirectionTimeframe, __config.hedgeLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    return(INIT_SUCCEEDED);
 }
 
@@ -193,7 +193,7 @@ ENUM_ENTRY_COMMAND getHedgeDirection() {
 
    MqlRates prices[];
    ArraySetAsSeries(prices, false);
-   CopyRates(Symbol(), __config.createOrderPeriod, 0, 1, prices);
+   CopyRates(Symbol(), __config.createOrderTimeframe, 0, 1, prices);
    MqlRates currentPrice = prices[0];
 
    ENUM_ENTRY_COMMAND direction = ENTRY_COMMAND_NOOP;
