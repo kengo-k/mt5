@@ -5,11 +5,19 @@
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/Util.mqh>
-#include <Custom/v2/Common/Order.mqh>
-#include <Custom/v2/Common/Chart.mqh>
-#include <Custom/v2/Common/Bar.mqh>
-#include <Custom/v2/Common/GridManager.mqh>
+
+#include <Custom/v2/Common/Request.mqh>
 #include <Custom/v2/Common/RequestContainer.mqh>
+
+#include <Custom/v2/Common/Bar.mqh>
+#include <Custom/v2/Common/Chart.mqh>
+#include <Custom/v2/Common/Order.mqh>
+
+#include <Custom/v2/Common/PosInfo.mqh>
+#include <Custom/v2/Common/PositionSummary.mqh>
+#include <Custom/v2/Common/Position.mqh>
+
+#include <Custom/v2/Common/GridManager.mqh>
 
 Logger *__LOGGER__;
 
@@ -67,25 +75,6 @@ public:
    double orderLongMa[];
    double hedgeMa[];
    double hedgeLongMa[];
-};
-
-struct Summary {
-
-   int totalCount;
-   int buyCount;
-   int sellCount;
-
-   double total;
-   double red;
-   double black;
-
-   double buy;
-   double buyRed;
-   double buyBlack;
-
-   double sell;
-   double sellRed;
-   double sellBlack;
 };
 
 enum ENUM_HEDGE_MODE {
@@ -154,10 +143,10 @@ void createOrder() {
    }
    __latestHedgeDirection = hedgeDirection;
 
-   Summary mainSummary;
-   Summary hedgeSummary;
-   summaryPosition(mainSummary, MAGIC_NUMBER_MAIN);
-   summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
+   PositionSummary mainSummary;
+   PositionSummary hedgeSummary;
+   Position::summaryPosition(mainSummary, MAGIC_NUMBER_MAIN);
+   Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
 
    logger.logDebug(StringFormat("command: %d", command), true);
    logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection), true);
@@ -227,7 +216,7 @@ ENUM_ENTRY_COMMAND getHedgeDirection() {
    return direction;
 }
 
-void addHedgePositionCloseOrders(Summary &mainSummary, Summary &hedgeSummary) {
+void addHedgePositionCloseOrders(PositionSummary &mainSummary, PositionSummary &hedgeSummary) {
 
    LoggerFacade logger;
 
@@ -359,73 +348,4 @@ void sendCloseOrders() {
 
 void sendCancelOrders() {
    __orderGrid.sendOrdersFromQueue(__cancelOrderQueue, -1);
-}
-
-void summaryPosition(Summary &summary, long magicNumber) {
-
-   int buyCount = 0;
-   int sellCount = 0;
-
-   double red = 0;
-   double black = 0;
-   double buy = 0;
-   double buyRed = 0;
-   double buyBlack = 0;
-
-   double sell = 0;
-   double sellRed = 0;
-   double sellBlack = 0;
-
-   int posCount = PositionsTotal();
-   for (int i = 0; i < posCount; i++) {
-      ulong posTicket = PositionGetTicket(i);
-      if (posTicket) {
-         long posMagicNumber = PositionGetInteger(POSITION_MAGIC);
-         if (magicNumber != posMagicNumber) {
-            continue;
-         }
-         double profit = PositionGetDouble(POSITION_PROFIT);
-         double swap = PositionGetDouble(POSITION_SWAP);
-         double profitAndSwap = profit + swap;
-         if (profitAndSwap < 0) {
-            red = red + profitAndSwap;
-         } else {
-            black = black + profitAndSwap;
-         }
-         ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
-         if (positionType == POSITION_TYPE_BUY) {
-            if (profitAndSwap < 0) {
-               buyRed = buyRed + profitAndSwap;
-            } else {
-               buyBlack = buyBlack + profitAndSwap;
-            }
-            buy = buy + profitAndSwap;
-            buyCount++;
-         } else {
-            if (profitAndSwap < 0) {
-               sellRed = sellRed + profitAndSwap;
-            } else {
-               sellBlack = sellBlack + profitAndSwap;
-            }
-            sell = sell + profitAndSwap;
-            sellCount++;
-         }
-      }
-   }
-
-   summary.totalCount = buyCount + sellCount;
-   summary.buyCount = buyCount;
-   summary.sellCount = sellCount;
-
-   summary.total = buy + sell;
-   summary.red = red;
-   summary.black = black;
-
-   summary.buy = buy;
-   summary.buyRed = buyRed;
-   summary.buyBlack = buyBlack;
-
-   summary.sell = sell;
-   summary.sellRed = sellRed;
-   summary.sellBlack = sellBlack;
 }
