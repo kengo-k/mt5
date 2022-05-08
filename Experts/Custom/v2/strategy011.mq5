@@ -1,6 +1,22 @@
 /**
- * グリッドトレードのバリエーション形(008修正版)
- * ・ヘッジする方向を固定ではなくトレンド判定により切り替える
+ * グリッドトレードのバリエーション形
+ *
+ * グリッドトレードでは必ず天井/大底をつかんでしまう(不可避)。そのため残高は増え続けていくが証拠金は減り続けて最終的には損失ポジションが積み重ねた利益を上回ってしまう。よって
+ * ①天井/大底ポジション(クソポジ)を極力掴まないようにする
+ * ②とはいえ必ず掴まされてしまうため極力数を減らしつつもつかんだ場合速やかに解消させるようにする
+ * 以上の対策を行う。
+ *
+ * ①
+ * 1:
+ * ・基本方針としてはトレンド方向に合わせてエントリを行う
+ * ・トレンド判定にはMAを使うのでトレンド途中は問題ないがトレンドの終わりにエントリしたポジションは必ずクソポジ化する
+ * ・素直にMAのトレンド転換を待っていたのでは遅すぎる
+ * ・よってトレンド転換の予兆を察知したらMA判定ではトレンド中でもエントリをしないようにする
+ * ・トレンド転換の予兆は直近MA値がトレンドと逆行した場合とする(=MAのトレンド転換基準に到達する前(例えばMAクロスとか))
+ *
+ * 2:
+ * ・トレンドの判定は実際にエントリを行う時間足よりも長い時間で見て判断する(かなりの長期で取るorひとつ(もしくはN個)上の時間足を使う)
+ * ・エントリ可否判断は実際にエントリを行う時間足の判定と上記の(より長期の)トレンド判定が一致した場合とする
  */
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
@@ -24,6 +40,9 @@ Logger *__LOGGER__;
 const string EA_NAME = "strategy011";
 const long MAGIC_NUMBER_MAIN = 1;
 const long MAGIC_NUMBER_HEDGE = 2;
+
+const bool USE_GRID_TRADE = true;
+const bool USE_GRID_HEDGE_TRADE = true;
 
 input double TP = 20;
 input double TOTAL_HEDGE_TP = 200;
@@ -146,18 +165,22 @@ void createOrder() {
    logger.logDebug(StringFormat("command: %d", command), true);
    logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection), true);
 
-   addHedgePositionCloseOrders();
+   if (USE_GRID_HEDGE_TRADE) {
+      addHedgePositionCloseOrders();
+   }
 
    if (command != hedgeDirection) {
       addAllPendingOrderCancelOrders();
    }
 
-   double orderGridPrice = __orderGrid.getTargetGridPrice(command);
-   Request* req = RequestContainer::createRequest();
-   Order::createLimitRequest(command, req.item, orderGridPrice, getVolume(), -1, __config.tp, MAGIC_NUMBER_MAIN);
-   //__newMainOrderQueue.add(req);
+   if (USE_GRID_TRADE) {
+      double orderGridPrice = __orderGrid.getTargetGridPrice(command);
+      Request* req = RequestContainer::createRequest();
+      Order::createLimitRequest(command, req.item, orderGridPrice, getVolume(), -1, __config.tp, MAGIC_NUMBER_MAIN);
+      __newMainOrderQueue.add(req);
+   }
 
-   if (command == hedgeDirection) {
+   if (USE_GRID_HEDGE_TRADE) {
       double hedgeGridPrice = __hedgeGrid.getTargetGridPrice(command);
       Request* hedgeReq = RequestContainer::createRequest();
       Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, getVolume(), -1, -1, MAGIC_NUMBER_HEDGE);
