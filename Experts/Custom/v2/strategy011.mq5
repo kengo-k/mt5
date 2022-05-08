@@ -20,33 +20,35 @@
  */
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Common/Util.mqh>
-
 #include <Custom/v2/Common/Request.mqh>
 #include <Custom/v2/Common/RequestContainer.mqh>
-
 #include <Custom/v2/Common/Bar.mqh>
-#include <Custom/v2/Common/Chart.mqh>
 #include <Custom/v2/Common/Order.mqh>
-
-#include <Custom/v2/Common/PosInfo.mqh>
-#include <Custom/v2/Common/PositionSummary.mqh>
-#include <Custom/v2/Common/Position.mqh>
-
 #include <Custom/v2/Common/GridManager.mqh>
+
+// 以下固有ロジック
+
+#include <Custom/v2/Logic/011/Config.mqh>
+#include <Custom/v2/Logic/011/Context.mqh>
+
+// トレンド判定ロジック
+//#include <Custom/v2/Logic/011/CheckTrendNoop.mqh>
+#include <Custom/v2/Logic/011/CheckTrend01.mqh>
+
+// エントリ判定ロジック
+//#include <Custom/v2/Logic/011/GetEntryCommandWithoutTrend.mqh>
+#include <Custom/v2/Logic/011/GetEntryCommand01.mqh>
 
 Logger *__LOGGER__;
 
 const string EA_NAME = "strategy011";
-const long MAGIC_NUMBER_MAIN = 1;
-const long MAGIC_NUMBER_HEDGE = 2;
 
 const bool USE_GRID_TRADE = true;
-const bool USE_GRID_HEDGE_TRADE = true;
+const bool USE_GRID_HEDGE_TRADE = false;
 
 input double TP = 20;
 input double TOTAL_HEDGE_TP = 200;
-input ENUM_TIMEFRAMES CREATE_ORDER_TIMEFRAME = PERIOD_H1;
+input ENUM_TIMEFRAMES CREATE_ORDER_TIMEFRAME = PERIOD_M15;
 input ENUM_TIMEFRAMES HEDGE_DIRECTION_TIMEFRAME = PERIOD_D1;
 input int ORDER_MA_PERIOD = 5;
 input int ORDER_LONG_MA_PERIOD = 15;
@@ -55,53 +57,21 @@ input int HEDGE_LONG_MA_PERIOD = 50;
 input int ORDER_GRID_SIZE = 30;
 input int HEDGE_GRID_SIZE = 15;
 
-class Config {
-public:
-   double tp;
-   double totalHedgeTp;
-   ENUM_TIMEFRAMES createOrderTimeframe;
-   ENUM_TIMEFRAMES sendOrderTimeframe;
-   ENUM_TIMEFRAMES hedgeDirectionTimeframe;
-   int orderMaPeriod;
-   int orderLongMaPeriod;
-   int hedgeMaPeriod;
-   int hedgeLongMaPeriod;
-   int orderGridSize;
-   int hedgeGridSize;
+Config __config__(
+   TP
+   , TOTAL_HEDGE_TP
+   , CREATE_ORDER_TIMEFRAME
+   , PERIOD_M1
+   , HEDGE_DIRECTION_TIMEFRAME
+   , ORDER_MA_PERIOD
+   , ORDER_LONG_MA_PERIOD
+   , HEDGE_MA_PERIOD
+   , HEDGE_LONG_MA_PERIOD
+   , ORDER_GRID_SIZE
+   , HEDGE_GRID_SIZE
+);
+Config *__config = &__config__;
 
-   Config():
-      tp(TP)
-      , totalHedgeTp(TOTAL_HEDGE_TP)
-      , createOrderTimeframe(CREATE_ORDER_TIMEFRAME)
-      , sendOrderTimeframe(PERIOD_M1)
-      , hedgeDirectionTimeframe(HEDGE_DIRECTION_TIMEFRAME)
-      , orderMaPeriod(ORDER_MA_PERIOD)
-      , orderLongMaPeriod(ORDER_LONG_MA_PERIOD)
-      , hedgeMaPeriod(HEDGE_MA_PERIOD)
-      , hedgeLongMaPeriod(HEDGE_LONG_MA_PERIOD)
-      , orderGridSize(ORDER_GRID_SIZE)
-      , hedgeGridSize(HEDGE_GRID_SIZE)
-      {}
-};
-
-class Context {
-public:
-   int orderMaHandle;
-   int orderLongMaHandle;
-   int hedgeMaHandle;
-   int hedgeLongMaHandle;
-   double orderMa[];
-   double orderLongMa[];
-   double hedgeMa[];
-   double hedgeLongMa[];
-};
-
-enum ENUM_HEDGE_MODE {
-   HEDGE_MODE_MAIN
-   , HEDGE_MODE_OPPOSITE
-};
-
-Config __config;
 Context __context;
 
 RequestContainer __newMainOrderQueue;
@@ -118,16 +88,19 @@ Bar __sendHedgeOrderBar(__config.sendOrderTimeframe);
 Bar __sendCloseOrderBar(__config.sendOrderTimeframe);
 Bar __sendCancelOrderBar(__config.sendOrderTimeframe);
 
-ENUM_ENTRY_COMMAND __latestHedgeDirection = ENTRY_COMMAND_NOOP;
-ENUM_HEDGE_MODE __hedgeMode = HEDGE_MODE_MAIN;
+CheckTrend __checkTrend;
+GetEntryCommand __getEntryCommand;
 
 int OnInit() {
+
    __LOGGER__ = new Logger(EA_NAME);
-   __LOGGER__.setLogLevel(LOG_LEVEL_INFO);
+   __LOGGER__.setLogLevel(LOG_LEVEL_DEBUG);
+
    __context.orderMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    __context.orderLongMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    __context.hedgeMaHandle = iMA(Symbol(), __config.hedgeDirectionTimeframe, __config.hedgeMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    __context.hedgeLongMaHandle = iMA(Symbol(), __config.hedgeDirectionTimeframe, __config.hedgeLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
+
    return(INIT_SUCCEEDED);
 }
 
@@ -148,29 +121,22 @@ double getVolume() {
 }
 
 void createOrder() {
+
    LoggerFacade logger;
 
-   ENUM_ENTRY_COMMAND command = getNextCommand();
-   ENUM_ENTRY_COMMAND hedgeDirection = getHedgeDirection();
+   ENUM_ENTRY_COMMAND hedgeDirection = __checkTrend.exec();
+   ENUM_ENTRY_COMMAND command = __getEntryCommand.exec(hedgeDirection);
 
-   // ヘッジ方向の切り替わりを検出
-   if (__latestHedgeDirection != ENTRY_COMMAND_NOOP) {
-      if (__latestHedgeDirection != hedgeDirection) {
-         logger.logDebug("hedge direction switched!!!");
-         __hedgeMode = HEDGE_MODE_OPPOSITE;
-      }
-   }
-   __latestHedgeDirection = hedgeDirection;
-
-   logger.logDebug(StringFormat("command: %d", command), true);
-   logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection), true);
+   logger.logDebug(StringFormat("command: %d", command));
+   logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection));
 
    if (USE_GRID_HEDGE_TRADE) {
       addHedgePositionCloseOrders();
-   }
-
-   if (command != hedgeDirection) {
       addAllPendingOrderCancelOrders();
+   }
+   
+   if (command == ENTRY_COMMAND_NOOP) {
+      return;
    }
 
    if (USE_GRID_TRADE) {
@@ -188,148 +154,8 @@ void createOrder() {
    }
 }
 
-ENUM_ENTRY_COMMAND getNextCommand() {
-
-   CopyBuffer(__context.orderMaHandle, 0, 0, 2, __context.orderMa);
-   CopyBuffer(__context.orderLongMaHandle, 0, 0, 2, __context.orderLongMa);
-
-   double latestMa = __context.orderMa[0];
-   double latestLongMa = __context.orderLongMa[0];
-
-   ENUM_ENTRY_COMMAND command = ENTRY_COMMAND_NOOP;
-   if (latestMa > latestLongMa) {
-      command = ENTRY_COMMAND_BUY;
-   } else {
-      command = ENTRY_COMMAND_SELL;
-   }
-
-   return command;
-}
-
-ENUM_ENTRY_COMMAND getHedgeDirection() {
-
-   CopyBuffer(__context.hedgeMaHandle, 0, 0, 1, __context.hedgeMa);
-   CopyBuffer(__context.hedgeLongMaHandle, 0, 0, 1, __context.hedgeLongMa);
-
-   //double latestMa = __context.hedgeMa[0];
-   double currentLongMa = __context.hedgeLongMa[0];
-
-   MqlRates prices[];
-   ArraySetAsSeries(prices, false);
-   CopyRates(Symbol(), __config.createOrderTimeframe, 0, 1, prices);
-   MqlRates currentPrice = prices[0];
-
-   ENUM_ENTRY_COMMAND direction = ENTRY_COMMAND_NOOP;
-   //if (latestMa > latestLongMa) {
-   //   direction = ENTRY_COMMAND_BUY;
-   //} else {
-   //   direction = ENTRY_COMMAND_SELL;
-   //}
-   if (currentPrice.close > currentLongMa) {
-      direction = ENTRY_COMMAND_BUY;
-   } else {
-      direction = ENTRY_COMMAND_SELL;
-   }
-
-   return direction;
-}
-
 void addHedgePositionCloseOrders() {
-
-   LoggerFacade logger;
-
-   PositionSummary mainSummary;
-   PositionSummary hedgeSummary;
-   Position::summaryPosition(mainSummary, MAGIC_NUMBER_MAIN);
-   Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
-
-   logger.logDebug(StringFormat("main position summary: buy(%d)=%f, sell(%d)=%f", mainSummary.buyCount, mainSummary.buy, mainSummary.sellCount, mainSummary.sell), true);
-   logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
-
-   CArrayList<PosInfo*> closePosList;
-   CArrayList<PosInfo*> buyHedgeList;
-   CArrayList<PosInfo*> sellHedgeList;
-   CArrayList<PosInfo*> buyMainList;
-   CArrayList<PosInfo*> sellMainList;
-
-   int posCount = PositionsTotal();
-   for (int i = 0; i < posCount; i++) {
-      ulong posTicket = PositionGetTicket(i);
-      if (posTicket) {
-         ENUM_POSITION_TYPE posType = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
-         long posMagicNumber = PositionGetInteger(POSITION_MAGIC);
-         double profit = PositionGetDouble(POSITION_PROFIT);
-         double swap = PositionGetDouble(POSITION_SWAP);
-         PosInfo *p = new PosInfo();
-         p.positionTicket = posTicket;
-         p.profitAndSwap = profit + swap;
-         p.swap = swap;
-         p.magicNumber = posMagicNumber;
-         if (posMagicNumber == MAGIC_NUMBER_MAIN && posType == POSITION_TYPE_BUY) {
-            buyMainList.Add(p);
-         } else if(posMagicNumber == MAGIC_NUMBER_MAIN && posType == POSITION_TYPE_SELL) {
-            sellMainList.Add(p);
-         } else if(posMagicNumber == MAGIC_NUMBER_HEDGE && posType == POSITION_TYPE_BUY) {
-            buyHedgeList.Add(p);
-         } else if(posMagicNumber == MAGIC_NUMBER_HEDGE && posType == POSITION_TYPE_SELL) {
-            sellHedgeList.Add(p);
-         }
-      }
-   }
-
-   PosInfoComparer sortAsc(true);
-   PosInfoComparer sortDesc(false);
-
-   logger.logDebug(StringFormat("buy main: %s", Position::getPositionListString(&buyMainList)), true);
-   logger.logDebug(StringFormat("sell main: %s", Position::getPositionListString(&sellMainList)), true);
-   logger.logDebug(StringFormat("buy hedge: %s", Position::getPositionListString(&buyHedgeList)), true);
-   logger.logDebug(StringFormat("sell hedge: %s", Position::getPositionListString(&sellHedgeList)), true);
-
-   double hedgeSum = hedgeSummary.sell;
-   double oppositeSum = 0;
-   CArrayList<PosInfo*> *hedgeList = &sellHedgeList;
-   CArrayList<PosInfo*> *oppositeList = &buyHedgeList;
-   if (__latestHedgeDirection == ENTRY_COMMAND_BUY) {
-      hedgeSum = hedgeSummary.buy;
-      hedgeList = &buyHedgeList;
-      oppositeList = &sellHedgeList;
-      oppositeList.Sort(&sortDesc);
-   }
-
-   int oCount = oppositeList.Count();
-   for (int i = 0; i < oCount; i++) {
-      PosInfo *p;
-      oppositeList.TryGetValue(i, p);
-      oppositeSum += p.profitAndSwap;
-      if (hedgeSum + oppositeSum < __config.totalHedgeTp) {
-         break;
-      }
-      closePosList.Add(p);
-   }
-
-   if (closePosList.Count() > 0) {
-      int hCount = hedgeList.Count();
-      for (int i = 0; i < hCount; i++) {
-         PosInfo *p;
-         hedgeList.TryGetValue(i, p);
-         closePosList.Add(p);
-      }
-   }
-
-   int cCount = closePosList.Count();
-   for (int i = 0; i < cCount; i++) {
-      PosInfo *p;
-      closePosList.TryGetValue(i, p);
-      logger.logDebug(StringFormat("add position #%d in close position list", p.positionTicket), true);
-      Request* req = RequestContainer::createRequest();
-      Order::createCloseRequest(req.item, p.positionTicket, p.magicNumber);
-      __closeOrderQueue.add(req);
-   }
-
-   Position::deletePositionList(&buyHedgeList);
-   Position::deletePositionList(&sellHedgeList);
-   Position::deletePositionList(&buyMainList);
-   Position::deletePositionList(&sellMainList);
+   // TODO 後で
 }
 
 void sendMainOrders() {
