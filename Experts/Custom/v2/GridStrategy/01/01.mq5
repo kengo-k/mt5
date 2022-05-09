@@ -27,7 +27,7 @@ input int ORDER_GRID_SIZE = 30;
 input int HEDGE_GRID_SIZE = 15;
 
 // 以下global変数に値を設定する
-string EA_NAME = "strategy011";
+string EA_NAME = "gridstrategy01-01";
 bool USE_GRID_TRADE = true;
 bool USE_GRID_HEDGE_TRADE = false;
 
