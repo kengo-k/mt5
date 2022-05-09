@@ -1,3 +1,10 @@
+/**
+ * グリッドトレードバリエーション
+ *
+ * ひとまずは余計な小細工なしでシンプルに実装する
+ * ・2本のMAを使い短期が上なら買い、下なら売り
+ * ・長期トレンドの判定はしない
+ */
 #include <Custom/v2/Strategy/GridStrategy/01/StrategyTemplate.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
