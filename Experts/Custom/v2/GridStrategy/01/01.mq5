@@ -12,7 +12,7 @@
 
 // 以下固有ロジック提供するためのIF実装をincludeする
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrendNoop.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/Logic/GetEntryCommand/GetEntryCommandWithoutTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/GetEntryCommand/GetEntryCommand2maWithoutTrend.mqh>
 
 // 外部パラメータ
 input double TP = 20;
