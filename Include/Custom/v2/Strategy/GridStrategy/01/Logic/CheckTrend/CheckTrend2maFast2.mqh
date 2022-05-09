@@ -1,7 +1,7 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrendBase.mqh>
 
 extern Config *__config;
 extern Context __context;
@@ -11,15 +11,13 @@ extern Context __context;
 //
 // ・直近2本のMAクロス
 // ・ただし現在の短期MA(=つまりまだローソク足が確定せず動いている状態)が判定したトレンドと逆行した場合にトレンド無しとして返す
-class CheckTrend : public ICheckTrend {
+class CheckTrend : public CheckTrendBase {
 public:
 
-   CheckTrend() {
-      latestHedgeDirection = ENTRY_COMMAND_NOOP;
-      currentHedgeDirection = ENTRY_COMMAND_NOOP;
-   }
-
    ENUM_ENTRY_COMMAND exec() {
+
+      this.setLatestTrend(this.getCurrentTrend());
+
       CopyBuffer(__context.hedgeMaHandle, 0, 0, 2, __context.hedgeMa);
       CopyBuffer(__context.hedgeLongMaHandle, 0, 0, 2, __context.hedgeLongMa);
 
@@ -38,10 +36,9 @@ public:
          }
       }
 
+      this.setCurrentTrend(direction);
+
       return direction;
    }
 
-private:
-   ENUM_ENTRY_COMMAND latestHedgeDirection;
-   ENUM_ENTRY_COMMAND currentHedgeDirection;
 };

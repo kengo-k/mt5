@@ -1,22 +1,20 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrendBase.mqh>
 
 extern Config *__config;
 extern Context __context;
 
 // トレンド判定ロジック実装
 // ・直近2本のMAクロス
-class CheckTrend : public ICheckTrend {
+class CheckTrend : public CheckTrendBase {
 public:
 
-   CheckTrend() {
-      latestHedgeDirection = ENTRY_COMMAND_NOOP;
-      currentHedgeDirection = ENTRY_COMMAND_NOOP;
-   }
-
    ENUM_ENTRY_COMMAND exec() {
+
+      this.setLatestTrend(this.getCurrentTrend());
+
       CopyBuffer(__context.hedgeMaHandle, 0, 0, 2, __context.hedgeMa);
       CopyBuffer(__context.hedgeLongMaHandle, 0, 0, 2, __context.hedgeLongMa);
 
@@ -30,10 +28,9 @@ public:
          direction = ENTRY_COMMAND_SELL;
       }
 
+      this.setCurrentTrend(direction);
+
       return direction;
    }
 
-private:
-   ENUM_ENTRY_COMMAND latestHedgeDirection;
-   ENUM_ENTRY_COMMAND currentHedgeDirection;
 };
