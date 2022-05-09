@@ -6,8 +6,11 @@
 extern Config *__config;
 extern Context __context;
 
-// strategy011で使用するトレンド判定ロジック実装
-// シンプルな直近MAクロスを使うが短期MAが逆行したらその時点でトレンド反転の兆しと判断する
+// トレンド判定ロジック実装
+// CheckTrend2maの改善版
+//
+// ・直近2本のMAクロス
+// ・ただし現在の短期MA(=つまりまだローソク足が確定せず動いている状態)が判定したトレンドと逆行した場合にトレンド無しとして返す
 class CheckTrend : public ICheckTrend {
 public:
 
