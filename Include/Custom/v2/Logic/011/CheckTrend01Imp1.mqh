@@ -7,7 +7,7 @@ extern Config *__config;
 extern Context __context;
 
 // strategy011で使用するトレンド判定ロジック実装
-// シンプルな直近MAクロスを使う
+// シンプルな直近MAクロスを使うが短期MAが逆行したらその時点でトレンド反転の兆しと判断する
 class CheckTrend : public ICheckTrend {
 public:
 
@@ -17,17 +17,22 @@ public:
    }
 
    ENUM_ENTRY_COMMAND exec() {
-      CopyBuffer(__context.hedgeMaHandle, 0, 0, 2, __context.hedgeMa);
-      CopyBuffer(__context.hedgeLongMaHandle, 0, 0, 2, __context.hedgeLongMa);
+      CopyBuffer(__context.hedgeMaHandle, 0, 0, 3, __context.hedgeMa);
+      CopyBuffer(__context.hedgeLongMaHandle, 0, 0, 3, __context.hedgeLongMa);
 
-      double latestMa = __context.hedgeMa[0];
-      double latestLongMa = __context.hedgeLongMa[0];
+      double latestMa = __context.hedgeMa[1];
+      double latestLongMa = __context.hedgeLongMa[1];
+      double prevMa = __context.hedgeMa[0];
 
       ENUM_ENTRY_COMMAND direction = ENTRY_COMMAND_NOOP;
       if (latestMa > latestLongMa) {
-         direction = ENTRY_COMMAND_BUY;
+         if (prevMa < latestMa) {
+            direction = ENTRY_COMMAND_BUY;
+         }
       } else {
-         direction = ENTRY_COMMAND_SELL;
+         if (prevMa > latestMa) {
+            direction = ENTRY_COMMAND_SELL;
+         }
       }
 
       return direction;

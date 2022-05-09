@@ -1,12 +1,13 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Logic/011/Context.mqh>
+#include <Custom/v2/Logic/011/IGetEntryCommand.mqh>
 
 extern Context __context;
 
 // BUY/SELL(もしくは何もしない)を判断するロジック
 // 引数で渡されたトレンドは無視して単純に短期の直近MAでのみ判定を行う
 // ※比較検討用
-class GetEntryCommand {
+class GetEntryCommand : public IGetEntryCommand {
 public:
 
    ENUM_ENTRY_COMMAND exec(ENUM_ENTRY_COMMAND trend) {
