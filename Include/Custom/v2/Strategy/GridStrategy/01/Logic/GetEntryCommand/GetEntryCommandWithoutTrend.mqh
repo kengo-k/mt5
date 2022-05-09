@@ -4,9 +4,9 @@
 
 extern Context __context;
 
-// BUY/SELL(もしくは何もしない)を判断するロジック
-// 引数で渡されたトレンドは無視して単純に短期の直近MAでのみ判定を行う
-// ※比較検討用
+// エントリ判断ロジック実装
+// トレンドは無視して直近2本のMAクロスでのみ判定を行う
+// ※比較用
 class GetEntryCommand : public IGetEntryCommand {
 public:
 
