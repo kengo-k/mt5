@@ -1,5 +1,5 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Logic/011/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
 
 // strategy011で使用するトレンド判定ロジック実装
 // 何も判定をしない実装

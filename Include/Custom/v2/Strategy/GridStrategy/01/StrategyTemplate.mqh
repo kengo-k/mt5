@@ -26,14 +26,11 @@
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Common/GridManager.mqh>
 
-// 以下固有ロジック
-#include <Custom/v2/Logic/011/Context.mqh>
-// 設定値
-#include <Custom/v2/Logic/011/Config.mqh>
-// トレンド判定ロジックIF
-#include <Custom/v2/Logic/011/ICheckTrend.mqh>
-// エントリ判定ロジックIF
-#include <Custom/v2/Logic/011/IGetEntryCommand.mqh>
+// 以下固有ロジック用IF
+#include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
 
 Logger *__LOGGER__;
 

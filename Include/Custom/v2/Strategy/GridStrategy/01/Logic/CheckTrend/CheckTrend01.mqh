@@ -1,13 +1,13 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Logic/011/Config.mqh>
-#include <Custom/v2/Logic/011/Context.mqh>
-#include <Custom/v2/Logic/011/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
 
 extern Config *__config;
 extern Context __context;
 
 // strategy011で使用するトレンド判定ロジック実装
-// シンプルな直近MAクロスを使うが短期MAが逆行したらその時点でトレンド反転の兆しと判断する
+// シンプルな直近MAクロスを使う
 class CheckTrend : public ICheckTrend {
 public:
 
@@ -22,17 +22,12 @@ public:
 
       double latestMa = __context.hedgeMa[0];
       double latestLongMa = __context.hedgeLongMa[0];
-      double currentMa = __context.hedgeMa[1];
 
       ENUM_ENTRY_COMMAND direction = ENTRY_COMMAND_NOOP;
       if (latestMa > latestLongMa) {
-         if (latestMa < currentMa) {
-            direction = ENTRY_COMMAND_BUY;
-         }
+         direction = ENTRY_COMMAND_BUY;
       } else {
-         if (latestMa > currentMa) {
-            direction = ENTRY_COMMAND_SELL;
-         }
+         direction = ENTRY_COMMAND_SELL;
       }
 
       return direction;

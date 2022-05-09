@@ -1,6 +1,6 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Logic/011/Context.mqh>
-#include <Custom/v2/Logic/011/IGetEntryCommand.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
 
 extern Context __context;
 

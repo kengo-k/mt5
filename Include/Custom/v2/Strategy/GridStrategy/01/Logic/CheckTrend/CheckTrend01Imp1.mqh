@@ -1,7 +1,7 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Logic/011/Config.mqh>
-#include <Custom/v2/Logic/011/Context.mqh>
-#include <Custom/v2/Logic/011/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
 
 extern Config *__config;
 extern Context __context;

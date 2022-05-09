@@ -1,11 +1,11 @@
-#include <Custom/v2/Strategy/GridStrategy01.mqh>
-#include <Custom/v2/Logic/011/Config.mqh>
-#include <Custom/v2/Logic/011/ICheckTrend.mqh>
-#include <Custom/v2/Logic/011/IGetEntryCommand.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/StrategyTemplate.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
 
 // 以下固有ロジック提供するためのIF実装をincludeする
-#include <Custom/v2/Logic/011/CheckTrendNoop.mqh>
-#include <Custom/v2/Logic/011/GetEntryCommandWithoutTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrendNoop.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/GetEntryCommand/GetEntryCommandWithoutTrend.mqh>
 
 // 外部パラメータ
 input double TP = 20;
