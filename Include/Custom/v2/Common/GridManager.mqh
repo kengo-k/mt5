@@ -9,8 +9,8 @@
 class GridManager {
 public:
 
-   GridManager(double _gridSize)
-      : gridSize(_gridSize) {
+   GridManager()
+      : gridSize(20) {
    }
 
    double getTargetGridPrice(ENUM_ENTRY_COMMAND command) {
@@ -142,7 +142,9 @@ public:
       }
    }
 
-
+   void setGridSize(double _gridSize) {
+      this.gridSize = _gridSize;
+   }
 
 private:
    // 使用するグリッドのサイズ(pips)
