@@ -4,9 +4,8 @@
 
 extern Context __context;
 
-// BUY/SELL(もしくは何もしない)を判断するロジック
-// 判定したコマンドがトレンド方向と一致した場合のみそのコマンドを返す
-// それ以外はすべて何もしないこととする
+// エントリ判断ロジック実装
+// 判定したエントリがトレンド方向と一致した場合のみエントリする
 class GetEntryCommand : public IGetEntryCommand {
 public:
 
