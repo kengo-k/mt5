@@ -6,8 +6,8 @@
 extern Config *__config;
 extern Context __context;
 
-// strategy011で使用するトレンド判定ロジック実装
-// シンプルな直近MAクロスを使う
+// トレンド判定ロジック実装
+// ・直近2本のMAクロス
 class CheckTrend : public ICheckTrend {
 public:
 
