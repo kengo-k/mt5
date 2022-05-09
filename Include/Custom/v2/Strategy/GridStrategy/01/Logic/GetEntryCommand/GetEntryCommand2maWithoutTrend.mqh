@@ -10,7 +10,7 @@ extern Context __context;
 class GetEntryCommand : public IGetEntryCommand {
 public:
 
-   ENUM_ENTRY_COMMAND exec(ENUM_ENTRY_COMMAND trend) {
+   ENUM_ENTRY_COMMAND exec() {
 
       CopyBuffer(__context.orderMaHandle, 0, 0, 2, __context.orderMa);
       CopyBuffer(__context.orderLongMaHandle, 0, 0, 2, __context.orderLongMa);

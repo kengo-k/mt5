@@ -9,10 +9,12 @@
 #include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICloseHedgePositions.mqh>
 
 // 以下固有ロジック提供するためのIF実装をincludeする
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrendNoop.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/GetEntryCommand/GetEntryCommand2maWithoutTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/CloseHedgePositions/CloseHedgePositionsNoop.mqh>
 
 // 外部パラメータ
 input double TP = 20;
@@ -51,3 +53,6 @@ ICheckTrend *__checkTrend = &__checkTrend__;
 
 GetEntryCommand __getEntryCommand__;
 IGetEntryCommand *__getEntryCommand = &__getEntryCommand__;
+
+CloseHedgePositions __closeHedgePositions__;
+ICloseHedgePositions *__closeHedgePositions = &__closeHedgePositions__;

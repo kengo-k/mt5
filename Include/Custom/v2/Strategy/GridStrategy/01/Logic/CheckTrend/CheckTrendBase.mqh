@@ -10,20 +10,29 @@ public:
       return this.currentTrend;
    }
 
-   ENUM_ENTRY_COMMAND getLatestTrend() {
-      return this.latestTrend;
+   ENUM_ENTRY_COMMAND getPrevTrend() {
+      return this.prevTrend;
+   }
+
+   bool hasTrendSwitchSign() {
+      return this.trendSwitchSign;
    }
 
 protected:
 
    ENUM_ENTRY_COMMAND currentTrend;
-   ENUM_ENTRY_COMMAND latestTrend;
+   ENUM_ENTRY_COMMAND prevTrend;
+   bool trendSwitchSign;
 
    void setCurrentTrend(ENUM_ENTRY_COMMAND _currentTrend) {
       this.currentTrend = _currentTrend;
    }
 
-   void setLatestTrend(ENUM_ENTRY_COMMAND _latestTrend) {
-      this.latestTrend = _latestTrend;
+   void setPrevTrend(ENUM_ENTRY_COMMAND _prevTrend) {
+      this.prevTrend = _prevTrend;
+   }
+
+   void setTrendSwitchSign(bool sign) {
+      this.trendSwitchSign = sign;
    }
 };

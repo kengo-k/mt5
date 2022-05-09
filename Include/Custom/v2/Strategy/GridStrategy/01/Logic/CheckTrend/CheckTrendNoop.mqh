@@ -7,7 +7,6 @@
 class CheckTrend : public CheckTrendBase {
 public:
 
-   ENUM_ENTRY_COMMAND exec() {
-      return ENTRY_COMMAND_NOOP;
+   void exec() {
    }
 };

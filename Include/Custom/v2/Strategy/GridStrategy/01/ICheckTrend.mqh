@@ -1,7 +1,8 @@
 #include <Custom/v2/Common/Constant.mqh>
 
 interface ICheckTrend {
-   ENUM_ENTRY_COMMAND exec();
+   void exec();
    ENUM_ENTRY_COMMAND getCurrentTrend();
-   ENUM_ENTRY_COMMAND getLatestTrend();
+   ENUM_ENTRY_COMMAND getPrevTrend();
+   bool hasTrendSwitchSign();
 };

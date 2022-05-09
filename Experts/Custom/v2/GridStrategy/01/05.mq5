@@ -12,8 +12,8 @@
 #include <Custom/v2/Strategy/GridStrategy/01/ICloseHedgePositions.mqh>
 
 // 以下固有ロジック提供するためのIF実装をincludeする
-#include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrend2maFast2.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/Logic/GetEntryCommand/GetEntryCommand2maFast2.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrend2maFast1.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/GetEntryCommand/GetEntryCommand2maFast1.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/CloseHedgePositions/CloseHedgePositionsOnlyWhenTrendSwitch1.mqh>
 
 // 外部パラメータ

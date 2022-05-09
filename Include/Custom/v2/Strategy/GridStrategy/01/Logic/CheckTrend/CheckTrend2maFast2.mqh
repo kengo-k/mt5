@@ -14,9 +14,9 @@ extern Context __context;
 class CheckTrend : public CheckTrendBase {
 public:
 
-   ENUM_ENTRY_COMMAND exec() {
+   void exec() {
 
-      this.setLatestTrend(this.getCurrentTrend());
+      this.setPrevTrend(this.getCurrentTrend());
 
       CopyBuffer(__context.hedgeMaHandle, 0, 0, 2, __context.hedgeMa);
       CopyBuffer(__context.hedgeLongMaHandle, 0, 0, 2, __context.hedgeLongMa);
@@ -27,18 +27,12 @@ public:
 
       ENUM_ENTRY_COMMAND direction = ENTRY_COMMAND_NOOP;
       if (latestMa > latestLongMa) {
-         if (latestMa < currentMa) {
-            direction = ENTRY_COMMAND_BUY;
-         }
+         this.setCurrentTrend(ENTRY_COMMAND_BUY);
+         this.setTrendSwitchSign(latestMa >= currentMa);
       } else {
-         if (latestMa > currentMa) {
-            direction = ENTRY_COMMAND_SELL;
-         }
+         this.setCurrentTrend(ENTRY_COMMAND_SELL);
+         this.setTrendSwitchSign(latestMa <= currentMa);
       }
-
-      this.setCurrentTrend(direction);
-
-      return direction;
    }
 
 };

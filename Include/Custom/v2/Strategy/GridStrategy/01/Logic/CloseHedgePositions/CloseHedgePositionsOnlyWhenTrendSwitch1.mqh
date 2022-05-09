@@ -9,9 +9,11 @@
 #include <Custom/v2/Common/RequestContainer.mqh>
 
 #include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
 
 extern Config *__config;
+extern ICheckTrend *__checkTrend;
 
 // ヘッジポジションのクローズロジック実装
 // トレンドの転換予兆が発生した時点ですべてクローズする
@@ -32,7 +34,10 @@ public:
 
       logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
 
-      if (this.getCurrentTrend() == this.getLatestTrend()) {
+      if (
+         !((__checkTrend.getCurrentTrend() != __checkTrend.getPrevTrend())
+            || (__checkTrend.getCurrentTrend() == __checkTrend.getPrevTrend() && __checkTrend.hasTrendSwitchSign()))
+      ) {
          return;
       }
 

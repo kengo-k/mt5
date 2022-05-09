@@ -92,16 +92,15 @@ double getVolume() {
 void createOrder() {
 
    LoggerFacade logger;
-   ENUM_ENTRY_COMMAND hedgeDirection = __checkTrend.exec();
-   ENUM_ENTRY_COMMAND command = __getEntryCommand.exec(hedgeDirection);
+
+   __checkTrend.exec();
+   ENUM_ENTRY_COMMAND hedgeDirection = __checkTrend.getCurrentTrend();
+   ENUM_ENTRY_COMMAND command = __getEntryCommand.exec();
 
    logger.logDebug(StringFormat("command: %d", command));
    logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection));
 
    if (USE_GRID_HEDGE_TRADE) {
-      //addHedgePositionCloseOrders();
-      __closeHedgePositions.setCurrentTrend(__checkTrend.getCurrentTrend());
-      __closeHedgePositions.setLatestTrend(__checkTrend.getLatestTrend());
       __closeHedgePositions.exec();
    }
 
