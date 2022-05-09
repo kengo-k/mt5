@@ -20,6 +20,7 @@
 #include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/ICloseHedgePositions.mqh>
 
 Logger *__LOGGER__;
 
@@ -30,6 +31,7 @@ extern bool USE_GRID_HEDGE_TRADE;
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
 extern IGetEntryCommand *__getEntryCommand;
+extern ICloseHedgePositions *__closeHedgePositions;
 
 Context __context;
 
@@ -50,16 +52,18 @@ Bar __sendCancelOrderBar;
 int OnInit() {
 
    __LOGGER__ = new Logger(EA_NAME);
-   __LOGGER__.setLogLevel(LOG_LEVEL_DEBUG);
+   __LOGGER__.setLogLevel(LOG_LEVEL_INFO);
+
+   __closeHedgePositions.setCloseOrderQueue(&__closeOrderQueue);
 
    __context.orderMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    __context.orderLongMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    __context.hedgeMaHandle = iMA(Symbol(), __config.hedgeDirectionTimeframe, __config.hedgeMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    __context.hedgeLongMaHandle = iMA(Symbol(), __config.hedgeDirectionTimeframe, __config.hedgeLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
-   
+
    __orderGrid.setGridSize(__config.orderGridSize);
    __hedgeGrid.setGridSize(__config.hedgeGridSize);
-   
+
    __createOrderBar.setTimeframes(__config.createOrderTimeframe);
    __sendMainOrderBar.setTimeframes(__config.sendOrderTimeframe);
    __sendHedgeOrderBar.setTimeframes(__config.sendOrderTimeframe);
@@ -95,8 +99,10 @@ void createOrder() {
    logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection));
 
    if (USE_GRID_HEDGE_TRADE) {
-      addHedgePositionCloseOrders();
-      addAllPendingOrderCancelOrders();
+      //addHedgePositionCloseOrders();
+      __closeHedgePositions.setCurrentTrend(__checkTrend.getCurrentTrend());
+      __closeHedgePositions.setLatestTrend(__checkTrend.getLatestTrend());
+      __closeHedgePositions.exec();
    }
 
    if (command == ENTRY_COMMAND_NOOP) {
@@ -116,10 +122,6 @@ void createOrder() {
       Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, getVolume(), -1, -1, MAGIC_NUMBER_HEDGE);
       __newHedgeOrderQueue.add(hedgeReq);
    }
-}
-
-void addHedgePositionCloseOrders() {
-   // TODO 後で
 }
 
 void sendMainOrders() {
