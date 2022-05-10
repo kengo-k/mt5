@@ -16,7 +16,7 @@ extern Config *__config;
 extern ICheckTrend *__checkTrend;
 
 // ヘッジポジションのクローズロジック実装
-// トレンドの転換予兆が発生した時点ですべてクローズする
+// トレンドが転換もしくは転換予兆が発生した時点ですべてクローズする
 class CloseHedgePositions: public CloseHedgePositionsBase {
 public:
 
@@ -32,12 +32,20 @@ public:
       PositionSummary hedgeSummary;
       Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
 
-      logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
+      //logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
 
-      if (
-         !((__checkTrend.getCurrentTrend() != __checkTrend.getPrevTrend())
-            || (__checkTrend.getCurrentTrend() == __checkTrend.getPrevTrend() && __checkTrend.hasTrendSwitchSign()))
-      ) {
+      bool isRequireClose = false;
+
+      if (__checkTrend.getCurrentTrend() != __checkTrend.getPrevTrend()) {
+         isRequireClose = true;
+      }
+
+      if (__checkTrend.getCurrentTrend() == __checkTrend.getPrevTrend()
+            && __checkTrend.hasTrendSwitchSign()) {
+         isRequireClose = true;
+      }
+
+      if (!isRequireClose) {
          return;
       }
 
@@ -48,24 +56,18 @@ public:
          ulong posTicket = PositionGetTicket(i);
          if (posTicket) {
             ENUM_POSITION_TYPE posType = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
-            long posMagicNumber = PositionGetInteger(POSITION_MAGIC);
-            double profit = PositionGetDouble(POSITION_PROFIT);
-            double swap = PositionGetDouble(POSITION_SWAP);
             PosInfo *p = new PosInfo();
-            p.positionTicket = posTicket;
-            p.profitAndSwap = profit + swap;
-            p.swap = swap;
-            p.magicNumber = posMagicNumber;
-            if(posMagicNumber == MAGIC_NUMBER_HEDGE && posType == POSITION_TYPE_BUY) {
+            Position::setPosInfo(p);
+            if(posType == POSITION_TYPE_BUY) {
                buyHedgeList.Add(p);
-            } else if(posMagicNumber == MAGIC_NUMBER_HEDGE && posType == POSITION_TYPE_SELL) {
+            } else {
                sellHedgeList.Add(p);
             }
          }
       }
 
-      logger.logDebug(StringFormat("buy hedge: %s", Position::getPositionListString(&buyHedgeList)), true);
-      logger.logDebug(StringFormat("sell hedge: %s", Position::getPositionListString(&sellHedgeList)), true);
+      //logger.logDebug(StringFormat("buy hedge: %s", Position::getPositionListString(&buyHedgeList)), true);
+      //logger.logDebug(StringFormat("sell hedge: %s", Position::getPositionListString(&sellHedgeList)), true);
 
       this.addClosePositions(&buyHedgeList);
       this.addClosePositions(&sellHedgeList);
@@ -80,7 +82,7 @@ public:
       for (int i = 0; i < count; i++) {
          PosInfo *p;
          positions.TryGetValue(i, p);
-         logger.logDebug(StringFormat("add position #%d in close position list", p.positionTicket), true);
+         //logger.logDebug(StringFormat("add position #%d in close position list", p.positionTicket), true);
          Request* req = RequestContainer::createRequest();
          Order::createCloseRequest(req.item, p.positionTicket, p.magicNumber);
          this.orderQueue.add(req);
