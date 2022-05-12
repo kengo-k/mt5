@@ -19,10 +19,6 @@
       }
     </style>
   </head>
-  <body>
-    <button id="btn1">click</button>
-    <div id="container"></div>
-  </body>
   <script
     src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
     integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
@@ -41,9 +37,16 @@
     referrerpolicy="no-referrer"
   ></script>
   <script>
+    const shell = new ActiveXObject("WScript.Shell");
     const fs = new ActiveXObject("Scripting.FileSystemObject");
     var header = [];
     var body = [];
+
+    $(function () {
+      loadCsv();
+      sort();
+      showChart();
+    });
 
     const CommonItemLabels = {
       Pass: true,
@@ -78,18 +81,14 @@
       body = _.orderBy(body, ["Equity DD %", "Profit"], ["asc", "desc"]);
     }
 
-    $(function () {
-      $("#btn1").on("click", onClick);
-    });
-
-    function onClick() {
-      loadCsv();
-      sort();
-      showChart();
-    }
-
     function loadCsv() {
-      const file = fs.openTextFile("test.csv", 1, false, 0);
+      const dir = shell.ExpandEnvironmentStrings("%temp%");
+      const file = fs.openTextFile(
+        dir + "\\mt5_optimize_test_result.csv",
+        1,
+        false,
+        0
+      );
       var i = 0;
       while (!file.atEndOfStream) {
         const line = file.readLine();
@@ -194,4 +193,7 @@
       });
     }
   </script>
+  <body>
+    <div id="container"></div>
+  </body>
 </html>
