@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+    <title>MT5 back test optimization result</title>
+    <style>
+      html {
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        width: 100%;
+        height: 100%;
+      }
+      #container {
+        margin: auto;
+        width: 80%;
+        height: 80%;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="btn1">click</button>
+    <div id="container"></div>
+  </body>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
+    integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script
+    src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.1.0/highcharts.js"
+    integrity="sha512-8mNMOCKB2dbqlbvEAC4C4aMIioDavSLzEHF4P/A+V8ODWoaRnBz4zar7CGM8o1teyAV1sI7n6NhMLfgNZThWIA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script>
+    const fs = new ActiveXObject("Scripting.FileSystemObject");
+    var header = [];
+    var body = [];
+
+    const CommonItemLabels = {
+      Pass: true,
+      Result: true,
+      Profit: true,
+      "Expected Payoff": true,
+      "Profit Factor": true,
+      "Recovery Factor": true,
+      "Sharpe Ratio": true,
+      Custom: true,
+      "Equity DD %": true,
+      Trades: true,
+    };
+
+    function extract(label) {
+      return _.map(body, function (lineObj) {
+        return lineObj[label];
+      });
+    }
+
+    function max(label) {
+      const values = extract(label);
+      return _.max(values);
+    }
+
+    function min(label) {
+      const values = extract(label);
+      return _.min(values);
+    }
+
+    function sort() {
+      body = _.orderBy(body, ["Equity DD %", "Profit"], ["asc", "desc"]);
+    }
+
+    $(function () {
+      $("#btn1").on("click", onClick);
+    });
+
+    function onClick() {
+      loadCsv();
+      sort();
+      showChart();
+    }
+
+    function loadCsv() {
+      const file = fs.openTextFile("test.csv", 1, false, 0);
+      var i = 0;
+      while (!file.atEndOfStream) {
+        const line = file.readLine();
+        if (i == 0) {
+          const hs = line.split(",");
+          for (var i = 0; i < hs.length; i++) {
+            header.push(hs[i]);
+          }
+        } else {
+          const bs = line.split(",");
+          const lineObj = {};
+          for (var i = 0; i < bs.length; i++) {
+            lineObj[header[i]] = Number(bs[i]);
+          }
+          body.push(lineObj);
+        }
+      }
+      file.close();
+    }
+
+    function showChart() {
+      Highcharts.chart("container", {
+        chart: {
+          zoomType: "xy",
+        },
+        title: {
+          text: "MT5 back test optimization result",
+        },
+        subtitle: {
+          text: "profit and max draw down",
+        },
+        xAxis: [
+          {
+            categories: extract("Pass"),
+            crosshair: true,
+          },
+        ],
+        yAxis: [
+          {
+            title: {
+              text: "Profit",
+              style: {
+                color: Highcharts.getOptions().colors[0],
+              },
+            },
+            labels: {
+              format: "{value}",
+              style: {
+                color: Highcharts.getOptions().colors[0],
+              },
+            },
+            min: min("Profit"),
+            max: max("Profit"),
+          },
+          {
+            labels: {
+              format: "{value}",
+              style: {
+                color: Highcharts.getOptions().colors[1],
+              },
+            },
+            title: {
+              text: "Max Draw Down(%)",
+              style: {
+                color: Highcharts.getOptions().colors[1],
+              },
+            },
+            opposite: true,
+          },
+        ],
+        tooltip: {
+          shared: true,
+        },
+        legend: {
+          layout: "vertical",
+          align: "left",
+          x: 120,
+          verticalAlign: "top",
+          y: 100,
+          floating: true,
+          backgroundColor:
+            Highcharts.defaultOptions.legend.backgroundColor || // theme
+            "rgba(255,255,255,0.25)",
+        },
+        series: [
+          {
+            name: "Profit",
+            type: "column",
+            yAxis: 0,
+            data: extract("Profit"),
+          },
+          {
+            name: "Max Draw Down",
+            type: "spline",
+            yAxis: 1,
+            data: extract("Equity DD %"),
+            tooltip: {
+              valueSuffix: "%",
+            },
+          },
+        ],
+      });
+    }
+  </script>
+</html>
