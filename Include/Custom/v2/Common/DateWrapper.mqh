@@ -10,16 +10,28 @@ public:
       this.dateValue = _dateValue;
    }
 
+   string getYYYYMM() {
+      MqlDateTime t;
+      TimeToStruct(this.dateValue, t);
+      return StringFormat("%d%d", t.year, t.mon);
+   }
+
+   int getWeek() {
+      MqlDateTime t;
+      TimeToStruct(this.dateValue, t);
+      return t.day_of_week;
+   }
+
    string getYYYYMMDD() {
       MqlDateTime t;
       TimeToStruct(this.dateValue, t);
       return StringFormat("%d%d%d", t.year, t.mon, t.day);
    }
 
-   string getYYYYMM() {
+   string getYYYYMMDDHH() {
       MqlDateTime t;
       TimeToStruct(this.dateValue, t);
-      return StringFormat("%d%d", t.year, t.mon);
+      return StringFormat("%d%d%d%d", t.year, t.mon, t.day, t.hour);
    }
 
 private:
