@@ -1,14 +1,7 @@
-/**
- * グリッドトレードバリエーション
- *
- * 単体ヘッジロジック検証
- * ・トレンドとエントリ方向が一致した場合のみエントリする
- * ・指定した期間経過後に強制的に決済する
- */
  /**
  * グリッドトレードバリエーション
  *
- * 目的: 
+ * 目的:
  * ・ヘッジロジックを単体で検証する
  *
  * 概要:
@@ -54,6 +47,9 @@ input int HEDGE_LONG_MA_PERIOD = 15;
 // ヘッジ用グリッドサイズ(たぶん固定。最適化してもよい)
 input int HEDGE_GRID_SIZE = 10;
 
+// クローズタイミング
+input ENUM_TIMEFRAMES CLOSE_TIMEFRAME = PERIOD_MN1;
+
 // 以下global変数に値を設定する
 string EA_NAME = "gridstrategy01-06";
 bool USE_GRID_TRADE = false;
@@ -80,5 +76,5 @@ ICheckTrend *__checkTrend = &__checkTrend__;
 GetEntryCommand __getEntryCommand__;
 IGetEntryCommand *__getEntryCommand = &__getEntryCommand__;
 
-CloseHedgePositions __closeHedgePositions__;
+CloseHedgePositions __closeHedgePositions__(CLOSE_TIMEFRAME);
 ICloseHedgePositions *__closeHedgePositions = &__closeHedgePositions__;
