@@ -7,22 +7,40 @@ enum ENUM_LOG_LEVEL {
    , LOG_LEVEL_ERROR // プログラム的なエラー等が発生した場合等
 };
 
+enum ENUM_LOGID_STATE {
+   LOGID_STATE_ENABLED,
+   LOGID_STATE_DISABLED,
+   LOGID_STATE_NONE
+};
+
+class LogId {
+public:
+   LogId(ENUM_LOGID_STATE _state): state(_state) {}
+   ENUM_LOGID_STATE state;
+};
+
+LogId __LOGID_DEFAULT(LOGID_STATE_NONE);
+LogId *LOGID_DEFAULT = &__LOGID_DEFAULT;
+
+LogId __LOGID_ENABLED(LOGID_STATE_ENABLED);
+LogId *LOGID_ENABLED = &__LOGID_ENABLED;
+
+LogId __LOGID_DISABLED(LOGID_STATE_DISABLED);
+LogId *LOGID_DISABLED = &__LOGID_DISABLED;
+
 class Logger {
 public:
-   
+
    bool debug;
    bool info;
    bool notice;
    bool error;
-   
-   Logger(string _eaName)
+
+   Logger(string _eaName, ENUM_LOG_LEVEL level)
       : eaName(_eaName) {
-      debug = true;
-      info = true;
-      notice = true;
-      error = true;   
+      this.setLogLevel(level);
    }
-   
+
    void setLogLevel(ENUM_LOG_LEVEL level) {
       debug = false;
       info = false;
@@ -42,7 +60,7 @@ public:
       }
    }
 
-   void logRequest(Request &req, bool force = false) {
+   void logRequest(Request &req) {
       string text = "";
       MqlTradeRequest request = req.item;
       if (request.action == TRADE_ACTION_DEAL) {
@@ -99,10 +117,10 @@ public:
             , request.magic
          );
       }
-      this.logWrite(LOG_LEVEL_INFO, text, force);
+      this.logWrite(LOG_LEVEL_INFO, text);
    }
 
-   void logResponse(MqlTradeResult &result, bool isSended, bool force = false) {
+   void logResponse(MqlTradeResult &result, bool isSended) {
       string text = StringFormat(
          "注文結果: sended=%d, retcode=%d, request_id=%d, deal=#%d, order=#%d"
          , isSended
@@ -111,33 +129,10 @@ public:
          , result.deal
          , result.order
       );
-      this.logWrite(LOG_LEVEL_INFO, text, force);
+      this.logWrite(LOG_LEVEL_INFO, text);
    }
 
-   void logWrite(ENUM_LOG_LEVEL logLevel, string text, bool force = false) {
-      
-      bool isLogRequired = false;
-      if (logLevel == LOG_LEVEL_DEBUG && debug) {
-         isLogRequired = true;
-      }
-      if (logLevel == LOG_LEVEL_INFO && info) {
-         isLogRequired = true;
-      }
-      if (logLevel == LOG_LEVEL_NOTICE && notice) {
-         isLogRequired = true;
-      }
-      if (logLevel == LOG_LEVEL_ERROR && error) {
-         isLogRequired = true;
-      }                  
-      
-      if (force) {
-         isLogRequired = true;
-      }
-      
-      if (!isLogRequired) {
-         return;
-      }
-      
+   void logWrite(ENUM_LOG_LEVEL logLevel, string text) {
       string message;
       if (logLevel == LOG_LEVEL_DEBUG) {
          message = "★ [DEBUG] %s";
@@ -151,14 +146,14 @@ public:
       message = StringFormat(message, text);
       printf(message);
    }
-   
-   void logAccount(bool force = false) {
+
+   void logAccount() {
       string balance = DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), Digits());
       string free = DoubleToString(AccountInfoDouble(ACCOUNT_MARGIN_FREE), Digits());
       string text = StringFormat("Account Info: balance=%s, free margin: %s", balance, free);
-      this.logWrite(LOG_LEVEL_DEBUG, text, force);
+      this.logWrite(LOG_LEVEL_DEBUG, text);
    }
-   
+
 private:
    string eaName;
    string getDoubleString(double value) {
@@ -168,46 +163,70 @@ private:
 
 extern Logger *__LOGGER__;
 
-class LoggerFacade {
-public:
-   void logRequest(Request &request, bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logRequest(request, force);
-      }
-   }
-   void logResponse(MqlTradeResult &result, bool isSended, bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logResponse(result, isSended, force);
-      }
-   }
-   void logWrited(ENUM_LOG_LEVEL logLevel, string text, bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logWrite(logLevel, text, force);
-      }
-   }
-   void logAccount(bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logAccount(force);
-      }
-   }
-   void logDebug(string text, bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logWrite(LOG_LEVEL_DEBUG, text, force);
-      }
-   }
-   void logInfo(string text, bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logWrite(LOG_LEVEL_INFO, text, force);
-      }
-   }
-   void logNotice(string text, bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logWrite(LOG_LEVEL_NOTICE, text, force);
-      }
-   }
-   void logError(string text, bool force = false) {
-      if (__LOGGER__ != NULL) {
-         __LOGGER__.logWrite(LOG_LEVEL_ERROR, text, force);
-      }
-   }         
-};
+#define LOG_DEBUG(text, logId) \
+   if (__LOGGER__ != NULL) {\
+      bool enabled = false;\
+      if (logId.state == LOGID_STATE_ENABLED) {\
+         enabled = true;\
+      } else if (logId.state == LOGID_STATE_DISABLED) {\
+         enabled = false;\
+      } else {\
+         if (__LOGGER__.debug) {\
+            enabled = true;\
+         }\
+      }\
+      if (enabled) {\
+         __LOGGER__.logWrite(LOG_LEVEL_DEBUG, text);\
+      }\
+   }\
+
+#define LOG_INFO(text, logId) \
+   if (__LOGGER__ != NULL) {\
+      bool enabled = false;\
+      if (logId.state == LOGID_STATE_ENABLED) {\
+         enabled = true;\
+      } else if (logId.state == LOGID_STATE_DISABLED) {\
+         enabled = false;\
+      } else {\
+         if (__LOGGER__.info) {\
+            enabled = true;\
+         }\
+      }\
+      if (enabled) {\
+         __LOGGER__.logWrite(LOG_LEVEL_INFO, text);\
+      }\
+   }\
+
+#define LOG_REQUEST(req, logId) \
+   if (__LOGGER__ != NULL) {\
+      bool enabled = false;\
+      if (logId.state == LOGID_STATE_ENABLED) {\
+         enabled = true;\
+      } else if (logId.state == LOGID_STATE_DISABLED) {\
+         enabled = false;\
+      } else {\
+         if (__LOGGER__.info) {\
+            enabled = true;\
+         }\
+      }\
+      if (enabled) {\
+         __LOGGER__.logRequest(req);\
+      }\
+   }\
+
+#define LOG_RESPONSE(result, isSended, logId) \
+   if (__LOGGER__ != NULL) {\
+      bool enabled = false;\
+      if (logId.state == LOGID_STATE_ENABLED) {\
+         enabled = true;\
+      } else if (logId.state == LOGID_STATE_DISABLED) {\
+         enabled = false;\
+      } else {\
+         if (__LOGGER__.info) {\
+            enabled = true;\
+         }\
+      }\
+      if (enabled) {\
+         __LOGGER__.logResponse(result, isSended);\
+      }\
+   }\

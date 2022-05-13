@@ -29,7 +29,6 @@ public:
    }
 
    bool isGridPriceUsed(ENUM_ORDER_TYPE targetType, double gridPrice, long magicNumber = -1) {
-      LoggerFacade logger;
       int posCount = PositionsTotal();
       for (int i = 0; i < posCount; i++) {
          ulong posTicket = PositionGetTicket(i);
@@ -50,7 +49,7 @@ public:
                         if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                            if (targetType == orderType) {
                               if (magicNumber < 0 || magicNumber == orderMagicNumber) {
-                                 logger.logDebug(StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber));
+                                 LOG_DEBUG(StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber), LOGID_DEFAULT);
                                  return true;
                               }
                            }
@@ -73,7 +72,7 @@ public:
             if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                if (targetType == orderType) {
                   if (magicNumber < 0 || magicNumber == orderMagicNumber) {
-                     logger.logDebug(StringFormat("grid price %s is already exists in %s order #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), orderTicket, magicNumber));
+                     LOG_DEBUG(StringFormat("grid price %s is already exists in %s order #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), orderTicket, magicNumber), LOGID_DEFAULT);
                      return true;
                   }
                }
@@ -90,7 +89,6 @@ public:
     * isGridPriceChecked true: 注文価格がすでに発注済みの場合に発注を行わない false: 常に発注を行う
     */
    void sendOrdersFromQueue(RequestContainer &orderQueue, long magicNumber = -1, bool isGridPriceChecked = true) {
-      LoggerFacade logger;
       int reqCount = orderQueue.count();
       for (int i = reqCount - 1; i >= 0; i--) {
          // キューからリクエストを取得する
@@ -107,9 +105,9 @@ public:
 
          // 発注処理
          MqlTradeResult result;
-         logger.logRequest(req);
+         LOG_REQUEST(req, LOGID_DEFAULT);
          bool isSended = OrderSend(req.item, result);
-         logger.logResponse(result, isSended);
+         LOG_RESPONSE(result, isSended, LOGID_DEFAULT);
 
          // 発注結果確認処理
          // ・成功時はキューから削除。

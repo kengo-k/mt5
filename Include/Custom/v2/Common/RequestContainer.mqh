@@ -17,8 +17,7 @@ public:
    }
 
    void add(Request *request) {
-      LoggerFacade logger;
-      logger.logDebug(StringFormat("create request #%d", request.requestId));
+      LOG_DEBUG(StringFormat("create request #%d", request.requestId), LOGID_DEFAULT);
       this.queue.Add(request);
    }
 

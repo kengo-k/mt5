@@ -52,6 +52,7 @@ input ENUM_TIMEFRAMES CLOSE_TIMEFRAME = PERIOD_MN1;
 
 // 以下global変数に値を設定する
 string EA_NAME = "gridstrategy01-06";
+Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
 bool USE_GRID_TRADE = false;
 bool USE_GRID_HEDGE_TRADE = true;
 

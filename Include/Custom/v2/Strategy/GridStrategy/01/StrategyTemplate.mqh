@@ -22,9 +22,7 @@
 #include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/ICloseHedgePositions.mqh>
 
-Logger *__LOGGER__;
-
-extern string EA_NAME;
+extern Logger *__LOGGER__;
 extern bool USE_GRID_TRADE;
 extern bool USE_GRID_HEDGE_TRADE;
 
@@ -50,9 +48,6 @@ Bar __sendCloseOrderBar;
 Bar __sendCancelOrderBar;
 
 int OnInit() {
-
-   __LOGGER__ = new Logger(EA_NAME);
-   __LOGGER__.setLogLevel(LOG_LEVEL_INFO);
 
    __closeHedgePositions.setCloseOrderQueue(&__closeOrderQueue);
 
@@ -91,14 +86,12 @@ double getVolume() {
 
 void createOrder() {
 
-   LoggerFacade logger;
-
    __checkTrend.exec();
    ENUM_ENTRY_COMMAND hedgeDirection = __checkTrend.getCurrentTrend();
    ENUM_ENTRY_COMMAND command = __getEntryCommand.exec();
 
-   logger.logDebug(StringFormat("command: %d", command));
-   logger.logDebug(StringFormat("hedge direction: %d", hedgeDirection));
+   LOG_DEBUG(StringFormat("command: %d", command), LOGID_DEFAULT);
+   LOG_DEBUG(StringFormat("hedge direction: %d", hedgeDirection), LOGID_DEFAULT);
 
    if (USE_GRID_HEDGE_TRADE) {
       __closeHedgePositions.exec();
