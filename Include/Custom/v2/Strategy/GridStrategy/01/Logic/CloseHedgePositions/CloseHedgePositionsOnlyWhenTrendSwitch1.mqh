@@ -21,7 +21,6 @@ class CloseHedgePositions: public CloseHedgePositionsBase {
 public:
 
    void exec() {
-      LoggerFacade logger;
 
       int posCount = PositionsTotal();
       if (posCount == 0) {
@@ -31,8 +30,6 @@ public:
       PositionSummary mainSummary;
       PositionSummary hedgeSummary;
       Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
-
-      //logger.logDebug(StringFormat("hedge position summary: buy(%d)=%f, sell(%d)=%f", hedgeSummary.buyCount, hedgeSummary.buy, hedgeSummary.sellCount, hedgeSummary.sell), true);
 
       bool isRequireClose = false;
 
@@ -66,9 +63,6 @@ public:
          }
       }
 
-      //logger.logDebug(StringFormat("buy hedge: %s", Position::getPositionListString(&buyHedgeList)), true);
-      //logger.logDebug(StringFormat("sell hedge: %s", Position::getPositionListString(&sellHedgeList)), true);
-
       this.addClosePositions(&buyHedgeList);
       this.addClosePositions(&sellHedgeList);
 
@@ -77,12 +71,10 @@ public:
    }
 
    void addClosePositions(CArrayList<PosInfo*> *positions) {
-      LoggerFacade logger;
       int count = positions.Count();
       for (int i = 0; i < count; i++) {
          PosInfo *p;
          positions.TryGetValue(i, p);
-         //logger.logDebug(StringFormat("add position #%d in close position list", p.positionTicket), true);
          Request* req = RequestContainer::createRequest();
          Order::createCloseRequest(req.item, p.positionTicket, p.magicNumber);
          this.orderQueue.add(req);
