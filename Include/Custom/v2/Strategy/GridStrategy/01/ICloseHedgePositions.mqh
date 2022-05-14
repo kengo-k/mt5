@@ -1,4 +1,3 @@
-#include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/RequestContainer.mqh>
 
 // ヘッジポジションのクローズ処理を行う
