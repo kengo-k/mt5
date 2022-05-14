@@ -101,8 +101,8 @@ void createOrder() {
    ENUM_ENTRY_COMMAND hedgeDirection = __checkTrend.getCurrentTrend();
    ENUM_ENTRY_COMMAND command = __getEntryCommand.exec();
 
-   LOG_DEBUG(StringFormat("command: %d", command), LOGID_DEFAULT);
-   LOG_DEBUG(StringFormat("hedge direction: %d", hedgeDirection), LOGID_DEFAULT);
+   LOG_DEBUG(StringFormat("command: %d", command));
+   LOG_DEBUG(StringFormat("hedge direction: %d", hedgeDirection));
 
    if (USE_GRID_HEDGE_TRADE) {
       __closeHedgePositions.exec();

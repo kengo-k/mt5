@@ -49,7 +49,7 @@ public:
                         if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                            if (targetType == orderType) {
                               if (magicNumber < 0 || magicNumber == orderMagicNumber) {
-                                 LOG_DEBUG(StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber), LOGID_DEFAULT);
+                                 LOG_DEBUG(StringFormat("grid price %s is already exists in %s position #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), posTicket, magicNumber));
                                  return true;
                               }
                            }
@@ -72,7 +72,7 @@ public:
             if (StringCompare(strOrderPrice, strGridPrice) == 0) {
                if (targetType == orderType) {
                   if (magicNumber < 0 || magicNumber == orderMagicNumber) {
-                     LOG_DEBUG(StringFormat("grid price %s is already exists in %s order #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), orderTicket, magicNumber), LOGID_DEFAULT);
+                     LOG_DEBUG(StringFormat("grid price %s is already exists in %s order #%d (magic: %d)", strGridPrice, getOrderTypeText(targetType), orderTicket, magicNumber));
                      return true;
                   }
                }
@@ -105,9 +105,9 @@ public:
 
          // 発注処理
          MqlTradeResult result;
-         LOG_REQUEST(req, LOGID_DEFAULT);
+         LOG_REQUEST(req);
          bool isSended = OrderSend(req.item, result);
-         LOG_RESPONSE(result, isSended, LOGID_DEFAULT);
+         LOG_RESPONSE(result, isSended);
 
          // 発注結果確認処理
          // ・成功時はキューから削除。

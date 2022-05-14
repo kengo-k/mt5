@@ -1,32 +1,6 @@
+#include <Custom/v2/Common/Constant.mqh>
+#include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/Request.mqh>
-
-enum ENUM_LOG_LEVEL {
-   LOG_LEVEL_DEBUG // 開発中に確認するためのメッセージ
-   , LOG_LEVEL_INFO // INFO以上の場合はファイルに記録する
-   , LOG_LEVEL_NOTICE // エラーではないが非常に重要な内容を示す。NOTICE以上の場合はSlackに通知を送るようにする等の目的で使用する
-   , LOG_LEVEL_ERROR // プログラム的なエラー等が発生した場合等
-};
-
-enum ENUM_LOGID_STATE {
-   LOGID_STATE_ENABLED,
-   LOGID_STATE_DISABLED,
-   LOGID_STATE_NONE
-};
-
-class LogId {
-public:
-   LogId(ENUM_LOGID_STATE _state): state(_state) {}
-   ENUM_LOGID_STATE state;
-};
-
-LogId __LOGID_DEFAULT(LOGID_STATE_NONE);
-LogId *LOGID_DEFAULT = &__LOGID_DEFAULT;
-
-LogId __LOGID_ENABLED(LOGID_STATE_ENABLED);
-LogId *LOGID_ENABLED = &__LOGID_ENABLED;
-
-LogId __LOGID_DISABLED(LOGID_STATE_DISABLED);
-LogId *LOGID_DISABLED = &__LOGID_DISABLED;
 
 class Logger {
 public:
@@ -163,7 +137,7 @@ private:
 
 extern Logger *__LOGGER__;
 
-#define LOG_DEBUG(text, logId) \
+#define LOG_DEBUG_WITH_ID(text, logId) \
    if (__LOGGER__ != NULL) {\
       bool enabled = false;\
       if (logId.state == LOGID_STATE_ENABLED) {\
@@ -180,7 +154,9 @@ extern Logger *__LOGGER__;
       }\
    }\
 
-#define LOG_INFO(text, logId) \
+#define LOG_DEBUG(text) LOG_DEBUG_WITH_ID(text, LOGID_DEFAULT)
+
+#define LOG_INFO_WITH_ID(text, logId) \
    if (__LOGGER__ != NULL) {\
       bool enabled = false;\
       if (logId.state == LOGID_STATE_ENABLED) {\
@@ -197,7 +173,28 @@ extern Logger *__LOGGER__;
       }\
    }\
 
-#define LOG_REQUEST(req, logId) \
+#define LOG_INFO(text) LOG_INFO_WITH_ID(text, LOGID_DEFAULT)
+
+#define LOG_ERROR_WITH_ID(text, logId) \
+   if (__LOGGER__ != NULL) {\
+      bool enabled = false;\
+      if (logId.state == LOGID_STATE_ENABLED) {\
+         enabled = true;\
+      } else if (logId.state == LOGID_STATE_DISABLED) {\
+         enabled = false;\
+      } else {\
+         if (__LOGGER__.error) {\
+            enabled = true;\
+         }\
+      }\
+      if (enabled) {\
+         __LOGGER__.logWrite(LOG_LEVEL_ERROR, text);\
+      }\
+   }\
+
+#define LOG_ERROR(text) LOG_ERROR_WITH_ID(text, LOGID_DEFAULT)
+
+#define LOG_REQUEST_WITH_ID(req, logId) \
    if (__LOGGER__ != NULL) {\
       bool enabled = false;\
       if (logId.state == LOGID_STATE_ENABLED) {\
@@ -214,7 +211,9 @@ extern Logger *__LOGGER__;
       }\
    }\
 
-#define LOG_RESPONSE(result, isSended, logId) \
+#define LOG_REQUEST(req) LOG_REQUEST_WITH_ID(req, LOGID_DEFAULT)
+
+#define LOG_RESPONSE_WITH_ID(result, isSended, logId) \
    if (__LOGGER__ != NULL) {\
       bool enabled = false;\
       if (logId.state == LOGID_STATE_ENABLED) {\
@@ -230,3 +229,5 @@ extern Logger *__LOGGER__;
          __LOGGER__.logResponse(result, isSended);\
       }\
    }\
+
+#define LOG_RESPONSE(result, isSended) LOG_RESPONSE_WITH_ID(result, isSended, LOGID_DEFAULT)

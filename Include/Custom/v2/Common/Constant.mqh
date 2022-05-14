@@ -13,3 +13,16 @@ enum ENUM_ENTRY_COMMAND {
    ,ENTRY_COMMAND_SELL
    ,ENTRY_COMMAND_NOOP
 };
+
+enum ENUM_LOG_LEVEL {
+   LOG_LEVEL_DEBUG // 開発中に確認するためのメッセージ
+   , LOG_LEVEL_INFO // INFO以上の場合はファイルに記録する
+   , LOG_LEVEL_NOTICE // エラーではないが非常に重要な内容を示す。NOTICE以上の場合はSlackに通知を送るようにする等の目的で使用する
+   , LOG_LEVEL_ERROR // プログラム的なエラー等が発生した場合等
+};
+
+enum ENUM_LOGID_STATE {
+   LOGID_STATE_ENABLED,
+   LOGID_STATE_DISABLED,
+   LOGID_STATE_NONE
+};
