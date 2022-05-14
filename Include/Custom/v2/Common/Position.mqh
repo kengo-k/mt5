@@ -49,7 +49,14 @@ public:
       }
    }
 
-   static void summaryPosition(PositionSummary &summary, long magicNumber) {
+   static void summaryPosition(
+      PositionSummary *summary
+      , CArrayList<PosInfo*> *buyRedPositions
+      , CArrayList<PosInfo*> *buyBlackPositions
+      , CArrayList<PosInfo*> *sellRedPositions
+      , CArrayList<PosInfo*> *sellBlackPositions
+      , long magicNumber
+   ) {
 
       int buyCount = 0;
       int sellCount = 0;
@@ -72,30 +79,32 @@ public:
             if (magicNumber != posMagicNumber) {
                continue;
             }
-            double profit = PositionGetDouble(POSITION_PROFIT);
-            double swap = PositionGetDouble(POSITION_SWAP);
-            double profitAndSwap = profit + swap;
-            if (profitAndSwap < 0) {
-               red = red + profitAndSwap;
+            PosInfo *p = new PosInfo();
+            Position::setPosInfo(p);
+            if (p.profitAndSwap < 0) {
+               red = red + p.profitAndSwap;
             } else {
-               black = black + profitAndSwap;
+               black = black + p.profitAndSwap;
             }
-            ENUM_POSITION_TYPE positionType = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
-            if (positionType == POSITION_TYPE_BUY) {
-               if (profitAndSwap < 0) {
-                  buyRed = buyRed + profitAndSwap;
+            if (p.positionType == POSITION_TYPE_BUY) {
+               if (p.profitAndSwap < 0) {
+                  buyRed = buyRed + p.profitAndSwap;
+                  buyRedPositions.Add(p);
                } else {
-                  buyBlack = buyBlack + profitAndSwap;
+                  buyBlack = buyBlack + p.profitAndSwap;
+                  buyBlackPositions.Add(p);
                }
-               buy = buy + profitAndSwap;
+               buy = buy + p.profitAndSwap;
                buyCount++;
             } else {
-               if (profitAndSwap < 0) {
-                  sellRed = sellRed + profitAndSwap;
+               if (p.profitAndSwap < 0) {
+                  sellRed = sellRed + p.profitAndSwap;
+                  sellRedPositions.Add(p);
                } else {
-                  sellBlack = sellBlack + profitAndSwap;
+                  sellBlack = sellBlack + p.profitAndSwap;
+                  sellBlackPositions.Add(p);
                }
-               sell = sell + profitAndSwap;
+               sell = sell + p.profitAndSwap;
                sellCount++;
             }
          }

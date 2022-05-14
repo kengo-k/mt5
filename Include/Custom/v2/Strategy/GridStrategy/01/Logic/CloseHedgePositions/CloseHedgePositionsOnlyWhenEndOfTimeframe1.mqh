@@ -42,8 +42,12 @@ public:
          return;
       }
 
-      PositionSummary hedgeSummary;
-      Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
+      PositionSummary summary;
+      CArrayList<PosInfo*> buyRed;
+      CArrayList<PosInfo*> buyBlack;
+      CArrayList<PosInfo*> sellRed;
+      CArrayList<PosInfo*> sellBlack;
+      Position::summaryPosition(&summary, &buyRed, &buyBlack, &sellRed, &sellBlack, MAGIC_NUMBER_HEDGE);
 
       bool isRequiredClose = false;
       bool closeAll = false;
@@ -59,34 +63,15 @@ public:
          return;
       }
 
-      CArrayList<PosInfo*> buyHedgeList;
-      CArrayList<PosInfo*> sellHedgeList;
+      this.addClosePositions(&buyRed, closeAll);
+      this.addClosePositions(&buyBlack, closeAll);
+      this.addClosePositions(&sellRed, closeAll);
+      this.addClosePositions(&sellBlack, closeAll);
 
-      for (int i = 0; i < posCount; i++) {
-         ulong posTicket = PositionGetTicket(i);
-         if (posTicket) {
-            ENUM_POSITION_TYPE posType = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
-            long posMagicNumber = PositionGetInteger(POSITION_MAGIC);
-            double profit = PositionGetDouble(POSITION_PROFIT);
-            double swap = PositionGetDouble(POSITION_SWAP);
-            PosInfo *p = new PosInfo();
-            p.positionTicket = posTicket;
-            p.profitAndSwap = profit + swap;
-            p.swap = swap;
-            p.magicNumber = posMagicNumber;
-            if(posMagicNumber == MAGIC_NUMBER_HEDGE && posType == POSITION_TYPE_BUY) {
-               buyHedgeList.Add(p);
-            } else if(posMagicNumber == MAGIC_NUMBER_HEDGE && posType == POSITION_TYPE_SELL) {
-               sellHedgeList.Add(p);
-            }
-         }
-      }
-
-      this.addClosePositions(&buyHedgeList, closeAll);
-      this.addClosePositions(&sellHedgeList, closeAll);
-
-      Position::deletePositionList(&buyHedgeList);
-      Position::deletePositionList(&sellHedgeList);
+      Position::deletePositionList(&buyRed);
+      Position::deletePositionList(&buyBlack);
+      Position::deletePositionList(&sellRed);
+      Position::deletePositionList(&sellBlack);
    }
 
    void addClosePositions(CArrayList<PosInfo*> *positions, bool closeAll) {
@@ -109,11 +94,11 @@ public:
          }
       }
    }
-   
+
    string getCurrentDate() {
-      
-      string ret = "";  
-      DateWrapper date;      
+
+      string ret = "";
+      DateWrapper date;
       if (this.closeTimeframes == PERIOD_MN1) {
          ret = date.getYYYYMM();
       } else if (this.closeTimeframes == PERIOD_W1) {
@@ -127,11 +112,11 @@ public:
       }
       return ret;
    }
-   
+
    string getInitialMaxDate() {
       string ret = "";
       if (this.closeTimeframes == PERIOD_MN1) {
-         ret = MAX_YYYYMM;  
+         ret = MAX_YYYYMM;
       } else if (this.closeTimeframes == PERIOD_W1) {
          ret = "9";
       } else if (this.closeTimeframes == PERIOD_D1) {
@@ -143,12 +128,12 @@ public:
       }
       return ret;
    }
-   
+
 private:
-   
+
    // ポジションクローズのタイミングを指示する期間
    ENUM_TIMEFRAMES closeTimeframes;
-   
+
    // クローズタイミングを判定するための現在の日付を管理するための文字列
    string latestDate;
 };

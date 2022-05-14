@@ -27,9 +27,12 @@ public:
          return;
       }
 
-      PositionSummary mainSummary;
-      PositionSummary hedgeSummary;
-      Position::summaryPosition(hedgeSummary, MAGIC_NUMBER_HEDGE);
+      PositionSummary summary;
+      CArrayList<PosInfo*> buyRed;
+      CArrayList<PosInfo*> buyBlack;
+      CArrayList<PosInfo*> sellRed;
+      CArrayList<PosInfo*> sellBlack;
+      Position::summaryPosition(&summary, &buyRed, &buyBlack, &sellRed, &sellBlack, MAGIC_NUMBER_HEDGE);
 
       bool isRequireClose = false;
 
@@ -46,28 +49,15 @@ public:
          return;
       }
 
-      CArrayList<PosInfo*> buyHedgeList;
-      CArrayList<PosInfo*> sellHedgeList;
+      this.addClosePositions(&buyRed);
+      this.addClosePositions(&buyBlack);
+      this.addClosePositions(&sellRed);
+      this.addClosePositions(&sellBlack);
 
-      for (int i = 0; i < posCount; i++) {
-         ulong posTicket = PositionGetTicket(i);
-         if (posTicket) {
-            ENUM_POSITION_TYPE posType = (ENUM_POSITION_TYPE) PositionGetInteger(POSITION_TYPE);
-            PosInfo *p = new PosInfo();
-            Position::setPosInfo(p);
-            if(posType == POSITION_TYPE_BUY) {
-               buyHedgeList.Add(p);
-            } else {
-               sellHedgeList.Add(p);
-            }
-         }
-      }
-
-      this.addClosePositions(&buyHedgeList);
-      this.addClosePositions(&sellHedgeList);
-
-      Position::deletePositionList(&buyHedgeList);
-      Position::deletePositionList(&sellHedgeList);
+      Position::deletePositionList(&buyRed);
+      Position::deletePositionList(&buyBlack);
+      Position::deletePositionList(&sellRed);
+      Position::deletePositionList(&sellBlack);
    }
 
    void addClosePositions(CArrayList<PosInfo*> *positions) {
