@@ -21,6 +21,7 @@
 #include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/ICloseHedgePositions.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/IObserve.mqh>
 
 extern Logger *__LOGGER__;
 extern bool USE_GRID_TRADE;
@@ -30,6 +31,9 @@ extern Config *__config;
 extern ICheckTrend *__checkTrend;
 extern IGetEntryCommand *__getEntryCommand;
 extern ICloseHedgePositions *__closeHedgePositions;
+extern IObserve *__observe;
+
+extern INIT_FN init;
 
 Context __context;
 
@@ -46,8 +50,13 @@ Bar __sendMainOrderBar;
 Bar __sendHedgeOrderBar;
 Bar __sendCloseOrderBar;
 Bar __sendCancelOrderBar;
+Bar __observeBar;
 
 int OnInit() {
+
+   if (init != NULL) {
+      init();
+   }
 
    __closeHedgePositions.setCloseOrderQueue(&__closeOrderQueue);
 
@@ -64,11 +73,13 @@ int OnInit() {
    __sendHedgeOrderBar.setTimeframes(__config.sendOrderTimeframe);
    __sendCloseOrderBar.setTimeframes(__config.sendOrderTimeframe);
    __sendCancelOrderBar.setTimeframes(__config.sendOrderTimeframe);
+   __observeBar.setTimeframes(__config.observeTimeframe);
 
    return(INIT_SUCCEEDED);
 }
 
 void OnTick() {
+   __observeBar.onBarCreated(observe);
    __sendCloseOrderBar.onBarCreated(sendCloseOrders);
    __sendCancelOrderBar.onBarCreated(sendCancelOrders);
    __createOrderBar.onBarCreated(createOrder);
@@ -156,4 +167,10 @@ void sendCloseOrders() {
 
 void sendCancelOrders() {
    __orderGrid.sendOrdersFromQueue(__cancelOrderQueue, -1);
+}
+
+void observe() {
+   if (__observe != NULL) {
+      __observe.exec();
+   }
 }

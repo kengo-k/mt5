@@ -8,6 +8,7 @@ public:
       ,ENUM_TIMEFRAMES _createOrderTimeframe
       ,ENUM_TIMEFRAMES _sendOrderTimeframe
       ,ENUM_TIMEFRAMES _hedgeDirectionTimeframe
+      ,ENUM_TIMEFRAMES _observeTimeframe
       ,int _orderMaPeriod
       ,int _orderLongMaPeriod
       ,int _hedgeMaPeriod
@@ -20,6 +21,7 @@ public:
       , createOrderTimeframe(_createOrderTimeframe)
       , sendOrderTimeframe(_sendOrderTimeframe)
       , hedgeDirectionTimeframe(_hedgeDirectionTimeframe)
+      , observeTimeframe(_observeTimeframe)
       , orderMaPeriod(_orderMaPeriod)
       , orderLongMaPeriod(_orderLongMaPeriod)
       , hedgeMaPeriod(_hedgeMaPeriod)
@@ -33,6 +35,7 @@ public:
    ENUM_TIMEFRAMES createOrderTimeframe;
    ENUM_TIMEFRAMES sendOrderTimeframe;
    ENUM_TIMEFRAMES hedgeDirectionTimeframe;
+   ENUM_TIMEFRAMES observeTimeframe;
    int orderMaPeriod;
    int orderLongMaPeriod;
    int hedgeMaPeriod;

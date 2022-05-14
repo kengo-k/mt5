@@ -1,3 +1,5 @@
+typedef void (*INIT_FN)();
+
 const long MAGIC_NUMBER_MAIN = 1;
 const long MAGIC_NUMBER_HEDGE = 2;
 
