@@ -22,7 +22,7 @@
 // 以下固有ロジック提供するためのIF実装をincludeする
 #include <Custom/v2/Strategy/GridStrategy/Logic/CheckTrend/CheckTrend2maFast1.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/GetEntryCommand/GetEntryCommand2maFast1.mqh>
-#include <Custom/v2/Strategy/GridStrategy/Logic/ClosePositions/ClosePositionsOnlyWhenProfitAchievementOneSide.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/ClosePositions/CloseHedgePositionsOnesideByProfitTarget.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/Observe.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/AccountObserver.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/PositionObserver.mqh>
