@@ -10,14 +10,14 @@
 
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
-#include <Custom/v2/Strategy/GridStrategy/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/ClosePositions/ClosePositionsBase.mqh>
 
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
 
 // ヘッジポジションのクローズロジック実装
 // トレンドが転換もしくは転換予兆が発生した時点ですべてクローズする
-class CloseHedgePositions: public CloseHedgePositionsBase {
+class ClosePositions: public ClosePositionsBase {
 public:
 
    void exec() {

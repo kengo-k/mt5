@@ -11,7 +11,7 @@
 
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
-#include <Custom/v2/Strategy/GridStrategy/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/ClosePositions/ClosePositionsBase.mqh>
 
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
@@ -19,10 +19,10 @@ extern ICheckTrend *__checkTrend;
 // ヘッジポジションのクローズロジック実装(※月足想定)
 // ・月が切り替わったタイミングで一定以上の黒字ポジションを決済
 // ・トレンド転換で残りの全ポジションを決済
-class CloseHedgePositions: public CloseHedgePositionsBase {
+class ClosePositions: public ClosePositionsBase {
 public:
 
-   CloseHedgePositions(ENUM_TIMEFRAMES _closeTimeframes) {
+   ClosePositions(ENUM_TIMEFRAMES _closeTimeframes) {
       this.closeTimeframes = _closeTimeframes;
       this.latestDate = this.getInitialMaxDate();
    }

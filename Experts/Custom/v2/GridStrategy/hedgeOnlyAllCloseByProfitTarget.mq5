@@ -21,13 +21,13 @@
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
 #include <Custom/v2/Strategy/GridStrategy/IGetEntryCommand.mqh>
-#include <Custom/v2/Strategy/GridStrategy/ICloseHedgePositions.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IClosePositions.mqh>
 #include <Custom/v2/Strategy/GridStrategy/IObserve.mqh>
 
 // 以下固有ロジック提供するためのIF実装をincludeする
 #include <Custom/v2/Strategy/GridStrategy/Logic/CheckTrend/CheckTrend2maFast1.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/GetEntryCommand/GetEntryCommand2maFast1.mqh>
-#include <Custom/v2/Strategy/GridStrategy/Logic/CloseHedgePositions/CloseHedgePositionsOnlyWhenProfitAchievement.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/ClosePositions/ClosePositionsOnlyWhenProfitAchievement.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/Observe.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/AccountObserver.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/PositionObserver.mqh>
@@ -109,8 +109,8 @@ ICheckTrend *__checkTrend = &__checkTrend__;
 GetEntryCommand __getEntryCommand__;
 IGetEntryCommand *__getEntryCommand = &__getEntryCommand__;
 
-CloseHedgePositions __closeHedgePositions__(CLOSE_TIMEFRAME);
-ICloseHedgePositions *__closeHedgePositions = &__closeHedgePositions__;
+ClosePositions __closePositions__(CLOSE_TIMEFRAME);
+IClosePositions *__closePositions = &__closePositions__;
 
 AccountObserver __accountObserver;
 PositionObserver __positionObserver(MAGIC_NUMBER_HEDGE);

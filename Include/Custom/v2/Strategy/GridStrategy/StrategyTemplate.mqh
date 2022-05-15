@@ -20,7 +20,7 @@
 #include <Custom/v2/Strategy/GridStrategy/Context.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
 #include <Custom/v2/Strategy/GridStrategy/IGetEntryCommand.mqh>
-#include <Custom/v2/Strategy/GridStrategy/ICloseHedgePositions.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IClosePositions.mqh>
 #include <Custom/v2/Strategy/GridStrategy/IObserve.mqh>
 
 extern Logger *__LOGGER__;
@@ -30,7 +30,7 @@ extern bool USE_GRID_HEDGE_TRADE;
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
 extern IGetEntryCommand *__getEntryCommand;
-extern ICloseHedgePositions *__closeHedgePositions;
+extern IClosePositions *__closePositions;
 extern IObserve *__observe;
 
 extern INIT_FN init;
@@ -60,7 +60,7 @@ int OnInit() {
       init();
    }
 
-   __closeHedgePositions.setCloseOrderQueue(&__closeOrderQueue);
+   __closePositions.setCloseOrderQueue(&__closeOrderQueue);
 
    __context.orderMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
    __context.orderLongMaHandle = iMA(Symbol(), __config.createOrderTimeframe, __config.orderLongMaPeriod, 0, MODE_EMA, PRICE_CLOSE);
@@ -118,7 +118,7 @@ void createOrder() {
    LOG_DEBUG(StringFormat("hedge direction: %d", hedgeDirection));
 
    if (USE_GRID_HEDGE_TRADE) {
-      __closeHedgePositions.exec();
+      __closePositions.exec();
    }
 
    if (command == ENTRY_COMMAND_NOOP) {

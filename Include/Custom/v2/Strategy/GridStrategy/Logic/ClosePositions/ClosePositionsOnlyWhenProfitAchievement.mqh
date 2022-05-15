@@ -12,17 +12,17 @@
 
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
-#include <Custom/v2/Strategy/GridStrategy/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/ClosePositions/ClosePositionsBase.mqh>
 
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
 
 // ヘッジポジションのクローズロジック実装
 // ・トータルの利益が目標額を超えた場合に全てのポジションを決済する
-class CloseHedgePositions: public CloseHedgePositionsBase {
+class ClosePositions: public ClosePositionsBase {
 public:
 
-   CloseHedgePositions(ENUM_TIMEFRAMES closeTimeframes) {
+   ClosePositions(ENUM_TIMEFRAMES closeTimeframes) {
       this.handler.set(closeTimeframes);
    }
 
