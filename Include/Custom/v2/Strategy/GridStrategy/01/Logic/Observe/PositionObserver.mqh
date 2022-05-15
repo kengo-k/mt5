@@ -31,11 +31,12 @@ public:
       sellRed.Sort(&desc);
       sellBlack.Sort(&asc);
 
-      LOG_DEBUG_WITH_ID(StringFormat("count: buy=%d, sell=%d", summary.buyCount, summary.sellCount), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID("buyRed: " + Position::getPositionListString(&buyRed), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID("buyBlack: " + Position::getPositionListString(&buyBlack), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID("sellRed: " + Position::getPositionListString(&sellRed), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID("sellBlack: " + Position::getPositionListString(&sellBlack), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID("---------- Position Summary ----------", LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("  profit: buy=%d, sell=%d, count: buy=%d, sell=%d", (int) summary.buy, (int) summary.sell, summary.buyCount, summary.sellCount), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("  buyRed=%s", Position::getPositionListString(&buyRed)), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("  buyBlack=%s", Position::getPositionListString(&buyBlack)), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("  sellRed=%s", Position::getPositionListString(&sellRed)), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("  sellBlack=%s", Position::getPositionListString(&sellBlack)), LOGID_POSITION);
    }
 private:
    long magicNumber;
