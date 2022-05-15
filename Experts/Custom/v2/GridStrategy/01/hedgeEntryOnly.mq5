@@ -63,21 +63,16 @@ void _init() {
 }
 
 void _deInit() {
-   LOG_DEBUG_WITH_ID("---------- total position report ----------", LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max position count total: %d", __positionObserver.maxTotalPositionCount), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max position count buy: %d", __positionObserver.maxBuyPositionCount), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max position count sell: %d", __positionObserver.maxSellPositionCount), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max profit total: %f", __positionObserver.maxTotalProfit), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max profit buy: %f", __positionObserver.maxBuyProfit), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max profit sell: %f", __positionObserver.maxSellProfit), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max loss total: %f", __positionObserver.maxTotalLoss), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max loss buy: %f", __positionObserver.maxBuyLoss), LOGID_ENABLED);
-   LOG_DEBUG_WITH_ID(StringFormat("  max loss sell: %f", __positionObserver.maxSellLoss), LOGID_ENABLED);
+   __positionObserver.logTotalReport();
+}
+
+double _getCustomResult() {
+   return 0;
 }
 
 INIT_FN init = _init;
 INIT_FN deInit = _deInit;
-GET_CUSTOM_RESULT_FN getCustomResult = NULL;
+GET_CUSTOM_RESULT_FN getCustomResult = _getCustomResult;
 
 Config __config__(
    -1//TP

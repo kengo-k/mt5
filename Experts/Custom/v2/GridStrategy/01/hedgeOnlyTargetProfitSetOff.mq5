@@ -74,7 +74,18 @@ void _init() {
    LOGID_CLOSE.set(LOGID_STATE_ENABLED);
 }
 
+void _deInit() {
+   __accountObserver.logTotalReport();
+   __positionObserver.logTotalReport();
+}
+
+double _getCustomResult() {
+   return 0;
+}
+
 INIT_FN init = _init;
+INIT_FN deInit = _deInit;
+GET_CUSTOM_RESULT_FN getCustomResult = _getCustomResult;
 
 Config __config__(
    -1//TP
