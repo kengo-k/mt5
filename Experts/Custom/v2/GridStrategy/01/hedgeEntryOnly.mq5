@@ -51,7 +51,7 @@ input int HEDGE_LONG_MA_PERIOD = 15;
 input int HEDGE_GRID_SIZE = 30;
 
 // 以下global変数に値を設定する
-const string EA_NAME = "gridstrategy01-entryOnly";
+const string EA_NAME = "gridstrategy01-hedgeEntryOnly";
 const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
 const bool USE_GRID_TRADE = false;
 const bool USE_GRID_HEDGE_TRADE = true;
