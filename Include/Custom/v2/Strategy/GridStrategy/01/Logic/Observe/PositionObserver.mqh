@@ -79,6 +79,19 @@ public:
       }
    }
 
+   void logTotalReport() {
+      LOG_DEBUG_WITH_ID("---------- total position report ----------", LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max position count total: %d", this.maxTotalPositionCount), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max position count buy: %d", this.maxBuyPositionCount), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max position count sell: %d", this.maxSellPositionCount), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max profit total: %f", this.maxTotalProfit), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max profit buy: %f", this.maxBuyProfit), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max profit sell: %f", this.maxSellProfit), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max loss total: %f", this.maxTotalLoss), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max loss buy: %f", this.maxBuyLoss), LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("  max loss sell: %f", this.maxSellLoss), LOGID_POSITION_TOTAL);
+   }
+
    // 以下レポート要用変数
    long maxTotalPositionCount;
    long maxBuyPositionCount;
