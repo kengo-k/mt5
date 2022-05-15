@@ -41,11 +41,12 @@
     const fs = new ActiveXObject("Scripting.FileSystemObject");
     var header = [];
     var body = [];
+    var bodyMap = {};
 
     $(function () {
       loadCsv();
       sort();
-      showChart();
+      showChart("Profit", "Equity DD %");
     });
 
     const CommonItemLabels = {
@@ -78,7 +79,22 @@
     }
 
     function sort() {
-      body = _.orderBy(body, ["Equity DD %", "Profit"], ["asc", "desc"]);
+      //body = _.orderBy(body, ["Equity DD %", "Profit"], ["asc", "desc"]);
+      body.sort(function (a, b) {
+        const dd_a = a["Equity DD %"];
+        const dd_b = b["Equity DD %"];
+        const profit_a = a["Profit"];
+        const profit_b = b["Profit"];
+        if (profit_a > 0 && profit_b > 0) {
+          return dd_a < dd_b ? -1 : 1;
+        } else if (profit_a > 0 && profit_b < 0) {
+          return -1;
+        } else if (profit_a < 0 && profit_b > 0) {
+          return 1;
+        } else if (profit_a < 0 && profit_b < 0) {
+          return dd_a < dd_b ? -1 : 1;
+        }
+      });
     }
 
     function loadCsv() {
@@ -104,12 +120,13 @@
             lineObj[header[i]] = Number(bs[i]);
           }
           body.push(lineObj);
+          bodyMap[lineObj["Pass"]] = lineObj;
         }
       }
       file.close();
     }
 
-    function showChart() {
+    function showChart(leftItem, rightItem) {
       Highcharts.chart("container", {
         chart: {
           zoomType: "xy",
@@ -140,8 +157,8 @@
                 color: Highcharts.getOptions().colors[0],
               },
             },
-            min: min("Profit"),
-            max: max("Profit"),
+            min: min(leftItem),
+            max: max(leftItem),
           },
           {
             labels: {
@@ -161,6 +178,31 @@
         ],
         tooltip: {
           shared: true,
+          useHTML: true,
+          formatter: function () {
+            const pass = this.x + "";
+            const lineObj = bodyMap[pass];
+            const toolTips = [];
+            for (var i = 0; i < header.length; i++) {
+              const itemName = header[i];
+              toolTips.push(itemName + ": " + lineObj[itemName]);
+            }
+            const toolTipHtml = toolTips
+              .map(function (t) {
+                return "<tr><td>" + t + "</td></tr>";
+              })
+              .join("");
+            return "<table>" + toolTipHtml + "</table>";
+          },
+          positioner: function (labelWidth, labelHeight, point) {
+            const chart = this.chart;
+            const plotWidth = chart.plotWidth;
+            const plotHeight = chart.plotHeight;
+            return {
+              x: plotWidth - 150,
+              y: 80,
+            };
+          },
         },
         legend: {
           layout: "vertical",
@@ -178,13 +220,13 @@
             name: "Profit",
             type: "column",
             yAxis: 0,
-            data: extract("Profit"),
+            data: extract(leftItem),
           },
           {
             name: "Max Draw Down",
             type: "spline",
             yAxis: 1,
-            data: extract("Equity DD %"),
+            data: extract(rightItem),
             tooltip: {
               valueSuffix: "%",
             },
@@ -195,5 +237,6 @@
   </script>
   <body>
     <div id="container"></div>
+    <div id="detailData"></div>
   </body>
 </html>
