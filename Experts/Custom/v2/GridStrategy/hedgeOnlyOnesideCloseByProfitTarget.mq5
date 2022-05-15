@@ -27,7 +27,7 @@
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/AccountObserver.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/PositionObserver.mqh>
 
-// 決済目標利益学(たぶん固定。最適化してもよい)
+// 決済目標利益学(要最適化)
 input double TOTAL_HEDGE_TP = 20000;
 
 // エントリ時間足(たぶん固定)
@@ -36,10 +36,10 @@ input ENUM_TIMEFRAMES CREATE_ORDER_TIMEFRAME = PERIOD_M15;
 // トレンド判定時間足(たぶん固定)
 input ENUM_TIMEFRAMES HEDGE_DIRECTION_TIMEFRAME = PERIOD_W1;
 
-// エントリ判定短期MA期間(最適化余地あり)
+// エントリ判定短期MA期間(たぶん固定)
 input int ORDER_MA_PERIOD = 5;
 
-// エントリ判定長期MA期間(最適化余地あり)
+// エントリ判定長期MA期間(たぶん固定)
 input int ORDER_LONG_MA_PERIOD = 15;
 
 // トレンド判定短期MA期間(最適化余地あり)
@@ -48,11 +48,11 @@ input int HEDGE_MA_PERIOD = 5;
 // トレンド判定短期MA期間(最適化余地あり)
 input int HEDGE_LONG_MA_PERIOD = 50;
 
-// ヘッジ用グリッドサイズ(たぶん固定。最適化してもよい)
+// ヘッジ用グリッドサイズ(要最適化)
 input int HEDGE_GRID_SIZE = 30;
 
 // 以下global変数に値を設定する
-const string EA_NAME = "gridstrategy01-hedgeOnlyTargetProfitOneSide";
+const string EA_NAME = "v2/Gridstrategy/hedgeOnlyOnesideCloseByProfitTarget";
 const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
 const bool USE_GRID_TRADE = false;
 const bool USE_GRID_HEDGE_TRADE = true;
@@ -74,7 +74,8 @@ void _deInit() {
 }
 
 double _getCustomResult() {
-   return 0;
+   // テスト中最もポジションを保有したときのポジション数
+   return (double) __positionObserver.maxTotalPositionCount;
 }
 
 INIT_FN init = _init;
