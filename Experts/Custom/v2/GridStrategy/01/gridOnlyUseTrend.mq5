@@ -25,6 +25,7 @@
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/CloseHedgePositions/CloseHedgePositionsNoop.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/Observe/Observe.mqh>
 #include <Custom/v2/Strategy/GridStrategy/01/Logic/Observe/PositionObserver.mqh>
+#include <Custom/v2/Strategy/GridStrategy/01/Logic/Observe/AccountObserver.mqh>
 
 // 外部パラメータ
 input double TP = 30;
@@ -46,17 +47,21 @@ const ENUM_TIMEFRAMES OBSERVE_TIMEFRAMES = PERIOD_D1;
 
 void _init() {
    LOGID_POSITION_TOTAL.set(LOGID_STATE_ENABLED);
+   LOGID_ACCOUNT_TOTAL.set(LOGID_STATE_ENABLED);
 }
 
 void _deInit() {
+   __accountObserver.logTotalReport();
    __positionObserver.logTotalReport();
 }
 
-//double _getCustomResult() {}
+double _getCustomResult() {
+   return __accountObserver.maxAccountBalance;
+}
 
 INIT_FN init = _init;
 INIT_FN deInit = _deInit;
-GET_CUSTOM_RESULT_FN getCustomResult = NULL;//_getCustomResult;
+GET_CUSTOM_RESULT_FN getCustomResult = _getCustomResult;
 
 Config __config__(
    TP
@@ -84,9 +89,11 @@ CloseHedgePositions __closeHedgePositions__;
 ICloseHedgePositions *__closeHedgePositions = &__closeHedgePositions__;
 
 PositionObserver __positionObserver(MAGIC_NUMBER_MAIN);
+AccountObserver __accountObserver;
 CArrayList<IObserver*> observerList;
 CArrayList<IObserver*>* createObserverList() {
    observerList.Add(&__positionObserver);
+   observerList.Add(&__accountObserver);
    return &observerList;
 }
 Observe __observe__(createObserverList());
