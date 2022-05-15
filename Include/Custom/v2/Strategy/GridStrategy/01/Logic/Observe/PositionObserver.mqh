@@ -33,11 +33,65 @@ public:
 
       LOG_DEBUG_WITH_ID("---------- Position Summary ----------", LOGID_POSITION);
       LOG_DEBUG_WITH_ID(StringFormat("  profit: buy=%d, sell=%d, count: buy=%d, sell=%d", (int) summary.buy, (int) summary.sell, summary.buyCount, summary.sellCount), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID(StringFormat("  buyRed=%s", Position::getPositionListString(&buyRed)), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID(StringFormat("  buyBlack=%s", Position::getPositionListString(&buyBlack)), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID(StringFormat("  sellRed=%s", Position::getPositionListString(&sellRed)), LOGID_POSITION);
-      LOG_DEBUG_WITH_ID(StringFormat("  sellBlack=%s", Position::getPositionListString(&sellBlack)), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("  buyRed=%s", Position::getPositionListString(&buyRed)), LOGID_POSITION_DETAIL);
+      LOG_DEBUG_WITH_ID(StringFormat("  buyBlack=%s", Position::getPositionListString(&buyBlack)), LOGID_POSITION_DETAIL);
+      LOG_DEBUG_WITH_ID(StringFormat("  sellRed=%s", Position::getPositionListString(&sellRed)), LOGID_POSITION_DETAIL);
+      LOG_DEBUG_WITH_ID(StringFormat("  sellBlack=%s", Position::getPositionListString(&sellBlack)), LOGID_POSITION_DETAIL);
+
+      // position count
+      if (summary.totalCount > this.maxTotalPositionCount) {
+         this.maxTotalPositionCount = summary.totalCount;
+      }
+
+      if (summary.buyCount > this.maxBuyPositionCount) {
+         this.maxBuyPositionCount = summary.buyCount;
+      }
+
+      if (summary.sellCount > this.maxSellPositionCount) {
+         this.maxSellPositionCount = summary.sellCount;
+      }
+
+
+      // profit
+      if (summary.total > this.maxTotalProfit) {
+         this.maxTotalProfit = summary.total;
+      }
+
+      if (summary.buyBlack > this.maxBuyProfit) {
+         this.maxBuyProfit = summary.buyBlack;
+      }
+
+      if (summary.sellBlack > this.maxSellProfit) {
+         this.maxSellProfit = summary.sellBlack;
+      }
+
+      // loss
+      if (summary.total < this.maxTotalLoss) {
+         this.maxTotalLoss = summary.total;
+      }
+
+      if (summary.buyRed < this.maxBuyLoss) {
+         this.maxBuyLoss = summary.buyRed;
+      }
+
+      if (summary.sellRed < this.maxSellLoss) {
+         this.maxSellLoss = summary.sellRed;
+      }
    }
+
+   // 以下レポート要用変数
+   long maxTotalPositionCount;
+   long maxBuyPositionCount;
+   long maxSellPositionCount;
+
+   double maxTotalProfit;
+   double maxBuyProfit;
+   double maxSellProfit;
+
+   double maxTotalLoss;
+   double maxBuyLoss;
+   double maxSellLoss;
+
 private:
    long magicNumber;
 };
