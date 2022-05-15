@@ -1,7 +1,7 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Context.mqh>
+#include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IGetEntryCommand.mqh>
 
 extern Context __context;
 extern ICheckTrend *__checkTrend;

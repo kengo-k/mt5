@@ -2,7 +2,7 @@
 
 #include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/Logger.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/IObserve.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IObserve.mqh>
 
 #include <Custom/v2/Common/PosInfo.mqh>
 #include <Custom/v2/Common/PositionSummary.mqh>

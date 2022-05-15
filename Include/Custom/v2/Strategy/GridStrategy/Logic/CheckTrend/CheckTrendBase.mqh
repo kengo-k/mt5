@@ -1,5 +1,5 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
 
 // トレンド判定ロジック実装
 // ・共通親クラス

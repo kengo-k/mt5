@@ -16,12 +16,12 @@
 #include <Custom/v2/Common/GridManager.mqh>
 
 // 以下固有ロジック用IF
-#include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/Context.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/IGetEntryCommand.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICloseHedgePositions.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/IObserve.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Context.mqh>
+#include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IGetEntryCommand.mqh>
+#include <Custom/v2/Strategy/GridStrategy/ICloseHedgePositions.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IObserve.mqh>
 
 extern Logger *__LOGGER__;
 extern bool USE_GRID_TRADE;

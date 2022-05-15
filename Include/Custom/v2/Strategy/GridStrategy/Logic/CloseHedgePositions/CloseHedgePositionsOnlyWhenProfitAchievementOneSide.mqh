@@ -2,25 +2,36 @@
 
 #include <Custom/v2/Common/Logger.mqh>
 #include <Custom/v2/Common/Constant.mqh>
+#include <Custom/v2/Common/DateWrapper.mqh>
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Common/PosInfo.mqh>
 #include <Custom/v2/Common/PositionSummary.mqh>
 #include <Custom/v2/Common/Position.mqh>
 #include <Custom/v2/Common/RequestContainer.mqh>
+#include <Custom/v2/Common/TimeframeSwitchHandler.mqh>
 
-#include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
 
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
 
 // ヘッジポジションのクローズロジック実装
-// トレンドが転換もしくは転換予兆が発生した時点ですべてクローズする
+// ・トータルの利益が目標額を超えた場合に全てのポジションを決済する
 class CloseHedgePositions: public CloseHedgePositionsBase {
 public:
 
+   CloseHedgePositions(ENUM_TIMEFRAMES closeTimeframes) {
+      this.handler.set(closeTimeframes);
+   }
+
    void exec() {
+
+      this.handler.update();
+      if (!this.handler.isSwitched()) {
+         return;
+      }
 
       int posCount = PositionsTotal();
       if (posCount == 0) {
@@ -34,25 +45,36 @@ public:
       CArrayList<PosInfo*> sellBlack;
       Position::summaryPosition(&summary, &buyRed, &buyBlack, &sellRed, &sellBlack, MAGIC_NUMBER_HEDGE);
 
-      bool isRequireClose = false;
+      bool isBuyRedCloseable = false;
+      bool isBuyBlackCloseable = false;
+      bool isSellRedCloseable = false;
+      bool isSellBlackCloseable = false;
 
-      if (__checkTrend.getCurrentTrend() != __checkTrend.getPrevTrend()) {
-         isRequireClose = true;
+      if (summary.buy > __config.totalHedgeTp) {
+         isBuyRedCloseable = true;
+         isBuyBlackCloseable = true;
       }
 
-      if (__checkTrend.getCurrentTrend() == __checkTrend.getPrevTrend()
-            && __checkTrend.hasTrendSwitchSign()) {
-         isRequireClose = true;
+      if (summary.sell > __config.totalHedgeTp) {
+         isSellRedCloseable = true;
+         isSellBlackCloseable = true;
       }
 
-      if (!isRequireClose) {
-         return;
+      if (isBuyRedCloseable) {
+         this.addClosePositions(&buyRed);
       }
 
-      this.addClosePositions(&buyRed);
-      this.addClosePositions(&buyBlack);
-      this.addClosePositions(&sellRed);
-      this.addClosePositions(&sellBlack);
+      if (isBuyBlackCloseable) {
+         this.addClosePositions(&buyBlack);
+      }
+
+      if (isSellRedCloseable) {
+         this.addClosePositions(&sellRed);
+      }
+
+      if (isSellBlackCloseable) {
+         this.addClosePositions(&sellBlack);
+      }
 
       Position::deletePositionList(&buyRed);
       Position::deletePositionList(&buyBlack);
@@ -71,4 +93,6 @@ public:
       }
    }
 
+private:
+   TimeframeSwitchHandler handler;
 };

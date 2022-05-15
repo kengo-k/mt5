@@ -3,7 +3,7 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/RequestContainer.mqh>
 
-#include <Custom/v2/Strategy/GridStrategy/01/ICloseHedgePositions.mqh>
+#include <Custom/v2/Strategy/GridStrategy/ICloseHedgePositions.mqh>
 
 // ヘッジポジションのクローズロジック実装
 // 何もしない実装

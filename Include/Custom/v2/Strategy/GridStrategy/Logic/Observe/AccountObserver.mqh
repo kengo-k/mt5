@@ -1,6 +1,6 @@
 #include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/Logger.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/IObserve.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IObserve.mqh>
 
 // 残高と証拠金をログに記録する
 class AccountObserver : public IObserver {

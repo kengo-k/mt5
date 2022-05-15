@@ -10,9 +10,9 @@
 #include <Custom/v2/Common/RequestContainer.mqh>
 #include <Custom/v2/Common/TimeframeSwitchHandler.mqh>
 
-#include <Custom/v2/Strategy/GridStrategy/01/Config.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/ICheckTrend.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Config.mqh>
+#include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/CloseHedgePositions/CloseHedgePositionsBase.mqh>
 
 extern Config *__config;
 extern ICheckTrend *__checkTrend;

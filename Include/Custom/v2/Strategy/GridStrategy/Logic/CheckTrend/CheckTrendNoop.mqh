@@ -1,5 +1,5 @@
 #include <Custom/v2/Common/Constant.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/Logic/CheckTrend/CheckTrendBase.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/CheckTrend/CheckTrendBase.mqh>
 
 // トレンド判定ロジック実装
 // ・判定を何も行わない

@@ -1,5 +1,5 @@
 #include <Generic/ArrayList.mqh>
-#include <Custom/v2/Strategy/GridStrategy/01/IObserve.mqh>
+#include <Custom/v2/Strategy/GridStrategy/IObserve.mqh>
 
 // 監視処理実装
 class Observe : public IObserve {

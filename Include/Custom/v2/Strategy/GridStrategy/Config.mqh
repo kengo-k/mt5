@@ -1,4 +1,4 @@
-// strategy001用Config
+// GridStrategy用のConfig
 class Config {
 public:
 

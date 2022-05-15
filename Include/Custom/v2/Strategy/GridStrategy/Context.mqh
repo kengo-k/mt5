@@ -1,4 +1,4 @@
-// strategy001用Context
+// GridStrategy用のContext
 class Context {
 public:
    int orderMaHandle;
