@@ -1,4 +1,5 @@
 typedef void (*INIT_FN)();
+typedef double (*GET_CUSTOM_RESULT_FN)();
 
 const long MAGIC_NUMBER_MAIN = 1;
 const long MAGIC_NUMBER_HEDGE = 2;

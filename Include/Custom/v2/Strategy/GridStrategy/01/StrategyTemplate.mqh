@@ -34,6 +34,8 @@ extern ICloseHedgePositions *__closeHedgePositions;
 extern IObserve *__observe;
 
 extern INIT_FN init;
+extern INIT_FN deInit;
+extern GET_CUSTOM_RESULT_FN getCustomResult;
 
 Context __context;
 
@@ -88,7 +90,18 @@ void OnTick() {
 }
 
 void OnDeinit(const int reason) {
+   if (deInit != NULL) {
+      deInit();
+   }
    delete __LOGGER__;
+}
+
+double OnTester() {
+   if (getCustomResult != NULL) {
+      return getCustomResult();
+   } else {
+      return 0;
+   }
 }
 
 double getVolume() {
