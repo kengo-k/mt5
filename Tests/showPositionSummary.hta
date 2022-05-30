@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+    <title>MT5 back test optimization result</title>
+    <style>
+      html {
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        width: 100%;
+        height: 100%;
+      }
+      #container {
+        margin: auto;
+        width: 80%;
+        height: 80%;
+      }
+    </style>
+  </head>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
+    integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script
+    src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.1.0/highcharts.js"
+    integrity="sha512-8mNMOCKB2dbqlbvEAC4C4aMIioDavSLzEHF4P/A+V8ODWoaRnBz4zar7CGM8o1teyAV1sI7n6NhMLfgNZThWIA=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script>
+    const shell = new ActiveXObject("WScript.Shell");
+    const fs = new ActiveXObject("Scripting.FileSystemObject");
+    var header = [];
+    var body = [];
+
+    $(function () {
+      loadCsv();
+      showChart();
+    });
+
+    function extract(label, conv) {
+      return _.map(body, function (lineObj) {
+        var ret = lineObj[label];
+        if (conv != null) {
+          ret = conv(ret);
+        }
+        return ret;
+      });
+    }
+
+    function loadCsv() {
+      header.push(
+        "date",
+        "gridBuyCount",
+        "gridBuyProfit",
+        "gridSellCount",
+        "gridSellProfit",
+        "hedgeBuyCount",
+        "hedgeBuyProfit",
+        "hedgeSellCount",
+        "hedgeSellProfit"
+      );
+      const dir = shell.ExpandEnvironmentStrings("%temp%");
+      const file = fs.openTextFile(dir + "\\position_summary.csv", 1, false, 0);
+      var i = 0;
+      while (!file.atEndOfStream) {
+        const line = file.readLine();
+        const bs = line.split(",");
+        const lineObj = {};
+        for (var i = 0; i < bs.length; i++) {
+          lineObj[header[i]] = bs[i];
+        }
+        body.push(lineObj);
+      }
+      file.close();
+    }
+
+    function showChart() {
+      alert(body[0].date);
+      Highcharts.chart("container", {
+        chart: {
+          zoomType: "xy",
+        },
+        xAxis: [
+          {
+            categories: extract("date"),
+            crosshair: true,
+          },
+        ],
+        yAxis: [
+          {
+            title: {
+              text: "Profit",
+            },
+          },
+          {
+            title: {
+              text: "Position Count",
+            },
+            labels: {
+              format: "{value}",
+            },
+            opposite: true,
+          },
+        ],
+        series: [
+          {
+            name: "グリッドトレード損益(買)",
+            type: "spline",
+            yAxis: 0,
+            data: extract("gridBuyProfit", Number),
+            zIndex: 2,
+          },
+          {
+            name: "グリッドトレード損益(売)",
+            type: "spline",
+            yAxis: 0,
+            data: extract("gridSellProfit", Number),
+            zIndex: 2,
+          },
+          {
+            name: "ヘッジトレード(買)",
+            type: "spline",
+            yAxis: 0,
+            data: extract("hedgeBuyProfit", Number),
+            zIndex: 2,
+          },
+          {
+            name: "ヘッジトレード(売)",
+            type: "spline",
+            yAxis: 0,
+            data: extract("hedgeSellProfit", Number),
+            zIndex: 2,
+          },
+          {
+            name: "グリッドトレード建玉数(買)",
+            type: "column",
+            yAxis: 1,
+            data: extract("gridBuyCount", Number),
+            zIndex: 1,
+          },
+          {
+            name: "グリッドトレード建玉数(売)",
+            type: "column",
+            yAxis: 1,
+            data: extract("gridSellCount", Number),
+            zIndex: 1,
+          },
+          {
+            name: "ヘッジトレード建玉数(買)",
+            type: "column",
+            yAxis: 1,
+            data: extract("hedgeBuyCount", Number),
+            zIndex: 1,
+          },
+          {
+            name: "ヘッジトレード建玉数(売)",
+            type: "column",
+            yAxis: 1,
+            data: extract("hedgeSellCount", Number),
+            zIndex: 1,
+          },
+        ],
+        plotOptions: {
+          spline: {
+            lineWidth: 5,
+          },
+          column: {
+            stacking: "normal",
+            dataLabels: {
+              enabled: false,
+            },
+          },
+        },
+      });
+    }
+  </script>
+  <body>
+    <div id="container"></div>
+  </body>
+</html>
