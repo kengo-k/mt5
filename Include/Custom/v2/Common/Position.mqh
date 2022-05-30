@@ -76,7 +76,7 @@ public:
          ulong posTicket = PositionGetTicket(i);
          if (posTicket) {
             long posMagicNumber = PositionGetInteger(POSITION_MAGIC);
-            if (magicNumber != posMagicNumber) {
+            if (magicNumber > 0 && magicNumber != posMagicNumber) {
                continue;
             }
             PosInfo *p = new PosInfo();
