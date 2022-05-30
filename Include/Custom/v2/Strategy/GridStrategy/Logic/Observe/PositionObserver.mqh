@@ -31,12 +31,17 @@ public:
       sellRed.Sort(&desc);
       sellBlack.Sort(&asc);
 
-      LOG_DEBUG_WITH_ID("---------- Position Summary ----------", LOGID_POSITION);
-      LOG_DEBUG_WITH_ID(StringFormat("  profit: buy=%d, sell=%d, count: buy=%d, sell=%d", (int) summary.buy, (int) summary.sell, summary.buyCount, summary.sellCount), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("---------- position summary (magic number=%d) ----------", this.magicNumber), LOGID_POSITION);
+      LOG_DEBUG_WITH_ID(StringFormat("  profit: buy(%d)=%d, sell(%d)=%d", summary.buyCount, (int) summary.buy, summary.sellCount, (int) summary.sell), LOGID_POSITION);
       LOG_DEBUG_WITH_ID(StringFormat("  buyRed=%s", Position::getPositionListString(&buyRed)), LOGID_POSITION_DETAIL);
       LOG_DEBUG_WITH_ID(StringFormat("  buyBlack=%s", Position::getPositionListString(&buyBlack)), LOGID_POSITION_DETAIL);
       LOG_DEBUG_WITH_ID(StringFormat("  sellRed=%s", Position::getPositionListString(&sellRed)), LOGID_POSITION_DETAIL);
       LOG_DEBUG_WITH_ID(StringFormat("  sellBlack=%s", Position::getPositionListString(&sellBlack)), LOGID_POSITION_DETAIL);
+
+      Position::deletePositionList(&buyRed);
+      Position::deletePositionList(&buyBlack);
+      Position::deletePositionList(&sellRed);
+      Position::deletePositionList(&sellBlack);
 
       // position count
       if (summary.totalCount > this.maxTotalPositionCount) {
@@ -80,7 +85,7 @@ public:
    }
 
    void logTotalReport() {
-      LOG_DEBUG_WITH_ID("---------- total position report ----------", LOGID_POSITION_TOTAL);
+      LOG_DEBUG_WITH_ID(StringFormat("---------- total position report (magic number=%d) ----------", this.magicNumber), LOGID_POSITION_TOTAL);
       LOG_DEBUG_WITH_ID(StringFormat("  max position count total: %d", this.maxTotalPositionCount), LOGID_POSITION_TOTAL);
       LOG_DEBUG_WITH_ID(StringFormat("  max position count buy: %d", this.maxBuyPositionCount), LOGID_POSITION_TOTAL);
       LOG_DEBUG_WITH_ID(StringFormat("  max position count sell: %d", this.maxSellPositionCount), LOGID_POSITION_TOTAL);
