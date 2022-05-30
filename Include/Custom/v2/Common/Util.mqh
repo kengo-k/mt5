@@ -12,6 +12,13 @@ public:
       return t;
    }
 
+   static string getCurrentDateString() {
+      datetime now = Util::getCurrentDate();
+      MqlDateTime t;
+      TimeToStruct(now, t);
+      return StringFormat("%d/%d/%d", t.year, t.mon, t.day);
+   }
+
    static datetime addDay(datetime t, int day) {
       t = t + (60 * 60 * 24 * day);
       return t;
