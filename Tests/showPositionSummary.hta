@@ -61,6 +61,16 @@
       });
     }
 
+    function max(label) {
+      const values = extract(label, Number);
+      return _.max(values);
+    }
+
+    function min(label) {
+      const values = extract(label, Number);
+      return _.min(values);
+    }
+
     function loadCsv() {
       header.push(
         "date",
@@ -89,6 +99,21 @@
     }
 
     function showChart() {
+      const gridBuyProfit = extract("gridBuyProfit", Number);
+      const gridSellProfit = extract("gridSellProfit", Number);
+      const hedgeBuyProfit = extract("hedgeBuyProfit", Number);
+      const hedgeSellProfit = extract("hedgeSellProfit", Number);
+      const minmax = [];
+      minmax.push(Math.abs(_.max(gridBuyProfit)));
+      minmax.push(Math.abs(_.min(gridBuyProfit)));
+      minmax.push(Math.abs(_.max(gridSellProfit)));
+      minmax.push(Math.abs(_.min(gridSellProfit)));
+      minmax.push(Math.abs(_.max(hedgeBuyProfit)));
+      minmax.push(Math.abs(_.min(hedgeBuyProfit)));
+      minmax.push(Math.abs(_.max(hedgeSellProfit)));
+      minmax.push(Math.abs(_.min(hedgeSellProfit)));
+      const minmaxmax = _.max(minmax);
+
       chart = Highcharts.chart("container", {
         chart: {
           zoomType: "xy",
@@ -102,16 +127,18 @@
         yAxis: [
           {
             title: {
-              text: "Profit",
-            },
-          },
-          {
-            title: {
               text: "Position Count",
             },
             labels: {
               format: "{value}",
             },
+          },
+          {
+            title: {
+              text: "Profit",
+            },
+            min: minmaxmax * -1,
+            max: minmaxmax,
             opposite: true,
           },
         ],
@@ -119,63 +146,63 @@
           {
             name: "profit(grid buy)",
             type: "spline",
-            yAxis: 0,
-            data: extract("gridBuyProfit", Number),
+            yAxis: 1,
+            data: gridBuyProfit,
             zIndex: 2,
             color: "red",
           },
           {
-            name: "profit(grid sell)",
-            type: "spline",
-            yAxis: 0,
-            data: extract("gridSellProfit", Number),
-            zIndex: 2,
-            color: "blue",
-          },
-          {
-            name: "profit (hedge buy)",
-            type: "spline",
-            yAxis: 0,
-            data: extract("hedgeBuyProfit", Number),
-            zIndex: 2,
-            color: "green",
-          },
-          {
-            name: "profit (hedge sell)",
-            type: "spline",
-            yAxis: 0,
-            data: extract("hedgeSellProfit", Number),
-            zIndex: 2,
-            color: "orange",
-          },
-          {
             name: "pos count (grid buy)",
             type: "column",
-            yAxis: 1,
+            yAxis: 0,
             data: extract("gridBuyCount", Number),
             zIndex: 1,
             color: "red",
           },
           {
+            name: "profit(grid sell)",
+            type: "spline",
+            yAxis: 1,
+            data: gridSellProfit,
+            zIndex: 2,
+            color: "blue",
+          },
+          {
             name: "pos count (grid sell)",
             type: "column",
-            yAxis: 1,
+            yAxis: 0,
             data: extract("gridSellCount", Number),
             zIndex: 1,
             color: "blue",
           },
           {
+            name: "profit (hedge buy)",
+            type: "spline",
+            yAxis: 1,
+            data: hedgeBuyProfit,
+            zIndex: 2,
+            color: "green",
+          },
+          {
             name: "pos count (hedge buy)",
             type: "column",
-            yAxis: 1,
+            yAxis: 0,
             data: extract("hedgeBuyCount", Number),
             zIndex: 1,
             color: "green",
           },
           {
+            name: "profit (hedge sell)",
+            type: "spline",
+            yAxis: 1,
+            data: hedgeSellProfit,
+            zIndex: 2,
+            color: "orange",
+          },
+          {
             name: "pos count (hedge sell)",
             type: "column",
-            yAxis: 1,
+            yAxis: 0,
             data: extract("hedgeSellCount", Number),
             zIndex: 1,
             color: "orange",
