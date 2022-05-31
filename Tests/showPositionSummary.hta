@@ -14,8 +14,8 @@
       }
       #container {
         margin: auto;
-        width: 80%;
-        height: 80%;
+        width: 98%;
+        height: 98%;
       }
     </style>
   </head>
@@ -36,9 +36,13 @@
     crossorigin="anonymous"
     referrerpolicy="no-referrer"
   ></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <script src="https://code.highcharts.com/modules/offline-exporting.js"></script>
+  <script src="https://code.highcharts.com/modules/export-data.js"></script>
   <script>
     const shell = new ActiveXObject("WScript.Shell");
     const fs = new ActiveXObject("Scripting.FileSystemObject");
+    var chart;
     var header = [];
     var body = [];
 
@@ -85,8 +89,7 @@
     }
 
     function showChart() {
-      alert(body[0].date);
-      Highcharts.chart("container", {
+      chart = Highcharts.chart("container", {
         chart: {
           zoomType: "xy",
         },
@@ -114,60 +117,68 @@
         ],
         series: [
           {
-            name: "グリッドトレード損益(買)",
+            name: "profit(grid buy)",
             type: "spline",
             yAxis: 0,
             data: extract("gridBuyProfit", Number),
             zIndex: 2,
+            color: "red",
           },
           {
-            name: "グリッドトレード損益(売)",
+            name: "profit(grid sell)",
             type: "spline",
             yAxis: 0,
             data: extract("gridSellProfit", Number),
             zIndex: 2,
+            color: "blue",
           },
           {
-            name: "ヘッジトレード(買)",
+            name: "profit (hedge buy)",
             type: "spline",
             yAxis: 0,
             data: extract("hedgeBuyProfit", Number),
             zIndex: 2,
+            color: "green",
           },
           {
-            name: "ヘッジトレード(売)",
+            name: "profit (hedge sell)",
             type: "spline",
             yAxis: 0,
             data: extract("hedgeSellProfit", Number),
             zIndex: 2,
+            color: "orange",
           },
           {
-            name: "グリッドトレード建玉数(買)",
+            name: "pos count (grid buy)",
             type: "column",
             yAxis: 1,
             data: extract("gridBuyCount", Number),
             zIndex: 1,
+            color: "red",
           },
           {
-            name: "グリッドトレード建玉数(売)",
+            name: "pos count (grid sell)",
             type: "column",
             yAxis: 1,
             data: extract("gridSellCount", Number),
             zIndex: 1,
+            color: "blue",
           },
           {
-            name: "ヘッジトレード建玉数(買)",
+            name: "pos count (hedge buy)",
             type: "column",
             yAxis: 1,
             data: extract("hedgeBuyCount", Number),
             zIndex: 1,
+            color: "green",
           },
           {
-            name: "ヘッジトレード建玉数(売)",
+            name: "pos count (hedge sell)",
             type: "column",
             yAxis: 1,
             data: extract("hedgeSellCount", Number),
             zIndex: 1,
+            color: "orange",
           },
         ],
         plotOptions: {
@@ -180,6 +191,11 @@
               enabled: false,
             },
           },
+        },
+        exporting: {
+          sourceWidth: 1280,
+          sourceHeight: 720,
+          scale: 1,
         },
       });
     }
