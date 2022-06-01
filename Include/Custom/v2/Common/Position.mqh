@@ -14,6 +14,7 @@ public:
       double profit = PositionGetDouble(POSITION_PROFIT);
       double swap = PositionGetDouble(POSITION_SWAP);
       posInfo.profitAndSwap = profit + swap;
+      posInfo.profit = profit;
       posInfo.swap = swap;
    }
 

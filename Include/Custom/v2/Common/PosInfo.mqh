@@ -6,6 +6,7 @@ public:
    ulong positionTicket;
    double volume;
    double profitAndSwap;
+   double profit;
    double swap;
    long magicNumber;
    ENUM_POSITION_TYPE positionType;
