@@ -1,3 +1,5 @@
+#include <Custom/v2/Common/Constant.mqh>
+
 // GridStrategy用のConfig
 class Config {
 public:
@@ -15,6 +17,9 @@ public:
       ,int _hedgeLongMaPeriod
       ,int _orderGridSize
       ,int _hedgeGridSize
+      ,bool _useGridTrade
+      ,bool _useGridHedgeTrade
+      ,ENUM_GRID_HEDGE_MODE _gridHedgeMode
    ):
       tp(_tp)
       , totalHedgeTp(_totalHedgeTp)
@@ -28,6 +33,9 @@ public:
       , hedgeLongMaPeriod(_hedgeLongMaPeriod)
       , orderGridSize(_orderGridSize)
       , hedgeGridSize(_hedgeGridSize)
+      , useGridTrade(_useGridTrade)
+      , useGridHedgeTrade(_useGridHedgeTrade)
+      , gridHedgeMode(_gridHedgeMode)
    {}
 
    double tp;
@@ -42,4 +50,7 @@ public:
    int hedgeLongMaPeriod;
    int orderGridSize;
    int hedgeGridSize;
+   bool useGridTrade;
+   bool useGridHedgeTrade;
+   ENUM_GRID_HEDGE_MODE gridHedgeMode;
 };
