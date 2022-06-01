@@ -1,10 +1,50 @@
 #include <Generic/HashMap.mqh>
+#include <Generic/ArrayList.mqh>
 
 /**
  * 各種ユーティリティメソッド
  */
 class Util {
 public:
+
+   static string getAgentName() {
+      string path = TerminalInfoString(TERMINAL_DATA_PATH);
+      string strSep = "\\";
+      string split_result[];
+      ushort sep = StringGetCharacter(strSep, 0);
+      StringSplit(path, sep, split_result);
+      int len = ArraySize(split_result);
+      string agentName = split_result[len - 1];
+      return agentName;
+   }
+
+   static string createUniqueFileName(string prefix, string extension) {
+      int fileCount = 1;
+      string fileName;
+      string agentName = Util::getAgentName();
+      long handle = FileFindFirst(StringFormat("%s-%s-*", prefix, agentName), fileName, FILE_COMMON);
+      if (handle != INVALID_HANDLE) {
+         fileCount++;
+         while(FileFindNext(handle, fileName)) {
+            fileCount++;
+         }
+      }
+      return StringFormat("%s-%s-%d.%s", prefix, agentName, fileCount, extension);
+   }
+
+   static string join(CArrayList<string> *strList, string sep) {
+      string ret = "";
+      int count = strList.Count();
+      for (int i = 0; i < count; i++) {
+         string s;
+         strList.TryGetValue(i, s);
+         StringAdd(ret, s);
+         if (i != count - 1) {
+            StringAdd(ret, sep);
+         }
+      }
+      return ret;
+   }
 
    static datetime getCurrentDate() {
       datetime t = TimeCurrent();
