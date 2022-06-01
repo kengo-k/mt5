@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
-    <title>MT5 back test optimization result</title>
+    <meta charset="utf-8" />
+    <title>MT5 test result viewer</title>
     <style>
       html {
         width: 100%;
@@ -11,42 +12,53 @@
       body {
         width: 100%;
         height: 100%;
+        font-family: "メイリオ";
       }
       #container {
         margin: auto;
-        width: 98%;
-        height: 98%;
+        width: 95%;
+        height: 80%;
+      }
+      #settings {
+        margin: auto;
+        width: 95%;
+      }
+      #settings fieldset {
+        float: left;
+      }
+      #settings fieldset.disabled {
+        background-color: #cccccc;
       }
     </style>
   </head>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
-    integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  ></script>
-  <script
-    src="https://code.jquery.com/jquery-3.6.0.min.js"
-    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
-    crossorigin="anonymous"
-  ></script>
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.1.0/highcharts.js"
-    integrity="sha512-8mNMOCKB2dbqlbvEAC4C4aMIioDavSLzEHF4P/A+V8ODWoaRnBz4zar7CGM8o1teyAV1sI7n6NhMLfgNZThWIA=="
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  ></script>
+  <!-- prettier-ignore -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js" integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- prettier-ignore -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <!-- prettier-ignore -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.1.0/highcharts.js" integrity="sha512-8mNMOCKB2dbqlbvEAC4C4aMIioDavSLzEHF4P/A+V8ODWoaRnBz4zar7CGM8o1teyAV1sI7n6NhMLfgNZThWIA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://code.highcharts.com/modules/exporting.js"></script>
   <script src="https://code.highcharts.com/modules/offline-exporting.js"></script>
   <script src="https://code.highcharts.com/modules/export-data.js"></script>
-  <script>
+  <!-- prettier-ignore -->
+  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+  <!-- prettier-ignore -->
+  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <script type="text/babel">
     const shell = new ActiveXObject("WScript.Shell");
     const fs = new ActiveXObject("Scripting.FileSystemObject");
+    // loaded csv data
+    const header = [];
+    const body = [];
+    let parameters = "";
+    // HighChart object
     var chart;
-    var header = [];
-    var body = [];
 
     $(function () {
+      const settings = $("#settings");
+      ReactDOM.render(<SettingsPanel />, settings[0]);
       loadCsv();
       showChart();
     });
@@ -81,13 +93,20 @@
         "hedgeBuyCount",
         "hedgeBuyProfit",
         "hedgeSellCount",
-        "hedgeSellProfit"
+        "hedgeSellProfit",
+        "balance",
+        "freeMargin"
       );
       const dir = shell.ExpandEnvironmentStrings("%temp%");
       const file = fs.openTextFile(dir + "\\position_summary.csv", 1, false, 0);
       var i = 0;
       while (!file.atEndOfStream) {
         const line = file.readLine();
+        const headChar = line[0];
+        if (headChar == "#") {
+          parameters = "parameters: " + line.substr(1);
+          continue;
+        }
         const bs = line.split(",");
         const lineObj = {};
         for (var i = 0; i < bs.length; i++) {
@@ -103,20 +122,109 @@
       const gridSellProfit = extract("gridSellProfit", Number);
       const hedgeBuyProfit = extract("hedgeBuyProfit", Number);
       const hedgeSellProfit = extract("hedgeSellProfit", Number);
-      const minmax = [];
-      minmax.push(Math.abs(_.max(gridBuyProfit)));
-      minmax.push(Math.abs(_.min(gridBuyProfit)));
-      minmax.push(Math.abs(_.max(gridSellProfit)));
-      minmax.push(Math.abs(_.min(gridSellProfit)));
-      minmax.push(Math.abs(_.max(hedgeBuyProfit)));
-      minmax.push(Math.abs(_.min(hedgeBuyProfit)));
-      minmax.push(Math.abs(_.max(hedgeSellProfit)));
-      minmax.push(Math.abs(_.min(hedgeSellProfit)));
-      const minmaxmax = _.max(minmax);
+      const balance = extract("balance", Number);
+      const freeMargin = extract("freeMargin", Number);
+      const profitMinMax = [];
+      const accountMax = [];
+      profitMinMax.push(Math.abs(_.max(gridBuyProfit)));
+      profitMinMax.push(Math.abs(_.min(gridBuyProfit)));
+      profitMinMax.push(Math.abs(_.max(gridSellProfit)));
+      profitMinMax.push(Math.abs(_.min(gridSellProfit)));
+      profitMinMax.push(Math.abs(_.max(hedgeBuyProfit)));
+      profitMinMax.push(Math.abs(_.min(hedgeBuyProfit)));
+      profitMinMax.push(Math.abs(_.max(hedgeSellProfit)));
+      profitMinMax.push(Math.abs(_.min(hedgeSellProfit)));
+      accountMax.push(_.max(balance));
+      accountMax.push(_.max(freeMargin));
+      const profitMinMaxMax = _.max(profitMinMax);
+      const accountMaxMax = _.max(accountMax);
+      const targetItemIndexMap = {};
+      const targetItems = [];
+      let targetItemIndex = 0;
+      if (STATE.accountChecked) {
+        targetItemIndexMap["account"] = targetItemIndex++;
+        targetItems.push("account");
+      }
+      if (STATE.positionCountChecked) {
+        targetItemIndexMap["positionCount"] = targetItemIndex++;
+        targetItems.push("positionCount");
+      }
+      if (STATE.positionProfitChecked) {
+        targetItemIndexMap["positionProfit"] = targetItemIndex++;
+        targetItems.push("positionProfit");
+      }
+      const createYAxis = function () {
+        const yAxis = targetItems.map((item, i) => {
+          let axis;
+          if (item == "account") {
+            axis = {
+              title: { text: "口座残高(USD)" },
+              min: 0,
+              max: accountMaxMax,
+            };
+          }
+          if (item == "positionCount") {
+            axis = { title: { text: "ポジション数" } };
+          }
+          if (item == "positionProfit") {
+            axis = {
+              title: { text: "損益(pips)" },
+              min: profitMinMaxMax * -1,
+              max: profitMinMaxMax,
+            };
+          }
+          if (i == 1) {
+            axis.opposite = true;
+          }
+          return axis;
+        });
+        return yAxis;
+      };
+      // prettier-ignore
+      const createSeries = function () {
+        const seriesList = [];
+        const createSeriesItem = (name, type, yAxis, data, zIndex, color) => {
+          return { name, type, yAxis, data, zIndex, color, };
+        };
+        const createProfitSeriesItem = (use, name, data, color) => {
+          if (use && targetItemIndexMap["positionProfit"] != null) {
+            const item = createSeriesItem(name, "spline", targetItemIndexMap["positionProfit"], data, 2, color);
+            seriesList.push(item);
+          }
+        };
+        const createCountSeriesItem = (use, name, data, color) => {
+          if (use && targetItemIndexMap["positionCount"] != null) {
+            const item = createSeriesItem(name, "column", targetItemIndexMap["positionCount"], data, 1, color);
+            seriesList.push(item);
+          }
+        };
+        const createAccountSeriesItem = (use, name, data, color) => {
+          if (use && targetItemIndexMap["account"] != null) {
+            const item = createSeriesItem(name, "area", targetItemIndexMap["account"], data, 1, color);
+            seriesList.push(item);
+          }
+        };
+        createProfitSeriesItem(STATE.gridBuyProfitChecked, "損益(グリッド/買)", gridBuyProfit, "red");
+        createCountSeriesItem(STATE.gridBuyCountChecked, "ポジション数(グリッド/買)", extract("gridBuyCount", Number), "red");
+        createProfitSeriesItem(STATE.gridSellProfitChecked, "損益(グリッド/売)", gridSellProfit, "blue");
+        createCountSeriesItem(STATE.gridSellCountChecked, "ポジション数(グリッド/売)", extract("gridSellCount", Number), "blue");
+        createProfitSeriesItem(STATE.hedgeBuyProfitChecked, "損益(ヘッジ/買)", hedgeBuyProfit, "green");
+        createCountSeriesItem(STATE.hedgeBuyCountChecked, "ポジション数(ヘッジ/買)", extract("hedgeBuyCount", Number), "green");
+        createProfitSeriesItem(STATE.hedgeSellProfitChecked, "損益(ヘッジ/売)", hedgeSellProfit, "orange");
+        createCountSeriesItem(STATE.hedgeSellCountChecked, "ポジション数(ヘッジ/売)", extract("hedgeSellCount", Number), "orange");
+        createAccountSeriesItem(STATE.balanceChecked, "残高", balance, "mistyrose");
+        createAccountSeriesItem(STATE.freeMarginChecked, "余裕証拠金", freeMargin, "lightblue");
+        return seriesList;
+      };
 
+      const yAxis = createYAxis();
+      const series = createSeries();
       chart = Highcharts.chart("container", {
         chart: {
           zoomType: "xy",
+        },
+        title: {
+          text: parameters,
         },
         xAxis: [
           {
@@ -124,90 +232,8 @@
             crosshair: true,
           },
         ],
-        yAxis: [
-          {
-            title: {
-              text: "Position Count",
-            },
-            labels: {
-              format: "{value}",
-            },
-          },
-          {
-            title: {
-              text: "Profit",
-            },
-            min: minmaxmax * -1,
-            max: minmaxmax,
-            opposite: true,
-          },
-        ],
-        series: [
-          {
-            name: "profit(grid buy)",
-            type: "spline",
-            yAxis: 1,
-            data: gridBuyProfit,
-            zIndex: 2,
-            color: "red",
-          },
-          {
-            name: "pos count (grid buy)",
-            type: "column",
-            yAxis: 0,
-            data: extract("gridBuyCount", Number),
-            zIndex: 1,
-            color: "red",
-          },
-          {
-            name: "profit(grid sell)",
-            type: "spline",
-            yAxis: 1,
-            data: gridSellProfit,
-            zIndex: 2,
-            color: "blue",
-          },
-          {
-            name: "pos count (grid sell)",
-            type: "column",
-            yAxis: 0,
-            data: extract("gridSellCount", Number),
-            zIndex: 1,
-            color: "blue",
-          },
-          {
-            name: "profit (hedge buy)",
-            type: "spline",
-            yAxis: 1,
-            data: hedgeBuyProfit,
-            zIndex: 2,
-            color: "green",
-          },
-          {
-            name: "pos count (hedge buy)",
-            type: "column",
-            yAxis: 0,
-            data: extract("hedgeBuyCount", Number),
-            zIndex: 1,
-            color: "green",
-          },
-          {
-            name: "profit (hedge sell)",
-            type: "spline",
-            yAxis: 1,
-            data: hedgeSellProfit,
-            zIndex: 2,
-            color: "orange",
-          },
-          {
-            name: "pos count (hedge sell)",
-            type: "column",
-            yAxis: 0,
-            data: extract("hedgeSellCount", Number),
-            zIndex: 1,
-            color: "orange",
-          },
-        ],
+        yAxis: yAxis,
+        series: series,
         plotOptions: {
           spline: {
             lineWidth: 5,
@@ -220,14 +246,232 @@
           },
         },
         exporting: {
-          sourceWidth: 1280,
-          sourceHeight: 720,
+          sourceWidth: 1920,
+          sourceHeight: 1080,
           scale: 1,
         },
       });
     }
+
+    class State {
+      constructor() {
+        this.accountChecked = true;
+        this.balanceChecked = true;
+        this.freeMarginChecked = true;
+
+        this.positionCountChecked = false;
+        this.gridBuyCountChecked = true;
+        this.gridSellCountChecked = true;
+        this.hedgeBuyCountChecked = true;
+        this.hedgeSellCountChecked = true;
+
+        this.positionProfitChecked = true;
+        this.gridBuyProfitChecked = true;
+        this.gridSellProfitChecked = true;
+        this.hedgeBuyProfitChecked = true;
+        this.hedgeSellProfitChecked = true;
+
+        this.getCheckedCount = function () {
+          let count = 0;
+          if (this.accountChecked) {
+            count++;
+          }
+          if (this.positionCountChecked) {
+            count++;
+          }
+          if (this.positionProfitChecked) {
+            count++;
+          }
+          return count;
+        };
+      }
+    }
+
+    class GraphItemGroup extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      render() {
+        return (
+          <React.Fragment>
+            <legend>{this.props.label}</legend>
+            <label>
+              <input
+                type="checkbox"
+                id="account"
+                checked={this.props.checked}
+                onClick={this.props.onClick}
+                disabled={this.props.disabled}
+              />{" "}
+              表示する
+            </label>
+          </React.Fragment>
+        );
+      }
+    }
+
+    class GraphItemSetting extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      render() {
+        return (
+          <label>
+            <input
+              type="checkbox"
+              id={this.props.itemId}
+              checked={this.props.checked}
+              disabled={this.props.disabled}
+              onClick={this.props.onClick}
+            />{" "}
+            {this.props.labelText}
+          </label>
+        );
+      }
+    }
+
+    let STATE = new State();
+    class SettingsPanel extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = STATE;
+      }
+
+      componentDidUpdate() {
+        STATE = _.clone(this.state);
+        showChart();
+      }
+
+      toggleChecked(checkName) {
+        return () => {
+          const current = this.state[checkName];
+          this.setState({ [checkName]: !current });
+        };
+      }
+
+      isDisabled(checkName) {
+        return (
+          (this.state.getCheckedCount() == 2 && !this.state[checkName]) ||
+          (this.state.getCheckedCount() == 1 && this.state[checkName])
+        );
+      }
+
+      getFieldSetClass(checked) {
+        return checked ? "" : "disabled";
+      }
+
+      render() {
+        return (
+          <div>
+            <fieldset class={this.getFieldSetClass(this.state.accountChecked)}>
+              <GraphItemGroup
+                label="口座情報"
+                checked={this.state.accountChecked}
+                onClick={this.toggleChecked("accountChecked")}
+                disabled={this.isDisabled("accountChecked")}
+              />
+              <hr />
+              <GraphItemSetting
+                itemId="balance"
+                labelText="残高"
+                checked={this.state.balanceChecked}
+                onClick={this.toggleChecked("balanceChecked")}
+                disabled={!this.state.accountChecked}
+              />
+              <GraphItemSetting
+                itemId="freeMargin"
+                labelText="証拠金"
+                checked={this.state.freeMarginChecked}
+                onClick={this.toggleChecked("freeMarginChecked")}
+                disabled={!this.state.accountChecked}
+              />
+            </fieldset>
+            <fieldset
+              class={this.getFieldSetClass(this.state.positionCountChecked)}
+            >
+              <GraphItemGroup
+                label="ポジション数"
+                checked={this.state.positionCountChecked}
+                onClick={this.toggleChecked("positionCountChecked")}
+                disabled={this.isDisabled("positionCountChecked")}
+              />
+              <hr />
+              <GraphItemSetting
+                itemId="gridBuyCount"
+                labelText="グリッド/買"
+                checked={this.state.gridBuyCountChecked}
+                onClick={this.toggleChecked("gridBuyCountChecked")}
+                disabled={!this.state.positionCountChecked}
+              />
+              <GraphItemSetting
+                itemId="gridSellCount"
+                labelText="グリッド/売"
+                checked={this.state.gridSellCountChecked}
+                onClick={this.toggleChecked("gridSellCountChecked")}
+                disabled={!this.state.positionCountChecked}
+              />
+              <GraphItemSetting
+                itemId="hedgeBuyCount"
+                labelText="ヘッジ/買"
+                checked={this.state.hedgeBuyCountChecked}
+                onClick={this.toggleChecked("hedgeBuyCountChecked")}
+                disabled={!this.state.positionCountChecked}
+              />
+              <GraphItemSetting
+                itemId="hedgeSellCount"
+                labelText="ヘッジ/売"
+                checked={this.state.hedgeSellCountChecked}
+                onClick={this.toggleChecked("hedgeSellCountChecked")}
+                disabled={!this.state.positionCountChecked}
+              />
+            </fieldset>
+            <fieldset
+              class={this.getFieldSetClass(this.state.positionProfitChecked)}
+            >
+              <GraphItemGroup
+                label="損益"
+                checked={this.state.positionProfitChecked}
+                onClick={this.toggleChecked("positionProfitChecked")}
+                disabled={this.isDisabled("positionProfitChecked")}
+              />
+              <hr />
+              <GraphItemSetting
+                itemId="gridBuyProfit"
+                labelText="グリッド/買"
+                checked={this.state.gridBuyProfitChecked}
+                onClick={this.toggleChecked("gridBuyProfitChecked")}
+                disabled={!this.state.positionProfitChecked}
+              />
+              <GraphItemSetting
+                itemId="gridSellProfit"
+                labelText="グリッド/売"
+                checked={this.state.gridSellProfitChecked}
+                onClick={this.toggleChecked("gridSellProfitChecked")}
+                disabled={!this.state.positionProfitChecked}
+              />
+              <GraphItemSetting
+                itemId="hedgeBuyProfit"
+                labelText="ヘッジ/買"
+                checked={this.state.hedgeBuyProfitChecked}
+                onClick={this.toggleChecked("hedgeBuyProfitChecked")}
+                disabled={!this.state.positionProfitChecked}
+              />
+              <GraphItemSetting
+                itemId="hedgeSellProfit"
+                labelText="ヘッジ/売"
+                checked={this.state.hedgeSellProfitChecked}
+                onClick={this.toggleChecked("hedgeSellProfitChecked")}
+                disabled={!this.state.positionProfitChecked}
+              />
+            </fieldset>
+          </div>
+        );
+      }
+    }
   </script>
   <body>
+    <div id="parameters"></div>
+    <div id="settings"></div>
     <div id="container"></div>
   </body>
 </html>
