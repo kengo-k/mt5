@@ -56,7 +56,7 @@ input int ORDER_GRID_SIZE = 30;
 input int HEDGE_GRID_SIZE = 30;
 
 // 以下global変数に値を設定する
-const string EA_NAME = "v2/Gridstrategy/gridAndOnesideHedgeOnlyOnesideCloseByProfitTarget";
+const string EA_NAME = "v2/Gridstrategy/gridStrategy1";
 const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
 
 // グリッドトレードを実行するかどうか
@@ -162,8 +162,8 @@ private:
       //observerList.Add(this.accountObserver);
       observerList.Add(this.positionRecorder);
       //observerList.Add(this.allPositionObserver);
-      observerList.Add(this.gridTradePositionObserver);
-      observerList.Add(this.hedgeTradePositionObserver);
+      //observerList.Add(this.gridTradePositionObserver);
+      //observerList.Add(this.hedgeTradePositionObserver);
    }
 
    void openFileHandles() {
