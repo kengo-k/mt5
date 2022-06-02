@@ -81,6 +81,9 @@ input bool USE_GRID_HEDGE_TRADE = true;
 // グリッドトレードのヘッジを行う場合の動作方式
 input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
 
+// 買/売を制限するかどうか
+input ENUM_ENTRY_MODE ENTRY_MODE = ENTRY_MODE_BOTH;
+
 // 以下global変数に値を設定する
 const string EA_NAME = "v2/Gridstrategy/gridStrategy1";
 const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
@@ -186,6 +189,13 @@ private:
             ExpertRemove();
       }
 
+      bool buyable = true;
+      bool sellable = true;
+      if (ENTRY_MODE == ENTRY_MODE_BUY_ONLY) {
+         sellable = false;
+      } else if (ENTRY_MODE == ENTRY_MODE_SELL_ONLY) {
+         buyable = false;
+      }
       __config = new Config(
          TP
          , TOTAL_HEDGE_TP
@@ -202,6 +212,8 @@ private:
          , USE_GRID_TRADE
          , USE_GRID_HEDGE_TRADE
          , GRID_HEDGE_MODE
+         , buyable
+         , sellable
       );
 
       delete orderTimeParamSet;

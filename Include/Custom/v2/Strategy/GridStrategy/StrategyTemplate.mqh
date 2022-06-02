@@ -124,17 +124,21 @@ void createOrder() {
    }
 
    if (__config.useGridTrade) {
-      double orderGridPrice = __orderGrid.getTargetGridPrice(command);
-      Request* req = RequestContainer::createRequest();
-      Order::createLimitRequest(command, req.item, orderGridPrice, getVolume(), -1, __config.tp, MAGIC_NUMBER_MAIN);
-      __newMainOrderQueue.add(req);
+      if ((command == ENTRY_COMMAND_BUY && __config.buyable) || (command == ENTRY_COMMAND_SELL && __config.sellable)) {
+         double orderGridPrice = __orderGrid.getTargetGridPrice(command);
+         Request* req = RequestContainer::createRequest();
+         Order::createLimitRequest(command, req.item, orderGridPrice, getVolume(), -1, __config.tp, MAGIC_NUMBER_MAIN);
+         __newMainOrderQueue.add(req);
+      }
    }
 
    if (__config.useGridHedgeTrade) {
-      double hedgeGridPrice = __hedgeGrid.getTargetGridPrice(command);
-      Request* hedgeReq = RequestContainer::createRequest();
-      Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, getVolume(), -1, -1, MAGIC_NUMBER_HEDGE);
-      __newHedgeOrderQueue.add(hedgeReq);
+      if ((command == ENTRY_COMMAND_BUY && __config.buyable) || (command == ENTRY_COMMAND_SELL && __config.sellable)) {
+         double hedgeGridPrice = __hedgeGrid.getTargetGridPrice(command);
+         Request* hedgeReq = RequestContainer::createRequest();
+         Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, getVolume(), -1, -1, MAGIC_NUMBER_HEDGE);
+         __newHedgeOrderQueue.add(hedgeReq);
+      }
    }
 }
 

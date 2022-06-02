@@ -20,6 +20,8 @@ public:
       ,bool _useGridTrade
       ,bool _useGridHedgeTrade
       ,ENUM_GRID_HEDGE_MODE _gridHedgeMode
+      ,bool _buyable
+      ,bool _sellable
    ):
       tp(_tp)
       , totalHedgeTp(_totalHedgeTp)
@@ -36,6 +38,8 @@ public:
       , useGridTrade(_useGridTrade)
       , useGridHedgeTrade(_useGridHedgeTrade)
       , gridHedgeMode(_gridHedgeMode)
+      , buyable(_buyable)
+      , sellable(_sellable)
    {}
 
    double tp;
@@ -53,4 +57,6 @@ public:
    bool useGridTrade;
    bool useGridHedgeTrade;
    ENUM_GRID_HEDGE_MODE gridHedgeMode;
+   bool buyable;
+   bool sellable;
 };
