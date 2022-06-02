@@ -17,8 +17,6 @@
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
 
-extern ENUM_GRID_HEDGE_MODE _GRID_HEDGE_MODE;
-
 // ヘッジポジションのクローズロジック実装
 // ・トータルの利益が目標額を超えた場合に全てのポジションを決済する
 class ClosePositions: public ClosePositionsBase {
@@ -40,7 +38,7 @@ public:
          return;
       }
 
-      if (_GRID_HEDGE_MODE == GRID_HEDGE_MODE_ONESIDE_CLOSE) {
+      if (__config.gridHedgeMode == GRID_HEDGE_MODE_ONESIDE_CLOSE) {
          PositionSummary gridSummary;
          PositionSummary hedgeSummary;
 
@@ -103,7 +101,7 @@ public:
          Position::deletePositionList(&hedgeSellBlack);
       }
 
-      if (_GRID_HEDGE_MODE == GRID_HEDGE_MODE_ALL_CLOSE) {
+      if (__config.gridHedgeMode == GRID_HEDGE_MODE_ALL_CLOSE) {
 
          PositionSummary summary;
 

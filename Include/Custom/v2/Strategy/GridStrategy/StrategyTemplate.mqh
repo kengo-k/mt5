@@ -24,8 +24,6 @@
 #include <Custom/v2/Strategy/GridStrategy/IObserve.mqh>
 
 extern Logger *__LOGGER__;
-extern bool _USE_GRID_TRADE;
-extern bool _USE_GRID_HEDGE_TRADE;
 
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
@@ -117,7 +115,7 @@ void createOrder() {
    LOG_DEBUG(StringFormat("command: %d", command));
    LOG_DEBUG(StringFormat("hedge direction: %d", hedgeDirection));
 
-   if (_USE_GRID_HEDGE_TRADE) {
+   if (__config.useGridHedgeTrade) {
       __closePositions.exec();
    }
 
@@ -125,14 +123,14 @@ void createOrder() {
       return;
    }
 
-   if (_USE_GRID_TRADE) {
+   if (__config.useGridTrade) {
       double orderGridPrice = __orderGrid.getTargetGridPrice(command);
       Request* req = RequestContainer::createRequest();
       Order::createLimitRequest(command, req.item, orderGridPrice, getVolume(), -1, __config.tp, MAGIC_NUMBER_MAIN);
       __newMainOrderQueue.add(req);
    }
 
-   if (_USE_GRID_HEDGE_TRADE) {
+   if (__config.useGridHedgeTrade) {
       double hedgeGridPrice = __hedgeGrid.getTargetGridPrice(command);
       Request* hedgeReq = RequestContainer::createRequest();
       Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, getVolume(), -1, -1, MAGIC_NUMBER_HEDGE);

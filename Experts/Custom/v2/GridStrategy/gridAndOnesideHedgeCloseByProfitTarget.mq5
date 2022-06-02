@@ -67,11 +67,6 @@ input bool USE_GRID_HEDGE_TRADE = true;
 // グリッドトレードのヘッジを行う場合の動作方式
 input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
 
-// パラメータの転記用変数。別ファイルからextern参照するために利用する
-bool _USE_GRID_TRADE = true;
-bool _USE_GRID_HEDGE_TRADE = true;
-ENUM_GRID_HEDGE_MODE _GRID_HEDGE_MODE = 0;
-
 // クローズタイミング
 const ENUM_TIMEFRAMES CLOSE_TIMEFRAME = PERIOD_D1;
 
@@ -134,7 +129,6 @@ class Init {
 public:
 
    void init() {
-      this.initMode();
       this.initLogSettings();
       this.openFileHandles();
       this.initObservers();
@@ -148,12 +142,6 @@ public:
    }
 
 private:
-
-   void initMode() {
-      _USE_GRID_TRADE = USE_GRID_TRADE;
-      _USE_GRID_HEDGE_TRADE = USE_GRID_HEDGE_TRADE;
-      _GRID_HEDGE_MODE = GRID_HEDGE_MODE;
-   }
 
    void initLogSettings() {
       LOGID_POSITION.set(LOGID_STATE_ENABLED);
