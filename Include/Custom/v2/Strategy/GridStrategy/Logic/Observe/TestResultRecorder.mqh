@@ -15,10 +15,10 @@
 extern Config *__config;
 
 // 一定期間毎にポジションの利益/損失の推移をCSVファイルに記録する
-class PositionRecorder : public IObserver {
+class TestResultRecorder : public IObserver {
 public:
 
-   PositionRecorder(int _fileHandle) {
+   TestResultRecorder(int _fileHandle) {
       this.fileHandle = _fileHandle;
 
       // 一行目をコメント行とする。コメント行はパラメータを記録するために使用する

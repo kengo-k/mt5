@@ -24,30 +24,47 @@
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/Observe.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/AccountObserver.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/PositionObserver.mqh>
-#include <Custom/v2/Strategy/GridStrategy/Logic/Observe/PositionRecorder.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/Observe/TestResultRecorder.mqh>
+
+enum ENUM_ORDER_TIME_PARAM_SET {
+   ORDER_TIME_PARAM_SET_M15_SHORT
+};
+
+enum ENUM_HEDGE_TIME_PARAM_SET {
+   HEDGE_TIME_PARAM_SET_W1_MID
+   , HEDGE_TIME_PARAM_SET_W1_LONG
+   , HEDGE_TIME_PARAM_SET_MN1_SHORT
+};
 
 // 利益目標
 input double TP = 20;
+
 // ヘッジ決済目標利益学(要最適化)
 input double TOTAL_HEDGE_TP = 1000;
 
-// エントリ時間足(たぶん固定)
-input ENUM_TIMEFRAMES CREATE_ORDER_TIMEFRAME = PERIOD_M15;
+// エントリ時間のパラメータセット
+input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_SHORT;
 
-// トレンド判定時間足(たぶん固定)
-input ENUM_TIMEFRAMES HEDGE_DIRECTION_TIMEFRAME = PERIOD_W1;
+// トレンド判定時間のパラメータセット
+input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MID;
+
+// エントリ時間足(たぶん固定)
+//input ENUM_TIMEFRAMES CREATE_ORDER_TIMEFRAME = PERIOD_M15;
 
 // エントリ判定短期MA期間(たぶん固定)
-input int ORDER_MA_PERIOD = 5;
+//input int ORDER_MA_PERIOD = 5;
 
 // エントリ判定長期MA期間(たぶん固定)
-input int ORDER_LONG_MA_PERIOD = 15;
+//input int ORDER_LONG_MA_PERIOD = 15;
+
+// トレンド判定時間足(たぶん固定)
+//input ENUM_TIMEFRAMES HEDGE_DIRECTION_TIMEFRAME = PERIOD_W1;
 
 // トレンド判定短期MA期間(最適化余地あり)
-input int HEDGE_MA_PERIOD = 5;
+//input int HEDGE_MA_PERIOD = 5;
 
 // トレンド判定短期MA期間(最適化余地あり)
-input int HEDGE_LONG_MA_PERIOD = 50;
+//input int HEDGE_LONG_MA_PERIOD = 50;
 
 // グリッドトレード用グリッドサイズ(要最適化)
 input int ORDER_GRID_SIZE = 30;
@@ -55,17 +72,18 @@ input int ORDER_GRID_SIZE = 30;
 // ヘッジ用グリッドサイズ(要最適化)
 input int HEDGE_GRID_SIZE = 30;
 
-// 以下global変数に値を設定する
-const string EA_NAME = "v2/Gridstrategy/gridStrategy1";
-const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
-
 // グリッドトレードを実行するかどうか
 input bool USE_GRID_TRADE = true;
 
 // グリッドトレードのヘッジを行うかどうか
 input bool USE_GRID_HEDGE_TRADE = true;
+
 // グリッドトレードのヘッジを行う場合の動作方式
 input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
+
+// 以下global変数に値を設定する
+const string EA_NAME = "v2/Gridstrategy/gridStrategy1";
+const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
 
 // クローズタイミング
 const ENUM_TIMEFRAMES CLOSE_TIMEFRAME = PERIOD_D1;
@@ -92,25 +110,7 @@ INIT_FN init = _init;
 INIT_FN deInit = _deInit;
 GET_CUSTOM_RESULT_FN getCustomResult = _getCustomResult;
 
-Config __config__(
-   TP
-   , TOTAL_HEDGE_TP
-   , CREATE_ORDER_TIMEFRAME
-   , PERIOD_M1
-   , HEDGE_DIRECTION_TIMEFRAME
-   , OBSERVE_TIMEFRAMES
-   , ORDER_MA_PERIOD
-   , ORDER_LONG_MA_PERIOD
-   , HEDGE_MA_PERIOD
-   , HEDGE_LONG_MA_PERIOD
-   , ORDER_GRID_SIZE
-   , HEDGE_GRID_SIZE
-   , USE_GRID_TRADE
-   , USE_GRID_HEDGE_TRADE
-   , GRID_HEDGE_MODE
-);
-Config *__config = &__config__;
-
+Config *__config;
 CheckTrend __checkTrend__;
 ICheckTrend *__checkTrend = &__checkTrend__;
 
@@ -124,11 +124,27 @@ CArrayList<IObserver*> observerList;
 Observe __observe__(&observerList);
 IObserve *__observe = &__observe__;
 
+class TimeParamSet {
+public:
+   TimeParamSet(ENUM_TIMEFRAMES _timeFrame, int _maPeriod, int _longMaPeriod):
+      timeFrame(_timeFrame)
+      , maPeriod(_maPeriod)
+      , longMaPeriod(_longMaPeriod){};
+   ENUM_TIMEFRAMES timeFrame;
+   int maPeriod;
+   int longMaPeriod;
+};
+
 // 初期化処理/終了処理を定義する
 class Init {
 public:
 
    void init() {
+      Print("NEKONEKONEKO");
+      Print(HEDGE_TIME_PARAM_SET_W1_MID);
+      Print(HEDGE_TIME_PARAM_SET_W1_LONG);
+      Print(HEDGE_TIME_PARAM_SET_MN1_SHORT);
+      this.initConfig();
       this.initLogSettings();
       this.openFileHandles();
       this.initObservers();
@@ -138,10 +154,59 @@ public:
       //this.logReport();
       this.deleteObservers();
       this.closeFileHandles();
+      delete __config;
       delete __LOGGER__;
    }
 
 private:
+
+   void initConfig() {
+
+      TimeParamSet *orderTimeParamSet;
+      switch(ORDER_TIME_PARAM_SET) {
+         case ORDER_TIME_PARAM_SET_M15_SHORT:
+            orderTimeParamSet = new TimeParamSet(PERIOD_M15, 5, 15);
+            break;
+         default:
+            ExpertRemove();
+      }
+
+      TimeParamSet *hedgeTimeParamSet;
+      switch(HEDGE_TIME_PARAM_SET) {
+         case HEDGE_TIME_PARAM_SET_W1_MID:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 50);
+            break;
+         case HEDGE_TIME_PARAM_SET_W1_LONG:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 100);
+            break;
+         case HEDGE_TIME_PARAM_SET_MN1_SHORT:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_MN1, 5, 15);
+            break;
+         default:
+            ExpertRemove();
+      }
+
+      __config = new Config(
+         TP
+         , TOTAL_HEDGE_TP
+         , orderTimeParamSet.timeFrame
+         , PERIOD_M1
+         , hedgeTimeParamSet.timeFrame
+         , OBSERVE_TIMEFRAMES
+         , orderTimeParamSet.maPeriod
+         , orderTimeParamSet.longMaPeriod
+         , hedgeTimeParamSet.maPeriod
+         , hedgeTimeParamSet.longMaPeriod
+         , ORDER_GRID_SIZE
+         , HEDGE_GRID_SIZE
+         , USE_GRID_TRADE
+         , USE_GRID_HEDGE_TRADE
+         , GRID_HEDGE_MODE
+      );
+
+      delete orderTimeParamSet;
+      delete hedgeTimeParamSet;
+   }
 
    void initLogSettings() {
       LOGID_POSITION.set(LOGID_STATE_ENABLED);
@@ -153,14 +218,14 @@ private:
    void initObservers() {
       // init observers
       this.accountObserver = new AccountObserver();
-      this.positionRecorder = new PositionRecorder(this.testResultFile);
+      this.testResultRecorder = new TestResultRecorder(this.testResultFile);
       this.allPositionObserver = new PositionObserver(0);
       this.gridTradePositionObserver = new PositionObserver(MAGIC_NUMBER_MAIN);
       this.hedgeTradePositionObserver = new PositionObserver(MAGIC_NUMBER_HEDGE);
 
       // register observers
       //observerList.Add(this.accountObserver);
-      observerList.Add(this.positionRecorder);
+      observerList.Add(this.testResultRecorder);
       //observerList.Add(this.allPositionObserver);
       //observerList.Add(this.gridTradePositionObserver);
       //observerList.Add(this.hedgeTradePositionObserver);
@@ -180,7 +245,7 @@ private:
 
    void deleteObservers() {
       delete this.accountObserver;
-      delete this.positionRecorder;
+      delete this.testResultRecorder;
       delete this.allPositionObserver;
       delete this.gridTradePositionObserver;
       delete this.hedgeTradePositionObserver;
@@ -195,7 +260,7 @@ private:
 
    int testResultFile;
    AccountObserver *accountObserver;
-   PositionRecorder *positionRecorder;
+   TestResultRecorder *testResultRecorder;
    PositionObserver *allPositionObserver;
    PositionObserver *gridTradePositionObserver;
    PositionObserver *hedgeTradePositionObserver;
