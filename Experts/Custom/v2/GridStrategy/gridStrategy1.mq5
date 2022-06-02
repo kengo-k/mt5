@@ -153,7 +153,7 @@ private:
    void initObservers() {
       // init observers
       this.accountObserver = new AccountObserver();
-      this.positionRecorder = new PositionRecorder(this.positionSummaryFile);
+      this.positionRecorder = new PositionRecorder(this.testResultFile);
       this.allPositionObserver = new PositionObserver(0);
       this.gridTradePositionObserver = new PositionObserver(MAGIC_NUMBER_MAIN);
       this.hedgeTradePositionObserver = new PositionObserver(MAGIC_NUMBER_HEDGE);
@@ -171,11 +171,11 @@ private:
       // $TERMINAL_IDは複数のMT5がインストールされている場合はそれぞれを識別するID
       // (MT5が利用できる複数の業者を利用する場合にMT5が複数インストールされる可能性がある)
       // セキュリティ上の理由から上記ディレクトリ以外の場所にファイルを出力することや読み込むことはできない模様
-      this.positionSummaryFile = FileOpen(Util::createUniqueFileName("position_summary", "csv"), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      this.testResultFile = FileOpen(Util::createUniqueFileName("test_result", "csv"), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
    }
 
    void closeFileHandles() {
-      FileClose(this.positionSummaryFile);
+      FileClose(this.testResultFile);
    }
 
    void deleteObservers() {
@@ -193,7 +193,7 @@ private:
       this.allPositionObserver.logTotalReport();
    }
 
-   int positionSummaryFile;
+   int testResultFile;
    AccountObserver *accountObserver;
    PositionRecorder *positionRecorder;
    PositionObserver *allPositionObserver;
