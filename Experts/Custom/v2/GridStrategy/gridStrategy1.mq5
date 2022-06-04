@@ -48,41 +48,27 @@ input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_
 // トレンド判定時間のパラメータセット
 input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MID;
 
-// エントリ時間足(たぶん固定)
-//input ENUM_TIMEFRAMES CREATE_ORDER_TIMEFRAME = PERIOD_M15;
-
-// エントリ判定短期MA期間(たぶん固定)
-//input int ORDER_MA_PERIOD = 5;
-
-// エントリ判定長期MA期間(たぶん固定)
-//input int ORDER_LONG_MA_PERIOD = 15;
-
-// トレンド判定時間足(たぶん固定)
-//input ENUM_TIMEFRAMES HEDGE_DIRECTION_TIMEFRAME = PERIOD_W1;
-
-// トレンド判定短期MA期間(最適化余地あり)
-//input int HEDGE_MA_PERIOD = 5;
-
-// トレンド判定短期MA期間(最適化余地あり)
-//input int HEDGE_LONG_MA_PERIOD = 50;
-
 // グリッドトレード用グリッドサイズ(要最適化)
 input int ORDER_GRID_SIZE = 30;
 
 // ヘッジ用グリッドサイズ(要最適化)
 input int HEDGE_GRID_SIZE = 30;
 
-// グリッドトレードを実行するかどうか
-input bool USE_GRID_TRADE = true;
+// トレード方式(グリッドのみ/ヘッジのみ/両方)
+input ENUM_TRADE_MODE TRADE_MODE = TRADE_MODE_GRID_AND_HEDGE;
 
-// グリッドトレードのヘッジを行うかどうか
-input bool USE_GRID_HEDGE_TRADE = true;
+// 損益計算時にスワップを考慮に含めるかどうか
+input ENUM_SWAP_INCLUDE SWAP_INCLUDE = SWAP_INCLUDE_OFF;
 
 // グリッドトレードのヘッジを行う場合の動作方式
 input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
 
 // 買/売を制限するかどうか
 input ENUM_ENTRY_MODE ENTRY_MODE = ENTRY_MODE_BOTH;
+
+// ログファイル識別用ユニーク文字列
+// ※最適化テストで大量のログファイルが生成されて区別がつかなくなるのを防止するために使用する。テスト実施時のYYYYMMDDHHMM等適当に設定しておけばよい
+input string LOG_FILE_PREFIX = "";
 
 // 以下global変数に値を設定する
 const string EA_NAME = "v2/Gridstrategy/gridStrategy1";
@@ -196,6 +182,20 @@ private:
       } else if (ENTRY_MODE == ENTRY_MODE_SELL_ONLY) {
          buyable = false;
       }
+
+      bool useGridTrade = true;
+      bool useGridHedegTrade = true;
+      if (TRADE_MODE == TRADE_MODE_GRID_ONLY) {
+         useGridHedegTrade = false;
+      } else if (TRADE_MODE == TRADE_MODE_HEDGE_ONLY) {
+         useGridTrade = false;
+      }
+
+      bool isIncludeSwap = true;
+      if (SWAP_INCLUDE == SWAP_INCLUDE_OFF) {
+         isIncludeSwap = false;
+      }
+
       __config = new Config(
          TP
          , TOTAL_HEDGE_TP
@@ -209,11 +209,12 @@ private:
          , hedgeTimeParamSet.longMaPeriod
          , ORDER_GRID_SIZE
          , HEDGE_GRID_SIZE
-         , USE_GRID_TRADE
-         , USE_GRID_HEDGE_TRADE
+         , useGridTrade
+         , useGridHedegTrade
          , GRID_HEDGE_MODE
          , buyable
          , sellable
+         , isIncludeSwap
       );
 
       delete orderTimeParamSet;
@@ -248,7 +249,7 @@ private:
       // $TERMINAL_IDは複数のMT5がインストールされている場合はそれぞれを識別するID
       // (MT5が利用できる複数の業者を利用する場合にMT5が複数インストールされる可能性がある)
       // セキュリティ上の理由から上記ディレクトリ以外の場所にファイルを出力することや読み込むことはできない模様
-      this.testResultFile = FileOpen(Util::createUniqueFileName("test_result", "csv"), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      this.testResultFile = FileOpen(Util::createUniqueFileName(StringFormat("%s_test_result", LOG_FILE_PREFIX), "csv"), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
    }
 
    void closeFileHandles() {

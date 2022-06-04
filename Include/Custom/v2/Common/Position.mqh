@@ -2,6 +2,10 @@
 #include <Custom/v2/Common/PosInfo.mqh>
 #include <Custom/v2/Common/PositionSummary.mqh>
 
+#include <Custom/v2/Strategy/GridStrategy/Config.mqh>
+
+extern Config *__config;
+
 // ポジション関連のメソッド集
 class Position {
 public:
@@ -33,7 +37,8 @@ public:
          if (i != 0) {
             StringAdd(str, ", ");
          }
-         string ps = DoubleToString(p.profitAndSwap, Digits());
+         double profit = p.profit;
+         string ps = DoubleToString(profit, Digits());
          string s = DoubleToString(p.swap, Digits());
          StringAdd(str, StringFormat("%s(%s)#%d", ps, s, p.positionTicket));
       }
@@ -82,30 +87,34 @@ public:
             }
             PosInfo *p = new PosInfo();
             Position::setPosInfo(p);
-            if (p.profitAndSwap < 0) {
-               red = red + p.profitAndSwap;
+            double profit = p.profit;
+            if (__config.isIncludeSwap) {
+               profit = p.profitAndSwap;
+            }
+            if (profit < 0) {
+               red = red + profit;
             } else {
-               black = black + p.profitAndSwap;
+               black = black + profit;
             }
             if (p.positionType == POSITION_TYPE_BUY) {
-               if (p.profitAndSwap < 0) {
-                  buyRed = buyRed + p.profitAndSwap;
+               if (profit < 0) {
+                  buyRed = buyRed + profit;
                   buyRedPositions.Add(p);
                } else {
-                  buyBlack = buyBlack + p.profitAndSwap;
+                  buyBlack = buyBlack + profit;
                   buyBlackPositions.Add(p);
                }
-               buy = buy + p.profitAndSwap;
+               buy = buy + profit;
                buyCount++;
             } else {
-               if (p.profitAndSwap < 0) {
-                  sellRed = sellRed + p.profitAndSwap;
+               if (profit < 0) {
+                  sellRed = sellRed + profit;
                   sellRedPositions.Add(p);
                } else {
-                  sellBlack = sellBlack + p.profitAndSwap;
+                  sellBlack = sellBlack + profit;
                   sellBlackPositions.Add(p);
                }
-               sell = sell + p.profitAndSwap;
+               sell = sell + profit;
                sellCount++;
             }
          }

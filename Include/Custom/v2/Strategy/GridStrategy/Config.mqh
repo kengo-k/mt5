@@ -22,6 +22,7 @@ public:
       ,ENUM_GRID_HEDGE_MODE _gridHedgeMode
       ,bool _buyable
       ,bool _sellable
+      ,bool _isIncludeSwap
    ):
       tp(_tp)
       , totalHedgeTp(_totalHedgeTp)
@@ -40,6 +41,7 @@ public:
       , gridHedgeMode(_gridHedgeMode)
       , buyable(_buyable)
       , sellable(_sellable)
+      , isIncludeSwap(_isIncludeSwap)
    {}
 
    double tp;
@@ -59,4 +61,5 @@ public:
    ENUM_GRID_HEDGE_MODE gridHedgeMode;
    bool buyable;
    bool sellable;
+   bool isIncludeSwap;
 };
