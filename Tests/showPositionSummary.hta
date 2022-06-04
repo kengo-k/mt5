@@ -19,14 +19,14 @@
         width: 95%;
         height: 80%;
       }
-      #settings {
+      #chartSettings {
         margin: auto;
         width: 95%;
       }
-      #settings fieldset {
+      #chartSettings fieldset {
         float: left;
       }
-      #settings fieldset.disabled {
+      #chartSettings fieldset.disabled {
         background-color: #cccccc;
       }
 
@@ -54,99 +54,36 @@
   <script type="text/babel">
     const shell = new ActiveXObject("WScript.Shell");
     const fs = new ActiveXObject("Scripting.FileSystemObject");
-    // all csv file names
-    const csvFiles = [];
-    let csvFileIndex;
-    // loaded csv data
-    let header = [];
-    let body = [];
-    let parameters = "";
+
     // HighChart object
     let chart = null;
 
     $(function () {
-      const settings = $("#settings");
-      const files = $("#files");
-      loadDir();
-      ReactDOM.render(<SettingsPanel />, settings[0]);
-      ReactDOM.render(<FilesPanel />, files[0]);
+      const root = $("#root");
+      ReactDOM.render(<RootComponent />, root[0]);
     });
 
-    function extract(label, conv) {
-      return _.map(body, function (lineObj) {
-        var ret = lineObj[label];
-        if (conv != null) {
-          ret = conv(ret);
-        }
-        return ret;
-      });
-    }
+    function showChart(chartSettings, csvInfo) {
+      const extract = (label, conv) => {
+        return _.map(csvInfo.body, function (lineObj) {
+          var ret = lineObj[label];
+          if (conv != null) {
+            ret = conv(ret);
+          }
+          return ret;
+        });
+      };
 
-    function max(label) {
-      const values = extract(label, Number);
-      return _.max(values);
-    }
+      const max = (label) => {
+        const values = extract(label, Number);
+        return _.max(values);
+      };
 
-    function min(label) {
-      const values = extract(label, Number);
-      return _.min(values);
-    }
+      const min = (label) => {
+        const values = extract(label, Number);
+        return _.min(values);
+      };
 
-    function loadDir() {
-      const tempDir = shell.ExpandEnvironmentStrings("%temp%");
-      const dataFolder = fs.getFolder(tempDir + "\\test_result");
-      const e = new Enumerator(dataFolder.files);
-      for (; !e.atEnd(); e.moveNext()) {
-        const f = e.item();
-        if (_.endsWith(f.name, ".csv")) {
-          csvFiles.push(f.name);
-        }
-      }
-    }
-
-    function loadCsv() {
-      header = [];
-      body = [];
-      parameters = "";
-      header.push(
-        "date",
-        "gridBuyCount",
-        "gridBuyProfit",
-        "gridSellCount",
-        "gridSellProfit",
-        "hedgeBuyCount",
-        "hedgeBuyProfit",
-        "hedgeSellCount",
-        "hedgeSellProfit",
-        "balance",
-        "freeMargin"
-      );
-      const dir = shell.ExpandEnvironmentStrings("%temp%");
-      const file = fs.openTextFile(
-        dir + "\\test_result\\" + csvFiles[csvFileIndex],
-        1,
-        false,
-        0
-      );
-      var i = 0;
-      while (!file.atEndOfStream) {
-        const line = file.readLine();
-        const headChar = line[0];
-        if (headChar == "#") {
-          parameters = "parameters: " + line.substr(1);
-          continue;
-        }
-        const bs = line.split(",");
-        const lineObj = {};
-        for (var i = 0; i < bs.length; i++) {
-          lineObj[header[i]] = bs[i];
-        }
-        body.push(lineObj);
-      }
-      file.close();
-    }
-
-    function showChart() {
       const gridBuyProfit = extract("gridBuyProfit", Number);
       const gridSellProfit = extract("gridSellProfit", Number);
       const hedgeBuyProfit = extract("hedgeBuyProfit", Number);
@@ -170,15 +107,15 @@
       const targetItemIndexMap = {};
       const targetItems = [];
       let targetItemIndex = 0;
-      if (STATE.accountChecked) {
+      if (chartSettings.accountChecked) {
         targetItemIndexMap["account"] = targetItemIndex++;
         targetItems.push("account");
       }
-      if (STATE.positionCountChecked) {
+      if (chartSettings.positionCountChecked) {
         targetItemIndexMap["positionCount"] = targetItemIndex++;
         targetItems.push("positionCount");
       }
-      if (STATE.positionProfitChecked) {
+      if (chartSettings.positionProfitChecked) {
         targetItemIndexMap["positionProfit"] = targetItemIndex++;
         targetItems.push("positionProfit");
       }
@@ -233,27 +170,27 @@
             seriesList.push(item);
           }
         };
-        createProfitSeriesItem(STATE.gridBuyProfitChecked, "損益(グリッド/買)", gridBuyProfit, "red");
-        createCountSeriesItem(STATE.gridBuyCountChecked, "ポジション数(グリッド/買)", extract("gridBuyCount", Number), "red");
-        createProfitSeriesItem(STATE.gridSellProfitChecked, "損益(グリッド/売)", gridSellProfit, "blue");
-        createCountSeriesItem(STATE.gridSellCountChecked, "ポジション数(グリッド/売)", extract("gridSellCount", Number), "blue");
-        createProfitSeriesItem(STATE.hedgeBuyProfitChecked, "損益(ヘッジ/買)", hedgeBuyProfit, "green");
-        createCountSeriesItem(STATE.hedgeBuyCountChecked, "ポジション数(ヘッジ/買)", extract("hedgeBuyCount", Number), "green");
-        createProfitSeriesItem(STATE.hedgeSellProfitChecked, "損益(ヘッジ/売)", hedgeSellProfit, "orange");
-        createCountSeriesItem(STATE.hedgeSellCountChecked, "ポジション数(ヘッジ/売)", extract("hedgeSellCount", Number), "orange");
-        createAccountSeriesItem(STATE.balanceChecked, "残高", balance, "mistyrose");
-        createAccountSeriesItem(STATE.freeMarginChecked, "余裕証拠金", freeMargin, "lightblue");
+        createProfitSeriesItem(chartSettings.gridBuyProfitChecked, "損益(グリッド/買)", gridBuyProfit, "red");
+        createCountSeriesItem(chartSettings.gridBuyCountChecked, "ポジション数(グリッド/買)", extract("gridBuyCount", Number), "red");
+        createProfitSeriesItem(chartSettings.gridSellProfitChecked, "損益(グリッド/売)", gridSellProfit, "blue");
+        createCountSeriesItem(chartSettings.gridSellCountChecked, "ポジション数(グリッド/売)", extract("gridSellCount", Number), "blue");
+        createProfitSeriesItem(chartSettings.hedgeBuyProfitChecked, "損益(ヘッジ/買)", hedgeBuyProfit, "green");
+        createCountSeriesItem(chartSettings.hedgeBuyCountChecked, "ポジション数(ヘッジ/買)", extract("hedgeBuyCount", Number), "green");
+        createProfitSeriesItem(chartSettings.hedgeSellProfitChecked, "損益(ヘッジ/売)", hedgeSellProfit, "orange");
+        createCountSeriesItem(chartSettings.hedgeSellCountChecked, "ポジション数(ヘッジ/売)", extract("hedgeSellCount", Number), "orange");
+        createAccountSeriesItem(chartSettings.balanceChecked, "残高", balance, "mistyrose");
+        createAccountSeriesItem(chartSettings.freeMarginChecked, "余裕証拠金", freeMargin, "lightblue");
         return seriesList;
       };
 
       const yAxis = createYAxis();
       const series = createSeries();
-      chart = Highcharts.chart("container", {
+      chart = Highcharts.chart("chart", {
         chart: {
           zoomType: "xy",
         },
         title: {
-          text: parameters,
+          text: csvInfo.paramString,
         },
         xAxis: [
           {
@@ -282,7 +219,7 @@
       });
     }
 
-    class State {
+    class ChartSettings {
       constructor() {
         this.accountChecked = true;
         this.balanceChecked = true;
@@ -316,32 +253,170 @@
       }
     }
 
-    class FilesPanel extends React.Component {
+    class RootComponent extends React.Component {
       constructor(props) {
         super(props);
+        const initialCsvFileIndex = 0;
+        const dirInfo = loadDir();
+        const csvFiles = dirInfo.allCsvFiles.map((f) => {
+          return f.csvFile;
+        });
+        const csvInfo = loadCsv(csvFiles[initialCsvFileIndex]);
+        const initialCsvFileFilterCondition = {};
+        Object.keys(dirInfo.paramListMap).forEach((k) => {
+          const values = dirInfo.paramListMap[k];
+          if (values.length > 1) {
+            initialCsvFileFilterCondition[k] = "";
+          } else {
+            initialCsvFileFilterCondition[k] = values[0];
+          }
+        });
         this.state = {
-          index: 0,
+          chartSettings: new ChartSettings(),
+          csvFileIndex: initialCsvFileIndex,
+          csvFiles,
+          allCsvFiles: dirInfo.allCsvFiles,
+          csvInfo,
+          dirInfo,
+          csvFileFilterCondition: initialCsvFileFilterCondition,
         };
       }
-      componentDidMount() {
-        csvFileIndex = this.state.index;
-        loadCsv();
-        showChart();
-      }
+
       render() {
-        const onChangeSelect = (e) => {
-          const index = e.target.value;
-          this.setState({ index });
-          csvFileIndex = index;
-          loadCsv();
-          showChart();
+        const updateChartSettings = (obj) => {
+          const chartSettings = _.merge({}, this.state.chartSettings, obj);
+          this.setState({ chartSettings });
         };
-        const onChangeText = (e) => {
+        const setCsvFileIndex = (csvFileIndex) => {
+          this.setState({ csvFileIndex });
+        };
+
+        const updateCsvFileFilterCondition = (obj) => {
+          const csvFileFilterCondition = _.merge(
+            {},
+            this.state.csvFileFilterCondition,
+            obj
+          );
+          alert(JSON.stringify(csvFileFilterCondition));
+          this.setState({ csvFileFilterCondition });
+
+          const csvFiles = this.state.allCsvFiles.filter((f) => {
+            //alert("filter!!");
+            let ret = true;
+            const keys = Object.keys(csvFileFilterCondition);
+            for (let i = 0; i < keys.length; i++) {
+              const k = keys[i];
+              // alert(
+              //   k +
+              //     ": value=" +
+              //     f.condition[k] +
+              //     ", filter=" +
+              //     csvFileFilterCondition[k]
+              // );
+              if (csvFileFilterCondition[k] != "") {
+                if (f.condition[k] != csvFileFilterCondition[k]) {
+                  ret = false;
+                  break;
+                }
+              }
+            }
+            return ret;
+          });
+          this.setState({
+            csvFiles: csvFiles.map((f) => {
+              return f.csvFile;
+            }),
+          });
+          this.setState({ csvFileIndex: 0 });
+        };
+        return (
+          <React.Fragment>
+            <ChartSettingsComponent
+              chartSettings={this.state.chartSettings}
+              updateChartSettings={updateChartSettings}
+            />
+            <FileSelectionComponent
+              csvFiles={this.state.csvFiles}
+              csvFileIndex={this.state.csvFileIndex}
+              setCsvFileIndex={setCsvFileIndex}
+            />
+            <FileFilterComponent
+              csvFileFilterCondition={this.state.csvFileFilterCondition}
+              paramListMap={this.state.dirInfo.paramListMap}
+              updateCsvFileFilterCondition={updateCsvFileFilterCondition}
+            />
+            <ChartComponent
+              chartSettings={this.state.chartSettings}
+              csvInfo={this.state.csvInfo}
+            />
+          </React.Fragment>
+        );
+      }
+    }
+
+    class ChartComponent extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+
+      componentDidMount() {
+        showChart(this.props.chartSettings, this.props.csvInfo);
+      }
+
+      render() {
+        return <div id="chart" />;
+      }
+    }
+
+    class FileFilterComponent extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+
+      render() {
+        return (
+          <React.Fragment>
+            {Object.keys(this.props.paramListMap).map((k) => {
+              const values = _.clone(this.props.paramListMap[k]);
+              if (values.length > 1) {
+                values.unshift("");
+              }
+              const onChange = (e) => {
+                const newValue = e.target.value;
+                this.props.updateCsvFileFilterCondition({ [k]: newValue });
+              };
+              return (
+                <React.Fragment>
+                  <span>{k}</span>
+                  <select onChange={onChange} disabled={values.length == 1}>
+                    {values.map((v) => {
+                      return (
+                        <option
+                          value={v}
+                          selected={this.props.csvFileFilterCondition[k] == v}
+                        >
+                          {v}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </React.Fragment>
+              );
+            })}
+          </React.Fragment>
+        );
+      }
+    }
+
+    class FileSelectionComponent extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+
+      render() {
+        const onChange = (e) => {
           const index = e.target.value;
-          this.setState({ index });
-          csvFileIndex = index;
-          loadCsv();
-          showChart();
+          this.props.setCsvFileIndex(index);
         };
 
         return (
@@ -350,14 +425,14 @@
               <input
                 type="number"
                 id="csvFileIndex"
-                value={this.state.index}
-                onChange={onChangeText}
+                value={this.props.csvFileIndex}
+                onChange={onChange}
               />
-              /<span>{csvFiles.length}</span>
-              <select size="5" onChange={onChangeSelect}>
-                {csvFiles.map((f, i) => {
+              /<span>{this.props.csvFiles.length}</span>
+              <select size="5" onChange={onChange}>
+                {this.props.csvFiles.map((f, i) => {
                   return (
-                    <option value={i} selected={i == this.state.index}>
+                    <option value={i} selected={i == this.props.csvFileIndex}>
                       {f}
                     </option>
                   );
@@ -412,29 +487,24 @@
       }
     }
 
-    let STATE = new State();
-    class SettingsPanel extends React.Component {
+    class ChartSettingsComponent extends React.Component {
       constructor(props) {
         super(props);
-        this.state = STATE;
-      }
-
-      componentDidUpdate() {
-        STATE = _.clone(this.state);
-        showChart();
       }
 
       toggleChecked(checkName) {
         return () => {
-          const current = this.state[checkName];
-          this.setState({ [checkName]: !current });
+          const current = this.props.chartSettings[checkName];
+          this.props.updateChartSettings({ [checkName]: !current });
         };
       }
 
       isDisabled(checkName) {
         return (
-          (this.state.getCheckedCount() == 2 && !this.state[checkName]) ||
-          (this.state.getCheckedCount() == 1 && this.state[checkName])
+          (this.props.chartSettings.getCheckedCount() == 2 &&
+            !this.props.chartSettings[checkName]) ||
+          (this.props.chartSettings.getCheckedCount() == 1 &&
+            this.props.chartSettings[checkName])
         );
       }
 
@@ -444,11 +514,15 @@
 
       render() {
         return (
-          <div>
-            <fieldset class={this.getFieldSetClass(this.state.accountChecked)}>
+          <div id="chartSettings">
+            <fieldset
+              class={this.getFieldSetClass(
+                this.props.chartSettings.accountChecked
+              )}
+            >
               <GraphItemGroup
                 label="口座情報"
-                checked={this.state.accountChecked}
+                checked={this.props.chartSettings.accountChecked}
                 onClick={this.toggleChecked("accountChecked")}
                 disabled={this.isDisabled("accountChecked")}
               />
@@ -456,24 +530,26 @@
               <GraphItemSetting
                 itemId="balance"
                 labelText="残高"
-                checked={this.state.balanceChecked}
+                checked={this.props.chartSettings.balanceChecked}
                 onClick={this.toggleChecked("balanceChecked")}
-                disabled={!this.state.accountChecked}
+                disabled={!this.props.chartSettings.accountChecked}
               />
               <GraphItemSetting
                 itemId="freeMargin"
                 labelText="証拠金"
-                checked={this.state.freeMarginChecked}
+                checked={this.props.chartSettings.freeMarginChecked}
                 onClick={this.toggleChecked("freeMarginChecked")}
-                disabled={!this.state.accountChecked}
+                disabled={!this.props.chartSettings.accountChecked}
               />
             </fieldset>
             <fieldset
-              class={this.getFieldSetClass(this.state.positionCountChecked)}
+              class={this.getFieldSetClass(
+                this.props.chartSettings.positionCountChecked
+              )}
             >
               <GraphItemGroup
                 label="ポジション数"
-                checked={this.state.positionCountChecked}
+                checked={this.props.chartSettings.positionCountChecked}
                 onClick={this.toggleChecked("positionCountChecked")}
                 disabled={this.isDisabled("positionCountChecked")}
               />
@@ -481,38 +557,40 @@
               <GraphItemSetting
                 itemId="gridBuyCount"
                 labelText="グリッド/買"
-                checked={this.state.gridBuyCountChecked}
+                checked={this.props.chartSettings.gridBuyCountChecked}
                 onClick={this.toggleChecked("gridBuyCountChecked")}
-                disabled={!this.state.positionCountChecked}
+                disabled={!this.props.chartSettings.positionCountChecked}
               />
               <GraphItemSetting
                 itemId="gridSellCount"
                 labelText="グリッド/売"
-                checked={this.state.gridSellCountChecked}
+                checked={this.props.chartSettings.gridSellCountChecked}
                 onClick={this.toggleChecked("gridSellCountChecked")}
-                disabled={!this.state.positionCountChecked}
+                disabled={!this.props.chartSettings.positionCountChecked}
               />
               <GraphItemSetting
                 itemId="hedgeBuyCount"
                 labelText="ヘッジ/買"
-                checked={this.state.hedgeBuyCountChecked}
+                checked={this.props.chartSettings.hedgeBuyCountChecked}
                 onClick={this.toggleChecked("hedgeBuyCountChecked")}
-                disabled={!this.state.positionCountChecked}
+                disabled={!this.props.chartSettings.positionCountChecked}
               />
               <GraphItemSetting
                 itemId="hedgeSellCount"
                 labelText="ヘッジ/売"
-                checked={this.state.hedgeSellCountChecked}
+                checked={this.props.chartSettings.hedgeSellCountChecked}
                 onClick={this.toggleChecked("hedgeSellCountChecked")}
-                disabled={!this.state.positionCountChecked}
+                disabled={!this.props.chartSettings.positionCountChecked}
               />
             </fieldset>
             <fieldset
-              class={this.getFieldSetClass(this.state.positionProfitChecked)}
+              class={this.getFieldSetClass(
+                this.props.chartSettings.positionProfitChecked
+              )}
             >
               <GraphItemGroup
                 label="損益"
-                checked={this.state.positionProfitChecked}
+                checked={this.props.chartSettings.positionProfitChecked}
                 onClick={this.toggleChecked("positionProfitChecked")}
                 disabled={this.isDisabled("positionProfitChecked")}
               />
@@ -520,40 +598,128 @@
               <GraphItemSetting
                 itemId="gridBuyProfit"
                 labelText="グリッド/買"
-                checked={this.state.gridBuyProfitChecked}
+                checked={this.props.chartSettings.gridBuyProfitChecked}
                 onClick={this.toggleChecked("gridBuyProfitChecked")}
-                disabled={!this.state.positionProfitChecked}
+                disabled={!this.props.chartSettings.positionProfitChecked}
               />
               <GraphItemSetting
                 itemId="gridSellProfit"
                 labelText="グリッド/売"
-                checked={this.state.gridSellProfitChecked}
+                checked={this.props.chartSettings.gridSellProfitChecked}
                 onClick={this.toggleChecked("gridSellProfitChecked")}
-                disabled={!this.state.positionProfitChecked}
+                disabled={!this.props.chartSettings.positionProfitChecked}
               />
               <GraphItemSetting
                 itemId="hedgeBuyProfit"
                 labelText="ヘッジ/買"
-                checked={this.state.hedgeBuyProfitChecked}
+                checked={this.props.chartSettings.hedgeBuyProfitChecked}
                 onClick={this.toggleChecked("hedgeBuyProfitChecked")}
-                disabled={!this.state.positionProfitChecked}
+                disabled={!this.props.chartSettings.positionProfitChecked}
               />
               <GraphItemSetting
                 itemId="hedgeSellProfit"
                 labelText="ヘッジ/売"
-                checked={this.state.hedgeSellProfitChecked}
+                checked={this.props.chartSettings.hedgeSellProfitChecked}
                 onClick={this.toggleChecked("hedgeSellProfitChecked")}
-                disabled={!this.state.positionProfitChecked}
+                disabled={!this.props.chartSettings.positionProfitChecked}
               />
             </fieldset>
           </div>
         );
       }
     }
+
+    function loadDir() {
+      const tempDir = shell.ExpandEnvironmentStrings("%temp%");
+      const dataFolder = fs.getFolder(tempDir + "\\test_result");
+      const e = new Enumerator(dataFolder.files);
+      const allCsvFiles = [];
+      // key: param name, value: param value list
+      const paramListMap = {};
+      for (; !e.atEnd(); e.moveNext()) {
+        const f = e.item();
+        if (!_.endsWith(f.name, ".csv")) {
+          continue;
+        }
+        const file = fs.openTextFile(
+          tempDir + "\\test_result\\" + f.name,
+          1,
+          false,
+          0
+        );
+        const line = file.readLine();
+        const params = line.substr(1).split(",");
+        const condition = {};
+        params.forEach((p) => {
+          const keyValue = p.split("=");
+          const key = keyValue[0];
+          const value = keyValue[1];
+          condition[key] = value;
+          if (!(key in paramListMap)) {
+            paramListMap[key] = [];
+          }
+          if (!_.includes(paramListMap[key], value)) {
+            paramListMap[key].push(value);
+          }
+        });
+        allCsvFiles.push({ condition, csvFile: f.name });
+        file.close();
+      }
+      return {
+        allCsvFiles,
+        paramListMap,
+      };
+    }
+
+    function loadCsv(csvFileName) {
+      const header = [];
+      const body = [];
+      let paramString = "";
+      header.push(
+        "date",
+        "gridBuyCount",
+        "gridBuyProfit",
+        "gridSellCount",
+        "gridSellProfit",
+        "hedgeBuyCount",
+        "hedgeBuyProfit",
+        "hedgeSellCount",
+        "hedgeSellProfit",
+        "balance",
+        "freeMargin"
+      );
+      const dir = shell.ExpandEnvironmentStrings("%temp%");
+      const file = fs.openTextFile(
+        dir + "\\test_result\\" + csvFileName,
+        1,
+        false,
+        0
+      );
+      var i = 0;
+      while (!file.atEndOfStream) {
+        const line = file.readLine();
+        const headChar = line[0];
+        if (headChar == "#") {
+          paramString = "parameters: " + line.substr(1);
+          continue;
+        }
+        const bs = line.split(",");
+        const lineObj = {};
+        for (var i = 0; i < bs.length; i++) {
+          lineObj[header[i]] = bs[i];
+        }
+        body.push(lineObj);
+      }
+      file.close();
+
+      return {
+        header,
+        body,
+        paramString,
+      };
+    }
   </script>
   <body>
-    <div id="settings"></div>
-    <div id="files"></div>
-    <div id="container"></div>
+    <div id="root"></div>
   </body>
 </html>
