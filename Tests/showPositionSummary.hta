@@ -14,14 +14,7 @@
         height: 100%;
         font-family: "メイリオ";
       }
-      #container {
-        margin: auto;
-        width: 95%;
-        height: 80%;
-      }
       #chartSettings {
-        margin: auto;
-        width: 95%;
       }
       #chartSettings fieldset {
         float: left;
@@ -29,10 +22,35 @@
       #chartSettings fieldset.disabled {
         background-color: #cccccc;
       }
-
+      #fileSelection {
+        float: left;
+      }
       #csvFileIndex {
         width: 40px;
         text-align: right;
+      }
+      #fileFilter {
+        float: left;
+      }
+      #chart {
+        float: left;
+        width: 80%;
+        height: 1700px;
+      }
+      .clearfix:after {
+        content: "";
+        display: block;
+        clear: both;
+      }
+      .clearfix:before {
+        content: "";
+        display: block;
+        clear: both;
+      }
+      .clearfix {
+        display: block;
+        width: 100%;
+        height: 100%;
       }
     </style>
   </head>
@@ -297,22 +315,13 @@
             this.state.csvFileFilterCondition,
             obj
           );
-          alert(JSON.stringify(csvFileFilterCondition));
           this.setState({ csvFileFilterCondition });
 
           const csvFiles = this.state.allCsvFiles.filter((f) => {
-            //alert("filter!!");
             let ret = true;
             const keys = Object.keys(csvFileFilterCondition);
             for (let i = 0; i < keys.length; i++) {
               const k = keys[i];
-              // alert(
-              //   k +
-              //     ": value=" +
-              //     f.condition[k] +
-              //     ", filter=" +
-              //     csvFileFilterCondition[k]
-              // );
               if (csvFileFilterCondition[k] != "") {
                 if (f.condition[k] != csvFileFilterCondition[k]) {
                   ret = false;
@@ -340,15 +349,17 @@
               csvFileIndex={this.state.csvFileIndex}
               setCsvFileIndex={setCsvFileIndex}
             />
-            <FileFilterComponent
-              csvFileFilterCondition={this.state.csvFileFilterCondition}
-              paramListMap={this.state.dirInfo.paramListMap}
-              updateCsvFileFilterCondition={updateCsvFileFilterCondition}
-            />
-            <ChartComponent
-              chartSettings={this.state.chartSettings}
-              csvInfo={this.state.csvInfo}
-            />
+            <div class="clearfix">
+              <FileFilterComponent
+                csvFileFilterCondition={this.state.csvFileFilterCondition}
+                paramListMap={this.state.dirInfo.paramListMap}
+                updateCsvFileFilterCondition={updateCsvFileFilterCondition}
+              />
+              <ChartComponent
+                chartSettings={this.state.chartSettings}
+                csvInfo={this.state.csvInfo}
+              />
+            </div>
           </React.Fragment>
         );
       }
@@ -360,6 +371,10 @@
       }
 
       componentDidMount() {
+        showChart(this.props.chartSettings, this.props.csvInfo);
+      }
+
+      componentDidUpdate() {
         showChart(this.props.chartSettings, this.props.csvInfo);
       }
 
@@ -376,33 +391,46 @@
       render() {
         return (
           <React.Fragment>
-            {Object.keys(this.props.paramListMap).map((k) => {
-              const values = _.clone(this.props.paramListMap[k]);
-              if (values.length > 1) {
-                values.unshift("");
-              }
-              const onChange = (e) => {
-                const newValue = e.target.value;
-                this.props.updateCsvFileFilterCondition({ [k]: newValue });
-              };
-              return (
-                <React.Fragment>
-                  <span>{k}</span>
-                  <select onChange={onChange} disabled={values.length == 1}>
-                    {values.map((v) => {
-                      return (
-                        <option
-                          value={v}
-                          selected={this.props.csvFileFilterCondition[k] == v}
+            <table id="fileFilter">
+              {Object.keys(this.props.paramListMap).map((k) => {
+                const values = _.clone(this.props.paramListMap[k]);
+                if (values.length > 1) {
+                  values.unshift("");
+                }
+                const onChange = (e) => {
+                  const newValue = e.target.value;
+                  this.props.updateCsvFileFilterCondition({ [k]: newValue });
+                };
+                return (
+                  <React.Fragment>
+                    <tr>
+                      <td>
+                        <span>{k}</span>
+                      </td>
+                      <td>
+                        <select
+                          onChange={onChange}
+                          disabled={values.length == 1}
                         >
-                          {v}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </React.Fragment>
-              );
-            })}
+                          {values.map((v) => {
+                            return (
+                              <option
+                                value={v}
+                                selected={
+                                  this.props.csvFileFilterCondition[k] == v
+                                }
+                              >
+                                {v}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </td>
+                    </tr>
+                  </React.Fragment>
+                );
+              })}
+            </table>
           </React.Fragment>
         );
       }
@@ -421,7 +449,7 @@
 
         return (
           <React.Fragment>
-            <div>
+            <div id="fileSelection">
               <input
                 type="number"
                 id="csvFileIndex"
