@@ -129,10 +129,6 @@ class Init {
 public:
 
    void init() {
-      Print("NEKONEKONEKO");
-      Print(HEDGE_TIME_PARAM_SET_W1_MID);
-      Print(HEDGE_TIME_PARAM_SET_W1_LONG);
-      Print(HEDGE_TIME_PARAM_SET_MN1_SHORT);
       this.initConfig();
       this.initLogSettings();
       this.openFileHandles();
