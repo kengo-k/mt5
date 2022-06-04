@@ -29,6 +29,11 @@
       #settings fieldset.disabled {
         background-color: #cccccc;
       }
+
+      #csvFileIndex {
+        width: 40px;
+        text-align: right;
+      }
     </style>
   </head>
   <!-- prettier-ignore -->
@@ -49,18 +54,22 @@
   <script type="text/babel">
     const shell = new ActiveXObject("WScript.Shell");
     const fs = new ActiveXObject("Scripting.FileSystemObject");
+    // all csv file names
+    const csvFiles = [];
+    let csvFileIndex;
     // loaded csv data
-    const header = [];
-    const body = [];
+    let header = [];
+    let body = [];
     let parameters = "";
     // HighChart object
-    var chart;
+    let chart = null;
 
     $(function () {
       const settings = $("#settings");
+      const files = $("#files");
+      loadDir();
       ReactDOM.render(<SettingsPanel />, settings[0]);
-      loadCsv();
-      showChart();
+      ReactDOM.render(<FilesPanel />, files[0]);
     });
 
     function extract(label, conv) {
@@ -83,7 +92,20 @@
       return _.min(values);
     }
 
+    function loadDir() {
+      const tempDir = shell.ExpandEnvironmentStrings("%temp%");
+      const dataFolder = fs.getFolder(tempDir + "\\test_result");
+      const e = new Enumerator(dataFolder.files);
+      for (; !e.atEnd(); e.moveNext()) {
+        const f = e.item();
+        csvFiles.push(f.name);
+      }
+    }
+
     function loadCsv() {
+      header = [];
+      body = [];
+      parameters = "";
       header.push(
         "date",
         "gridBuyCount",
@@ -98,7 +120,12 @@
         "freeMargin"
       );
       const dir = shell.ExpandEnvironmentStrings("%temp%");
-      const file = fs.openTextFile(dir + "\\position_summary.csv", 1, false, 0);
+      const file = fs.openTextFile(
+        dir + "\\test_result\\" + csvFiles[csvFileIndex],
+        1,
+        false,
+        0
+      );
       var i = 0;
       while (!file.atEndOfStream) {
         const line = file.readLine();
@@ -287,6 +314,59 @@
       }
     }
 
+    class FilesPanel extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          index: 0,
+        };
+      }
+      componentDidMount() {
+        csvFileIndex = this.state.index;
+        loadCsv();
+        showChart();
+      }
+      render() {
+        const onChangeSelect = (e) => {
+          const index = e.target.value;
+          this.setState({ index });
+          csvFileIndex = index;
+          loadCsv();
+          showChart();
+        };
+        const onChangeText = (e) => {
+          const index = e.target.value;
+          this.setState({ index });
+          csvFileIndex = index;
+          loadCsv();
+          showChart();
+        };
+
+        return (
+          <React.Fragment>
+            <div>
+              <input
+                type="number"
+                id="csvFileIndex"
+                value={this.state.index}
+                onChange={onChangeText}
+              />
+              /<span>{csvFiles.length}</span>
+              <select size="5" onChange={onChangeSelect}>
+                {csvFiles.map((f, i) => {
+                  return (
+                    <option value={i} selected={i == this.state.index}>
+                      {f}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </React.Fragment>
+        );
+      }
+    }
+
     class GraphItemGroup extends React.Component {
       constructor(props) {
         super(props);
@@ -470,8 +550,8 @@
     }
   </script>
   <body>
-    <div id="parameters"></div>
     <div id="settings"></div>
+    <div id="files"></div>
     <div id="container"></div>
   </body>
 </html>

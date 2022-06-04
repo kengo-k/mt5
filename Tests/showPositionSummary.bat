@@ -1,2 +1,3 @@
-copy /y %1 %temp%\position_summary.csv
+rmdir /s /q %temp%\test_result
+xcopy /y %1 %temp%\test_result\
 showPositionSummary.hta
