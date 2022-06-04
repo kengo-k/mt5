@@ -23,20 +23,23 @@ public:
 
       // 一行目をコメント行とする。コメント行はパラメータを記録するために使用する
       CArrayList<string> commentList;
-      commentList.Add(StringFormat("tp=%d", (int)__config.tp));
-      commentList.Add(StringFormat("totalHedgeTp=%d", (int)__config.totalHedgeTp));
-      commentList.Add(StringFormat("createOrderTimeframe=%d", __config.createOrderTimeframe));
-      commentList.Add(StringFormat("hedgeDirectionTimeframe=%d", __config.hedgeDirectionTimeframe));
-      commentList.Add(StringFormat("orderMaPeriod=%d", __config.orderMaPeriod));
-      commentList.Add(StringFormat("orderLongMaPeriod=%d", __config.orderLongMaPeriod));
-      commentList.Add(StringFormat("hedgeMaPeriod=%d", __config.hedgeMaPeriod));
-      commentList.Add(StringFormat("hedgeLongMaPeriod=%d", __config.hedgeLongMaPeriod));
-      commentList.Add(StringFormat("orderGridSize=%d", (int)__config.orderGridSize));
-      commentList.Add(StringFormat("hedgeGridSize=%d", (int)__config.hedgeGridSize));
-      commentList.Add(StringFormat("useGridTrade=%d", __config.useGridTrade));
-      commentList.Add(StringFormat("useGridHedgeTrade=%d", __config.useGridHedgeTrade));
-      commentList.Add(StringFormat("gridHedgeMode=%d", __config.gridHedgeMode));
-      string commentLine = Util::join(&commentList, ",  ");
+      commentList.Add(StringFormat("TP=%d", (int)__config.tp));
+      commentList.Add(StringFormat("合計TP=%d", (int)__config.totalHedgeTp));
+      commentList.Add(StringFormat("注文TF=%d", __config.createOrderTimeframe));
+      commentList.Add(StringFormat("トレンドTF=%d", __config.hedgeDirectionTimeframe));
+      commentList.Add(StringFormat("注文MA=%d", __config.orderMaPeriod));
+      commentList.Add(StringFormat("長期注文MA=%d", __config.orderLongMaPeriod));
+      commentList.Add(StringFormat("トレンドMA=%d", __config.hedgeMaPeriod));
+      commentList.Add(StringFormat("長期トレンドMA=%d", __config.hedgeLongMaPeriod));
+      commentList.Add(StringFormat("注文幅=%d", (int)__config.orderGridSize));
+      commentList.Add(StringFormat("ヘッジ幅=%d", (int)__config.hedgeGridSize));
+      commentList.Add(StringFormat("グリッド?=%d", __config.useGridTrade));
+      commentList.Add(StringFormat("ヘッジ?=%d", __config.useGridHedgeTrade));
+      commentList.Add(StringFormat("ヘッジ方式=%d", __config.gridHedgeMode));
+      commentList.Add(StringFormat("買=%d", __config.buyable));
+      commentList.Add(StringFormat("売=%d", __config.sellable));
+      commentList.Add(StringFormat("スワップ=%d", __config.isIncludeSwap));
+      string commentLine = Util::join(&commentList, ",");
       FileWrite(this.fileHandle, StringFormat("#%s", commentLine));
    }
 
