@@ -98,7 +98,9 @@
       const e = new Enumerator(dataFolder.files);
       for (; !e.atEnd(); e.moveNext()) {
         const f = e.item();
-        csvFiles.push(f.name);
+        if (_.endsWith(f.name, ".csv")) {
+          csvFiles.push(f.name);
+        }
       }
     }
 
