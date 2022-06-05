@@ -66,11 +66,15 @@ public:
                summary = new PositionSummary();
                map.TrySetValue(p.magicNumber, summary);
             }
+            double profit = p.profit;
+            if (__config.isIncludeSwap) {
+               profit = p.profitAndSwap;
+            }
             if (p.positionType == POSITION_TYPE_BUY) {
-               summary.buy += p.profitAndSwap;
+               summary.buy += profit;
                summary.buyCount++;
             } else {
-               summary.sell += p.profitAndSwap;
+               summary.sell += profit;
                summary.sellCount++;
             }
          }
