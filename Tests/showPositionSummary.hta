@@ -305,8 +305,13 @@
           const chartSettings = _.merge({}, this.state.chartSettings, obj);
           this.setState({ chartSettings });
         };
+
         const setCsvFileIndex = (csvFileIndex) => {
           this.setState({ csvFileIndex });
+        };
+
+        const setCsvInfo = (csvInfo) => {
+          this.setState({ csvInfo });
         };
 
         const updateCsvFileFilterCondition = (obj) => {
@@ -348,12 +353,14 @@
               csvFiles={this.state.csvFiles}
               csvFileIndex={this.state.csvFileIndex}
               setCsvFileIndex={setCsvFileIndex}
+              setCsvInfo={setCsvInfo}
             />
             <div class="clearfix">
               <FileFilterComponent
                 csvFileFilterCondition={this.state.csvFileFilterCondition}
                 paramListMap={this.state.dirInfo.paramListMap}
                 updateCsvFileFilterCondition={updateCsvFileFilterCondition}
+                setCsvFileIndex={setCsvFileIndex}
               />
               <ChartComponent
                 chartSettings={this.state.chartSettings}
@@ -400,6 +407,7 @@
                 const onChange = (e) => {
                   const newValue = e.target.value;
                   this.props.updateCsvFileFilterCondition({ [k]: newValue });
+                  this.props.setCsvFileIndex(0);
                 };
                 return (
                   <React.Fragment>
@@ -436,41 +444,40 @@
       }
     }
 
-    class FileSelectionComponent extends React.Component {
-      constructor(props) {
-        super(props);
-      }
+    const FileSelectionComponent = (props) => {
+      React.useEffect(() => {
+        const csvInfo = loadCsv(props.csvFiles[props.csvFileIndex]);
+        props.setCsvInfo(csvInfo);
+      }, [props.csvFiles, props.csvFileIndex]);
 
-      render() {
-        const onChange = (e) => {
-          const index = e.target.value;
-          this.props.setCsvFileIndex(index);
-        };
+      const onChange = (e) => {
+        const index = e.target.value;
+        props.setCsvFileIndex(index);
+      };
 
-        return (
-          <React.Fragment>
-            <div id="fileSelection">
-              <input
-                type="number"
-                id="csvFileIndex"
-                value={this.props.csvFileIndex}
-                onChange={onChange}
-              />
-              /<span>{this.props.csvFiles.length}</span>
-              <select size="5" onChange={onChange}>
-                {this.props.csvFiles.map((f, i) => {
-                  return (
-                    <option value={i} selected={i == this.props.csvFileIndex}>
-                      {f}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          </React.Fragment>
-        );
-      }
-    }
+      return (
+        <React.Fragment>
+          <div id="fileSelection">
+            <input
+              type="number"
+              id="csvFileIndex"
+              value={props.csvFileIndex}
+              onChange={onChange}
+            />
+            /<span>{props.csvFiles.length - 1}</span>
+            <select size="5" onChange={onChange}>
+              {props.csvFiles.map((f, i) => {
+                return (
+                  <option value={i} selected={i == props.csvFileIndex}>
+                    {f}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </React.Fragment>
+      );
+    };
 
     class GraphItemGroup extends React.Component {
       constructor(props) {
