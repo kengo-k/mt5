@@ -22,6 +22,12 @@ public:
       return t.day_of_week;
    }
 
+   int getHour() {
+      MqlDateTime t;
+      TimeToStruct(this.dateValue, t);
+      return t.hour;
+   }
+
    string getYYYYMMDD() {
       MqlDateTime t;
       TimeToStruct(this.dateValue, t);
