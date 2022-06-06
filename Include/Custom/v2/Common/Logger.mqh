@@ -92,6 +92,7 @@ public:
             , request.magic
          );
       }
+      this.notify(text, true, false);
       this.logWrite(LOG_LEVEL_INFO, text);
    }
 
@@ -104,6 +105,7 @@ public:
          , result.deal
          , result.order
       );
+      this.notify(text, true, false);
       this.logWrite(LOG_LEVEL_INFO, text);
    }
 
