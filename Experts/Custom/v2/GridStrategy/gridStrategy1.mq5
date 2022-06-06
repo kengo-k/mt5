@@ -66,6 +66,17 @@ input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
 // 買/売を制限するかどうか
 input ENUM_ENTRY_MODE ENTRY_MODE = ENTRY_MODE_BOTH;
 
+// ボリュームの単位は業者(さらに言えば業者内でも口座のタイプによって)で変わる
+// XMの場合：
+// ・マイクロ口座
+//  1LOT = 1,000、最小ロット = 0.1LOT = 100 ※MT5の場合。MT4の場合は0.01 = 10(のはず)
+// ・スタンダード口座
+//  1LOT = 100,000、最小ロット = 0.01LOT = 1000
+
+input double GRID_VOLUME = 0.1;
+
+input double HEDGE_VOLUME = 0.1;
+
 // ログファイル識別用ユニーク文字列
 // ※最適化テストで大量のログファイルが生成されて区別がつかなくなるのを防止するために使用する。テスト実施時のYYYYMMDDHHMM等適当に設定しておけばよい
 input string LOG_FILE_PREFIX = "";
@@ -78,7 +89,7 @@ const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
 const ENUM_TIMEFRAMES CLOSE_TIMEFRAME = PERIOD_D1;
 
 // 監視タイミング
-const ENUM_TIMEFRAMES OBSERVE_TIMEFRAMES = PERIOD_MN1;
+const ENUM_TIMEFRAMES OBSERVE_TIMEFRAMES = PERIOD_H1;
 
 void _init() {
    initializer.init();
@@ -211,6 +222,8 @@ private:
          , buyable
          , sellable
          , isIncludeSwap
+         , GRID_VOLUME
+         , HEDGE_VOLUME
       );
 
       delete orderTimeParamSet;

@@ -23,6 +23,8 @@ public:
       ,bool _buyable
       ,bool _sellable
       ,bool _isIncludeSwap
+      ,double _gridVolume
+      ,double _hedgeVolume
    ):
       tp(_tp)
       , totalHedgeTp(_totalHedgeTp)
@@ -42,6 +44,8 @@ public:
       , buyable(_buyable)
       , sellable(_sellable)
       , isIncludeSwap(_isIncludeSwap)
+      , gridVolume(_gridVolume)
+      , hedgeVolume(_hedgeVolume)
    {}
 
    double tp;
@@ -62,4 +66,6 @@ public:
    bool buyable;
    bool sellable;
    bool isIncludeSwap;
+   double gridVolume;
+   double hedgeVolume;
 };

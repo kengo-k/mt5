@@ -102,10 +102,6 @@ double OnTester() {
    }
 }
 
-double getVolume() {
-   return 0.1;
-}
-
 void createOrder() {
 
    __checkTrend.exec();
@@ -127,7 +123,7 @@ void createOrder() {
       if ((command == ENTRY_COMMAND_BUY && __config.buyable) || (command == ENTRY_COMMAND_SELL && __config.sellable)) {
          double orderGridPrice = __orderGrid.getTargetGridPrice(command);
          Request* req = RequestContainer::createRequest();
-         Order::createLimitRequest(command, req.item, orderGridPrice, getVolume(), -1, __config.tp, MAGIC_NUMBER_MAIN);
+         Order::createLimitRequest(command, req.item, orderGridPrice, __config.gridVolume, -1, __config.tp, MAGIC_NUMBER_MAIN);
          __newMainOrderQueue.add(req);
       }
    }
@@ -136,7 +132,7 @@ void createOrder() {
       if ((command == ENTRY_COMMAND_BUY && __config.buyable) || (command == ENTRY_COMMAND_SELL && __config.sellable)) {
          double hedgeGridPrice = __hedgeGrid.getTargetGridPrice(command);
          Request* hedgeReq = RequestContainer::createRequest();
-         Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, getVolume(), -1, -1, MAGIC_NUMBER_HEDGE);
+         Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, __config.gridVolume, -1, -1, MAGIC_NUMBER_HEDGE);
          __newHedgeOrderQueue.add(hedgeReq);
       }
    }
