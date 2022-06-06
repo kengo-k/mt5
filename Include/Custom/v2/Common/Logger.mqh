@@ -1,5 +1,6 @@
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/LogId.mqh>
+#include <Custom/v2/Common/Util.mqh>
 #include <Custom/v2/Common/Request.mqh>
 
 class Logger {
@@ -128,7 +129,80 @@ public:
       this.logWrite(LOG_LEVEL_DEBUG, text);
    }
 
+   int notify(string message, bool useThread, bool useMention) {
+      // slack api url and token
+      string API_PATH = "https://slack.com/api/chat.postMessage";
+      string API_TOKEN = "xoxb-1575963846754-2351585442598-1sXQfrbugJpksBPHmtDJQcQQ";
+      int timeout = 3000;
+
+      // スレッドの切り替えを制御するための現在日時文字列
+      bool isThreadSwitchRequired = false;
+      string date = Util::getCurrentDateString();
+      if (StringLen(this.currentDate) == 0) {
+         this.currentDate = date;
+      }
+      if (date != this.currentDate) {
+         isThreadSwitchRequired = true;
+      }
+
+      string requestHeaders;
+      string responseHeaders;
+      char request[];
+      char response[];
+
+      datetime current = TimeCurrent();
+      string messageWithTime = StringFormat("%s%s [%s]", useMention ? "<!channel> " : "", message, TimeToString(current, TIME_DATE | TIME_MINUTES));
+      if (useThread && !isThreadSwitchRequired && StringLen(this.threadId) > 0) {
+         string reqString = StringFormat("token=%s&channel=%s&thread_ts=%s&text=%s"
+            , API_TOKEN
+            , this.eaName
+            , this.threadId
+            , messageWithTime
+         );
+         StringToCharArray(reqString, request, 0, -1, CP_UTF8);
+         int retCode = WebRequest("POST"
+            , API_PATH
+            , requestHeaders
+            , timeout
+            , request
+            , response
+            , responseHeaders
+         );
+         return retCode;
+      } else {
+         string reqString = StringFormat("token=%s&channel=%s&text=%s"
+            , API_TOKEN
+            , this.eaName
+            , messageWithTime
+         );
+         StringToCharArray(reqString, request, 0, -1, CP_UTF8);
+         int retCode = WebRequest("POST"
+            , API_PATH
+            , requestHeaders
+            , timeout
+            , request
+            , response
+            , responseHeaders
+         );
+
+         if (isThreadSwitchRequired) {
+            this.currentDate = date;
+         }
+
+         // 返信するスレッドを識別する値をレスポンスから切り出す
+         string responseString = CharArrayToString(response);
+         int tsStartPos = StringFind(responseString, "\"ts\":\"");
+         int tsLastPos = StringFind(responseString, "\"", tsStartPos + 6);
+         string ts = StringSubstr(responseString, tsStartPos + 6, tsLastPos - tsStartPos - 6);
+         this.threadId = ts;
+
+         return retCode;
+      }
+   }
+
 private:
+   string threadId;
+   string currentDate;
    string eaName;
    string getDoubleString(double value) {
       return DoubleToString(value, Digits());
@@ -231,3 +305,8 @@ extern Logger *__LOGGER__;
    }\
 
 #define LOG_RESPONSE(result, isSended) LOG_RESPONSE_WITH_ID(result, isSended, LOGID_DEFAULT)
+
+#define NOTIFY(message, useThread, useMention) \
+   if (__LOGGER__ != NULL) {\
+      __LOGGER__.notify(message, useThread, useMention);\
+   }\
