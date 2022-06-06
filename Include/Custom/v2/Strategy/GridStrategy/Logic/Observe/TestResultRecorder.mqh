@@ -9,6 +9,7 @@
 #include <Custom/v2/Common/PosInfo.mqh>
 #include <Custom/v2/Common/PositionSummary.mqh>
 #include <Custom/v2/Common/Position.mqh>
+#include <Custom/v2/Common/TimeframeSwitchHandler.mqh>
 
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 
@@ -20,7 +21,7 @@ public:
 
    TestResultRecorder(int _fileHandle) {
       this.fileHandle = _fileHandle;
-
+      this.handler.set(PERIOD_MN1);
       // 一行目をコメント行とする。コメント行はパラメータを記録するために使用する
       CArrayList<string> commentList;
       commentList.Add(StringFormat("TP=%d", (int)__config.tp));
@@ -44,6 +45,10 @@ public:
    }
 
    void exec() {
+      this.handler.update();
+      if (!this.handler.isSwitched()) {
+         return;
+      }
       CArrayList<double> positionValues;
       CHashMap<long, PositionSummary*> map;
       CArrayList<long> keyList;
@@ -116,4 +121,5 @@ public:
 
 private:
    int fileHandle;
+   TimeframeSwitchHandler handler;
 };

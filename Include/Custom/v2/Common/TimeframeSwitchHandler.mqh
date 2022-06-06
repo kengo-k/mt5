@@ -14,10 +14,8 @@ public:
    // 期間更新処理
    void update() {
       string current = this.getCurrentDate();
-      if (this.latest != current) {
-         this.prev = this.latest;
-         this.latest = current;
-      }
+      this.prev = this.latest;
+      this.latest = current;
    }
 
    bool isSwitched() {
