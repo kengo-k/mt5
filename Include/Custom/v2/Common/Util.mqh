@@ -101,6 +101,7 @@ public:
       CHashMap<string, double> map;
       // 新しい通貨ペアを取り扱う場合はここに追記すること
       map.Add("USDJPY", 0.01);
+      map.Add("USDJPYmicro", 0.01);
       map.Add("EURGBP", 0.0001);
       map.Add("AUDNZD", 0.0001);
       if (map.ContainsKey(symbol)) {
