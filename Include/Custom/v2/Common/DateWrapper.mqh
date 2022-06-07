@@ -13,7 +13,7 @@ public:
    string getYYYYMM() {
       MqlDateTime t;
       TimeToStruct(this.dateValue, t);
-      return StringFormat("%d%d", t.year, t.mon);
+      return StringFormat("%d%02d", t.year, t.mon);
    }
 
    int getWeek() {
@@ -31,13 +31,13 @@ public:
    string getYYYYMMDD() {
       MqlDateTime t;
       TimeToStruct(this.dateValue, t);
-      return StringFormat("%d%d%d", t.year, t.mon, t.day);
+      return StringFormat("%d%02d%02d", t.year, t.mon, t.day);
    }
 
    string getYYYYMMDDHH() {
       MqlDateTime t;
       TimeToStruct(this.dateValue, t);
-      return StringFormat("%d%d%d%d", t.year, t.mon, t.day, t.hour);
+      return StringFormat("%d%02d%02d%02d", t.year, t.mon, t.day, t.hour);
    }
 
 private:
