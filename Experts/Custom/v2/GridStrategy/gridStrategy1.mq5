@@ -10,6 +10,7 @@
  */
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/LogId.mqh>
+#include <Custom/v2/Common/VolumeCalculator.mqh>
 #include <Custom/v2/Strategy/GridStrategy/StrategyTemplate.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
@@ -25,6 +26,7 @@
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/AccountObserver.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/PositionObserver.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/TestResultRecorder.mqh>
+#include <Custom/v2/Strategy/GridStrategy/Logic/Observe/HealthCheckNotifier.mqh>
 
 enum ENUM_ORDER_TIME_PARAM_SET {
    ORDER_TIME_PARAM_SET_M15_SHORT
@@ -36,54 +38,56 @@ enum ENUM_HEDGE_TIME_PARAM_SET {
    , HEDGE_TIME_PARAM_SET_MN1_SHORT
 };
 
+input group "利益・数量"
+
 // 利益目標
 input double TP = 20;
 
 // ヘッジ決済目標利益学(要最適化)
 input double TOTAL_HEDGE_TP = 1000;
 
-// エントリ時間のパラメータセット
-input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_SHORT;
+input ENUM_VOLUME_SETTINGS VOLUME_SETTINGS = VOLUME_SETTINGS_MICRO_MIN;
 
-// トレンド判定時間のパラメータセット
-input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MID;
+//input double GRID_VOLUME = 0.1;
+
+//input double HEDGE_VOLUME = 0.1;
+
+input group "トレード間隔"
 
 // グリッドトレード用グリッドサイズ(要最適化)
 input int ORDER_GRID_SIZE = 30;
 
+// エントリ時間のパラメータセット
+input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_SHORT;
+
 // ヘッジ用グリッドサイズ(要最適化)
 input int HEDGE_GRID_SIZE = 30;
 
-// トレード方式(グリッドのみ/ヘッジのみ/両方)
-input ENUM_TRADE_MODE TRADE_MODE = TRADE_MODE_GRID_AND_HEDGE;
+// トレンド判定時間のパラメータセット
+input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MID;
 
-// 損益計算時にスワップを考慮に含めるかどうか
-input ENUM_SWAP_INCLUDE SWAP_INCLUDE = SWAP_INCLUDE_OFF;
-
-// グリッドトレードのヘッジを行う場合の動作方式
-input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
+input group "トレード方式"
 
 // 買/売を制限するかどうか
 input ENUM_ENTRY_MODE ENTRY_MODE = ENTRY_MODE_BOTH;
 
-// ボリュームの単位は業者(さらに言えば業者内でも口座のタイプによって)で変わる
-// XMの場合：
-// ・マイクロ口座
-//  1LOT = 1,000、最小ロット = 0.1LOT = 100 ※MT5の場合。MT4の場合は0.01 = 10(のはず)
-// ・スタンダード口座
-//  1LOT = 100,000、最小ロット = 0.01LOT = 1000
+// トレード方式(グリッドのみ/ヘッジのみ/両方)
+input ENUM_TRADE_MODE TRADE_MODE = TRADE_MODE_GRID_AND_HEDGE;
 
-input double GRID_VOLUME = 0.1;
+// グリッドトレードのヘッジを行う場合の動作方式
+input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
 
-input double HEDGE_VOLUME = 0.1;
+// 損益計算時にスワップを考慮に含めるかどうか
+input ENUM_SWAP_INCLUDE SWAP_INCLUDE = SWAP_INCLUDE_OFF;
 
-// ログファイル識別用ユニーク文字列
-// ※最適化テストで大量のログファイルが生成されて区別がつかなくなるのを防止するために使用する。テスト実施時のYYYYMMDDHHMM等適当に設定しておけばよい
-input string LOG_FILE_PREFIX = "";
+input group "その他"
+
+input string TRADE_LOG_FILE = "trade_result"; /* TRADE_LOG_FILE: 取引履歴を記録するCSVファイル名を指定してください */
+
+input string NOTIFY_CHANNEL = "gridstrategy1"; /* NOTIFY_CHANNEL: 通知するスラックのチャンネル名を指定してください */
 
 // 以下global変数に値を設定する
-const string EA_NAME = "v2/Gridstrategy/gridStrategy1";
-const Logger *__LOGGER__ = new Logger(EA_NAME, LOG_LEVEL_INFO);
+const Logger *__LOGGER__ = new Logger(NOTIFY_CHANNEL, LOG_LEVEL_INFO);
 
 // クローズタイミング
 const ENUM_TIMEFRAMES CLOSE_TIMEFRAME = PERIOD_D1;
@@ -113,6 +117,8 @@ GET_CUSTOM_RESULT_FN getCustomResult = _getCustomResult;
 Config *__config;
 CheckTrend __checkTrend__;
 ICheckTrend *__checkTrend = &__checkTrend__;
+
+IVolumeCalculator *__volumeCalculator;
 
 GetEntryCommand __getEntryCommand__;
 IGetEntryCommand *__getEntryCommand = &__getEntryCommand__;
@@ -150,6 +156,7 @@ public:
       //this.logReport();
       this.deleteObservers();
       this.closeFileHandles();
+      delete __volumeCalculator;
       delete __config;
       delete __LOGGER__;
    }
@@ -157,6 +164,25 @@ public:
 private:
 
    void initConfig() {
+      // ボリュームの単位は業者(さらに言えば業者内でも口座のタイプによって)で変わる
+      // XMの場合：
+      // ・マイクロ口座
+      //  1LOT = 1,000、最小ロット = 0.1LOT = 100通貨 ※MT5の場合。MT4の場合は0.01 = 10(のはず)
+      // ・スタンダード口座
+      //  1LOT = 100,000、最小ロット = 0.01LOT = 1000通貨
+
+      switch(VOLUME_SETTINGS) {
+         case VOLUME_SETTINGS_MICRO_MIN:
+            __volumeCalculator = new FixedVolumeCalculator(0.1, 0.1);
+            break;
+         case VOLUME_SETTINGS_MICRO_INCREASE:
+            break;
+         case VOLUME_SETTINGS_STANDARD_MIN:
+            __volumeCalculator = new FixedVolumeCalculator(0.01, 0.01);
+            break;
+         default:
+            ExpertRemove();
+      }
 
       TimeParamSet *orderTimeParamSet;
       switch(ORDER_TIME_PARAM_SET) {
@@ -190,12 +216,15 @@ private:
          buyable = false;
       }
 
-      bool useGridTrade = true;
-      bool useGridHedegTrade = true;
+      bool useGridTrade = false;
+      bool useGridHedegTrade = false;
       if (TRADE_MODE == TRADE_MODE_GRID_ONLY) {
-         useGridHedegTrade = false;
+         useGridTrade = true;
       } else if (TRADE_MODE == TRADE_MODE_HEDGE_ONLY) {
-         useGridTrade = false;
+         useGridHedegTrade = true;
+      } else if (TRADE_MODE == TRADE_MODE_GRID_AND_HEDGE) {
+         useGridTrade = true;
+         useGridHedegTrade = true;
       }
 
       bool isIncludeSwap = true;
@@ -222,8 +251,7 @@ private:
          , buyable
          , sellable
          , isIncludeSwap
-         , GRID_VOLUME
-         , HEDGE_VOLUME
+         , VOLUME_SETTINGS
       );
 
       delete orderTimeParamSet;
@@ -244,13 +272,15 @@ private:
       this.allPositionObserver = new PositionObserver(0);
       this.gridTradePositionObserver = new PositionObserver(MAGIC_NUMBER_MAIN);
       this.hedgeTradePositionObserver = new PositionObserver(MAGIC_NUMBER_HEDGE);
+      this.healthCheckNotifier = new HealthCheckNotifier();
 
       // register observers
       //observerList.Add(this.accountObserver);
-      observerList.Add(this.testResultRecorder);
+      //observerList.Add(this.testResultRecorder);
       //observerList.Add(this.allPositionObserver);
       //observerList.Add(this.gridTradePositionObserver);
       //observerList.Add(this.hedgeTradePositionObserver);
+      observerList.Add(this.healthCheckNotifier);
    }
 
    void openFileHandles() {
@@ -258,7 +288,7 @@ private:
       // $TERMINAL_IDは複数のMT5がインストールされている場合はそれぞれを識別するID
       // (MT5が利用できる複数の業者を利用する場合にMT5が複数インストールされる可能性がある)
       // セキュリティ上の理由から上記ディレクトリ以外の場所にファイルを出力することや読み込むことはできない模様
-      this.testResultFile = FileOpen(Util::createUniqueFileName(StringFormat("%s_test_result", LOG_FILE_PREFIX), "csv"), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      this.testResultFile = FileOpen(Util::createUniqueFileName(TRADE_LOG_FILE, "csv"), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
    }
 
    void closeFileHandles() {
@@ -271,6 +301,7 @@ private:
       delete this.allPositionObserver;
       delete this.gridTradePositionObserver;
       delete this.hedgeTradePositionObserver;
+      delete this.healthCheckNotifier;
    }
 
    void logReport() {
@@ -286,6 +317,7 @@ private:
    PositionObserver *allPositionObserver;
    PositionObserver *gridTradePositionObserver;
    PositionObserver *hedgeTradePositionObserver;
+   HealthCheckNotifier *healthCheckNotifier;
 };
 
 Init *initializer = new Init();

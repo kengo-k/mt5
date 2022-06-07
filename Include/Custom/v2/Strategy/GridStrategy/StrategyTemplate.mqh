@@ -14,6 +14,7 @@
 #include <Custom/v2/Common/Bar.mqh>
 #include <Custom/v2/Common/Order.mqh>
 #include <Custom/v2/Common/GridManager.mqh>
+#include <Custom/v2/Common/VolumeCalculator.mqh>
 
 // 以下固有ロジック用IF
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
@@ -26,6 +27,7 @@
 extern Logger *__LOGGER__;
 
 extern Config *__config;
+extern IVolumeCalculator *__volumeCalculator;
 extern ICheckTrend *__checkTrend;
 extern IGetEntryCommand *__getEntryCommand;
 extern IClosePositions *__closePositions;
@@ -123,7 +125,8 @@ void createOrder() {
       if ((command == ENTRY_COMMAND_BUY && __config.buyable) || (command == ENTRY_COMMAND_SELL && __config.sellable)) {
          double orderGridPrice = __orderGrid.getTargetGridPrice(command);
          Request* req = RequestContainer::createRequest();
-         Order::createLimitRequest(command, req.item, orderGridPrice, __config.gridVolume, -1, __config.tp, MAGIC_NUMBER_MAIN);
+         __volumeCalculator.update();
+         Order::createLimitRequest(command, req.item, orderGridPrice, __volumeCalculator.getGridVolume(), -1, __config.tp, MAGIC_NUMBER_MAIN);
          __newMainOrderQueue.add(req);
       }
    }
@@ -132,7 +135,8 @@ void createOrder() {
       if ((command == ENTRY_COMMAND_BUY && __config.buyable) || (command == ENTRY_COMMAND_SELL && __config.sellable)) {
          double hedgeGridPrice = __hedgeGrid.getTargetGridPrice(command);
          Request* hedgeReq = RequestContainer::createRequest();
-         Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, __config.gridVolume, -1, -1, MAGIC_NUMBER_HEDGE);
+         __volumeCalculator.update();
+         Order::createLimitRequest(command, hedgeReq.item, hedgeGridPrice, __volumeCalculator.getHedgeVolume(), -1, -1, MAGIC_NUMBER_HEDGE);
          __newHedgeOrderQueue.add(hedgeReq);
       }
    }

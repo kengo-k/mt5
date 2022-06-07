@@ -40,6 +40,7 @@ public:
       commentList.Add(StringFormat("買=%d", __config.buyable));
       commentList.Add(StringFormat("売=%d", __config.sellable));
       commentList.Add(StringFormat("スワップ=%d", __config.isIncludeSwap));
+      commentList.Add(StringFormat("ボリューム=%d", __config.volumeSettings));
       string commentLine = Util::join(&commentList, ",");
       FileWrite(this.fileHandle, StringFormat("#%s", commentLine));
    }

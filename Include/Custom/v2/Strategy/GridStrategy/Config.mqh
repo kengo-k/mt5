@@ -23,8 +23,7 @@ public:
       ,bool _buyable
       ,bool _sellable
       ,bool _isIncludeSwap
-      ,double _gridVolume
-      ,double _hedgeVolume
+      ,ENUM_VOLUME_SETTINGS _volumeSettings
    ):
       tp(_tp)
       , totalHedgeTp(_totalHedgeTp)
@@ -44,8 +43,7 @@ public:
       , buyable(_buyable)
       , sellable(_sellable)
       , isIncludeSwap(_isIncludeSwap)
-      , gridVolume(_gridVolume)
-      , hedgeVolume(_hedgeVolume)
+      , volumeSettings(_volumeSettings)
    {}
 
    double tp;
@@ -68,4 +66,5 @@ public:
    bool isIncludeSwap;
    double gridVolume;
    double hedgeVolume;
+   ENUM_VOLUME_SETTINGS volumeSettings;
 };
