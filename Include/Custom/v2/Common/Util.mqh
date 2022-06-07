@@ -144,6 +144,35 @@ public:
       return periodName;
    }
 
+   static datetime getJpTime(datetime day = 0) {
+      MqlDateTime cjtm;
+      day = day == 0 ? TimeCurrent() : day; // 対象サーバ時間
+      datetime time_summer = 21600; // ６時間
+      datetime time_winter = 25200; // ７時間
+      int target_dow = 0; // 日曜日
+      int start_st_n = 2; // 夏時間開始3月第2週
+      int end_st_n = 1; // 夏時間終了11月第1週
+      TimeToStruct(day, cjtm); // 構造体の変数に変換
+      string year = (string)cjtm.year; // 対象年
+      // 対象年の3月1日と11月1日の曜日
+      TimeToStruct(StringToTime(year + ".03.01"), cjtm);
+      int fdo_mar = cjtm.day_of_week;
+      TimeToStruct(StringToTime(year + ".11.01"), cjtm);
+      int fdo_nov = cjtm.day_of_week;
+      // 3月第2日曜日
+      int start_st_day = (target_dow < fdo_mar ? target_dow + 7 : target_dow)
+                       - fdo_mar + 7 * start_st_n - 6;
+      // 11月第1日曜日
+      int end_st_day = (target_dow < fdo_nov ? target_dow + 7 : target_dow)
+                     - fdo_nov + 7 * end_st_n - 6;
+      // 対象年の夏時間開始日と終了日を確定
+      datetime start_st = StringToTime(year + ".03." + (string)start_st_day);
+      datetime end_st = StringToTime(year + ".11." + (string)end_st_day);
+      // 日本時間を返す
+      return day += start_st <= day && day <= end_st
+                  ? time_summer : time_winter;
+   }
+
    static void logProfit(const MqlTradeTransaction &tran, const MqlTradeRequest &request, const MqlTradeResult &result) {
 
       /*
