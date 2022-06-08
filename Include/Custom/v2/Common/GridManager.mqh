@@ -6,6 +6,10 @@
 #include <Custom/v2/Common/Util.mqh>
 #include <Custom/v2/Common/RequestContainer.mqh>
 
+#include <Custom/v2/Strategy/GridStrategy/Config.mqh>
+
+extern Config *__config;
+
 class GridManager {
 public:
 
@@ -100,6 +104,13 @@ public:
          double price = req.item.price;
          if (isGridPriceChecked && this.isGridPriceUsed(type, price, magicNumber)) {
             orderQueue.remove(i);
+            continue;
+         }
+
+         // スプレッドが閾値を超えた場合は発注せずに終了する
+         long spread = SymbolInfoInteger(Symbol(), SYMBOL_SPREAD);
+         if (spread > __config.acceptableSpread) {
+            LOG_INFO("spread=%d, return");
             continue;
          }
 

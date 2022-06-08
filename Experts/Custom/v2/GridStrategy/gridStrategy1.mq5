@@ -48,6 +48,8 @@ input double TOTAL_HEDGE_TP = 1000;
 
 input ENUM_VOLUME_SETTINGS VOLUME_SETTINGS = VOLUME_SETTINGS_MICRO_MIN;
 
+input long ACCEPTABLE_SPREAD = 50; /* ACCEPTABLE_SPREAD: 許容できる最大のスプレッド */
+
 //input double GRID_VOLUME = 0.1;
 
 //input double HEDGE_VOLUME = 0.1;
@@ -176,9 +178,13 @@ private:
             __volumeCalculator = new FixedVolumeCalculator(0.1, 0.1);
             break;
          case VOLUME_SETTINGS_MICRO_INCREASE:
+            __volumeCalculator = new IncreaseVolumeCalculator(500000, 0.1, 70000, 0.01, 2);
             break;
          case VOLUME_SETTINGS_STANDARD_MIN:
             __volumeCalculator = new FixedVolumeCalculator(0.01, 0.01);
+            break;
+         case VOLUME_SETTINGS_STANDARD_INCREASE:
+            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 1);
             break;
          default:
             ExpertRemove();
@@ -252,6 +258,7 @@ private:
          , sellable
          , isIncludeSwap
          , VOLUME_SETTINGS
+         , ACCEPTABLE_SPREAD
       );
 
       delete orderTimeParamSet;
@@ -276,11 +283,11 @@ private:
 
       // register observers
       //observerList.Add(this.accountObserver);
-      //observerList.Add(this.testResultRecorder);
+      observerList.Add(this.testResultRecorder);
       //observerList.Add(this.allPositionObserver);
       //observerList.Add(this.gridTradePositionObserver);
       //observerList.Add(this.hedgeTradePositionObserver);
-      observerList.Add(this.healthCheckNotifier);
+      //observerList.Add(this.healthCheckNotifier);
    }
 
    void openFileHandles() {
