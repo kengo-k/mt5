@@ -28,14 +28,14 @@ public:
       CArrayList<string> commentList;
       commentList.Add(StringFormat("GRID_TP=%d", (int)__config.tp));
       commentList.Add(StringFormat("HEDGE_TP=%d", (int)__config.totalHedgeTp));
-      commentList.Add(StringFormat("VOLUME=%s(%s)", EnumToString(__config.volumeSettings), __volumeCalculator.toString()));
+      commentList.Add(StringFormat("VOLUME=%d/%s(%s)", __config.volumeSettings, EnumToString(__config.volumeSettings), __volumeCalculator.toString()));
       commentList.Add(StringFormat("SPREAD=%d", __config.maxSpread));
       commentList.Add(StringFormat("INCLUDE_SWAP=%d", __config.isIncludeSwap));
       commentList.Add(StringFormat("BUYABLE=%d", __config.buyable));
       commentList.Add(StringFormat("SELLABLE=%d", __config.sellable));
       commentList.Add(StringFormat("USE_GRID=%d", __config.useGridTrade));
       commentList.Add(StringFormat("USE_HEDGE=%d", __config.useGridHedgeTrade));
-      commentList.Add(StringFormat("HEDGE_MODE=%s", EnumToString(__config.gridHedgeMode)));
+      commentList.Add(StringFormat("HEDGE_MODE=%d/%s", __config.gridHedgeMode, EnumToString(__config.gridHedgeMode)));
       commentList.Add(StringFormat("ORDER_GRID_SIZE=%d", (int)__config.orderGridSize));
       commentList.Add(StringFormat("HEDGE_GRID_SIZE=%d", (int)__config.hedgeGridSize));
       commentList.Add(StringFormat("ORDER_TIMEFRAME=%s", StringSubstr(EnumToString(__config.createOrderTimeframe), 7)));
