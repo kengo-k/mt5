@@ -13,7 +13,7 @@ namespace MT5Lib
 
         public static string GetCurrentDate()
         {
-            return DateUtil.GetCurrentDate("yyyy-MM-dd_HHmm");
+            return DateUtil.GetCurrentDate("yyyy-MM-dd_HH-mm-ss");
         }
     }
 }
