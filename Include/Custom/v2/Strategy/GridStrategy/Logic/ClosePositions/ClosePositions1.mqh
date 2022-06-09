@@ -9,6 +9,7 @@
 #include <Custom/v2/Common/Position.mqh>
 #include <Custom/v2/Common/RequestContainer.mqh>
 #include <Custom/v2/Common/TimeframeSwitchHandler.mqh>
+#include <Custom/v2/Common/HedgeTpCalculator.mqh>
 
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
@@ -16,6 +17,7 @@
 
 extern Config *__config;
 extern ICheckTrend *__checkTrend;
+extern IHedgeTpCalculator *__hedgeTpCalculator;
 
 // ヘッジポジションのクローズロジック実装
 // ・トータルの利益が目標額を超えた場合に全てのポジションを決済する
@@ -37,6 +39,9 @@ public:
       if (posCount == 0) {
          return;
       }
+
+      int hedgeTp = __hedgeTpCalculator.getHedgeTp();
+      LOG_INFO(StringFormat("hedge target tp: %d", hedgeTp));
 
       if (__config.gridHedgeMode == GRID_HEDGE_MODE_ONESIDE_CLOSE) {
          PositionSummary gridSummary;
@@ -60,12 +65,12 @@ public:
          bool isSellRedCloseable = false;
          bool isSellBlackCloseable = false;
 
-         if (hedgeSummary.buy + gridSummary.buy > __config.totalHedgeTp) {
+         if (hedgeSummary.buy + gridSummary.buy > hedgeTp) {
             isBuyRedCloseable = true;
             isBuyBlackCloseable = true;
          }
 
-         if (hedgeSummary.sell + gridSummary.sell > __config.totalHedgeTp) {
+         if (hedgeSummary.sell + gridSummary.sell > hedgeTp) {
             isSellRedCloseable = true;
             isSellBlackCloseable = true;
          }
@@ -114,7 +119,7 @@ public:
 
          bool closeable = false;
 
-         if (summary.total > __config.totalHedgeTp) {
+         if (summary.total > hedgeTp) {
             closeable = true;
          }
 

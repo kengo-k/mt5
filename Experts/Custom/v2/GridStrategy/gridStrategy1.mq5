@@ -15,6 +15,7 @@
 #include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/VolumeCalculator.mqh>
 #include <Custom/v2/Common/SpreadCalculator.mqh>
+#include <Custom/v2/Common/HedgeTpCalculator.mqh>
 #include <Custom/v2/Strategy/GridStrategy/StrategyTemplate.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
@@ -47,8 +48,8 @@ input group "利益・数量"
 // 利益目標
 input double TP = 20;
 
-// ヘッジ決済目標利益学(要最適化)
-input double TOTAL_HEDGE_TP = 1000;
+// ヘッジ決済目標利益学
+input ENUM_HEDGE_TP_SETTINGS HEDGE_TP_SETTINGS = HEDGE_TP_SETTINGS_FIXED_1000;
 
 input ENUM_VOLUME_SETTINGS VOLUME_SETTINGS = VOLUME_SETTINGS_MICRO_MIN;
 
@@ -138,6 +139,9 @@ IClosePositions *__closePositions = &__closePositions__;
 // ボリューム計算ロジック&実装
 IVolumeCalculator *__volumeCalculator;
 
+// ヘッジTP計算ロジック&実装
+IHedgeTpCalculator *__hedgeTpCalculator;
+
 // 監視リスト
 CArrayList<IObserver*> observerList;
 Observe __observe__(&observerList);
@@ -170,6 +174,7 @@ public:
       this.deleteObservers();
       this.closeFileHandles();
       delete __volumeCalculator;
+      delete __hedgeTpCalculator;
       delete __config;
       delete __LOGGER__;
    }
@@ -205,7 +210,7 @@ private:
             break;
          case VOLUME_SETTINGS_MICRO_INCREASE_MID:
             //__volumeCalculator = new IncreaseVolumeCalculator(2000000, 4.0, 200000, 0.25, 1);
-            __volumeCalculator = new IncreaseVolumeCalculator(2000000, 0.1, 200000, 0.25, 1);
+            __volumeCalculator = new IncreaseVolumeCalculator(2000000, 1.5, 300000, 0.15, 1);
             break;
          default:
             ExpertRemove();
@@ -267,9 +272,23 @@ private:
       }
       int maxSpread = spreadCalculator.getMaxSpread();
 
+      if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_FIXED_1000) {
+         __hedgeTpCalculator = new FixedHedgeTpCalculator(1000);
+      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_FIXED_5000) {
+         __hedgeTpCalculator = new FixedHedgeTpCalculator(5000);
+      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_FIXED_10000) {
+         __hedgeTpCalculator = new FixedHedgeTpCalculator(10000);
+      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_MICRO_INCREASE_1000) {
+         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(1000, 0.1);
+      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_MICRO_INCREASE_5000) {
+         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(5000, 0.1);
+      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_MICRO_INCREASE_10000) {
+         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(10000, 0.1);
+      }
+
       __config = new Config(
          TP
-         , TOTAL_HEDGE_TP
+         , HEDGE_TP_SETTINGS
          , orderTimeParamSet.timeFrame
          , PERIOD_M1
          , hedgeTimeParamSet.timeFrame

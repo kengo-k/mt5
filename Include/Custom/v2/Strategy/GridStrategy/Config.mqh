@@ -6,7 +6,7 @@ public:
 
    Config(
       double _tp
-      ,double _totalHedgeTp
+      ,ENUM_HEDGE_TP_SETTINGS _hedgeTpSettings
       ,ENUM_TIMEFRAMES _createOrderTimeframe
       ,ENUM_TIMEFRAMES _sendOrderTimeframe
       ,ENUM_TIMEFRAMES _hedgeDirectionTimeframe
@@ -27,7 +27,7 @@ public:
       ,int _maxSpread
    ):
       tp(_tp)
-      , totalHedgeTp(_totalHedgeTp)
+      , hedgeTpSettings(_hedgeTpSettings)
       , createOrderTimeframe(_createOrderTimeframe)
       , sendOrderTimeframe(_sendOrderTimeframe)
       , hedgeDirectionTimeframe(_hedgeDirectionTimeframe)
@@ -49,7 +49,7 @@ public:
    {}
 
    double tp;
-   double totalHedgeTp;
+   ENUM_HEDGE_TP_SETTINGS hedgeTpSettings;
    ENUM_TIMEFRAMES createOrderTimeframe;
    ENUM_TIMEFRAMES sendOrderTimeframe;
    ENUM_TIMEFRAMES hedgeDirectionTimeframe;
