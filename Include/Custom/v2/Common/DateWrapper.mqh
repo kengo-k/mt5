@@ -40,6 +40,12 @@ public:
       return StringFormat("%d%02d%02d%02d", t.year, t.mon, t.day, t.hour);
    }
 
+   string getYYYYMMDDHHMMSS(string format = "%d%02d%02d%02d") {
+      MqlDateTime t;
+      TimeToStruct(this.dateValue, t);
+      return StringFormat(format, t.year, t.mon, t.day, t.hour, t.min, t.sec);
+   }
+
 private:
    datetime dateValue;
 };
