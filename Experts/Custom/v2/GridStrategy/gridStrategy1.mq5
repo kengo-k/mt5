@@ -9,6 +9,7 @@
  * ・グリッドトレードで短期に利益を積み上げつつ発生した赤字ポジションをヘッジで決済する
  */
 #import "MT5Lib.dll"
+#import
 
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/LogId.mqh>
@@ -83,9 +84,13 @@ input ENUM_SWAP_INCLUDE SWAP_INCLUDE = SWAP_INCLUDE_OFF;
 
 input group "その他"
 
-input string TRADE_LOG_FILE = "trade_result"; /* TRADE_LOG_FILE: 取引履歴を記録するCSVファイル名を指定してください */
-
 input string NOTIFY_CHANNEL = "gridstrategy1"; /* NOTIFY_CHANNEL: 通知するスラックのチャンネル名を指定してください */
+
+// パラメータ外の定数
+
+const string TRADE_LOG_FILE = "trade_log"; /* TRADE_LOG_FILE: 取引履歴を記録するCSVファイル名を指定してください */
+
+const string APP_LOG_FILE = "app"; /* APP_LOG_FILE: アプリケーションのログファイル名を指定してください */
 
 // 以下global変数に値を設定する
 const Logger *__LOGGER__ = new Logger(NOTIFY_CHANNEL, LOG_LEVEL_INFO);
@@ -300,7 +305,7 @@ private:
    void initObservers() {
       // init observers
       this.accountObserver = new AccountObserver();
-      this.testResultRecorder = new TestResultRecorder(this.testResultFile);
+      this.testResultRecorder = new TestResultRecorder(this.tradeLogFile);
       this.allPositionObserver = new PositionObserver(0);
       this.gridTradePositionObserver = new PositionObserver(MAGIC_NUMBER_MAIN);
       this.hedgeTradePositionObserver = new PositionObserver(MAGIC_NUMBER_HEDGE);
@@ -316,19 +321,29 @@ private:
    }
 
    void openFileHandles() {
+      string currentDate = MT5Lib::DateUtil::GetCurrentDate();
       // ファイルは次のような場所に出力される C:\Users\$USERNAME\AppData\Roaming\MetaQuotes\Tester\$TERMINAL_ID\Agent-127.0.0.1-3000
       // $TERMINAL_IDは複数のMT5がインストールされている場合はそれぞれを識別するID
       // (MT5が利用できる複数の業者を利用する場合にMT5が複数インストールされる可能性がある)
       // セキュリティ上の理由から上記ディレクトリ以外の場所にファイルを出力することや読み込むことはできない模様
-      this.testResultFile = FileOpen(
-         StringFormat("%s\\%s",
-            MT5Lib::DateUtil::GetCurrentDate(),
+      this.tradeLogFile = FileOpen(
+         StringFormat("%s\\trade_log\\%s",
+            currentDate,
             Util::createUniqueFileName(TRADE_LOG_FILE, "csv")
          ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+
+      this.appLogFile = FileOpen(
+         StringFormat("%s\\app_log\\%s",
+            currentDate,
+            Util::createUniqueFileName(APP_LOG_FILE, "log")
+         ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+
+      __LOGGER__.setHandle(this.appLogFile);
    }
 
    void closeFileHandles() {
-      FileClose(this.testResultFile);
+      FileClose(this.tradeLogFile);
+      FileClose(this.appLogFile);
    }
 
    void deleteObservers() {
@@ -347,7 +362,8 @@ private:
       this.allPositionObserver.logTotalReport();
    }
 
-   int testResultFile;
+   int tradeLogFile;
+   int appLogFile;
    AccountObserver *accountObserver;
    TestResultRecorder *testResultRecorder;
    PositionObserver *allPositionObserver;
