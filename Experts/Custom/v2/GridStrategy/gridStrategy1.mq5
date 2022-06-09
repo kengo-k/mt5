@@ -8,9 +8,12 @@
  *
  * ・グリッドトレードで短期に利益を積み上げつつ発生した赤字ポジションをヘッジで決済する
  */
+#import "MT5Lib.dll"
+
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/VolumeCalculator.mqh>
+#include <Custom/v2/Common/SpreadCalculator.mqh>
 #include <Custom/v2/Strategy/GridStrategy/StrategyTemplate.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Config.mqh>
 #include <Custom/v2/Strategy/GridStrategy/ICheckTrend.mqh>
@@ -48,11 +51,7 @@ input double TOTAL_HEDGE_TP = 1000;
 
 input ENUM_VOLUME_SETTINGS VOLUME_SETTINGS = VOLUME_SETTINGS_MICRO_MIN;
 
-input long ACCEPTABLE_SPREAD = 50; /* ACCEPTABLE_SPREAD: 許容できる最大のスプレッド */
-
-//input double GRID_VOLUME = 0.1;
-
-//input double HEDGE_VOLUME = 0.1;
+input ENUM_SPREAD_SETTINGS SPREAD_SETTINGS = SPREAD_SETTINGS_NOOP; /* SPREAD_SETTINGS: 許容できる最大のスプレッド */
 
 input group "トレード間隔"
 
@@ -112,22 +111,29 @@ double _getCustomResult() {
    return 0;
 }
 
+// 初期化&終了処理
 INIT_FN init = _init;
 INIT_FN deInit = _deInit;
 GET_CUSTOM_RESULT_FN getCustomResult = _getCustomResult;
 
 Config *__config;
+
+// トレンド判定ロジックIF&実装
 CheckTrend __checkTrend__;
 ICheckTrend *__checkTrend = &__checkTrend__;
 
-IVolumeCalculator *__volumeCalculator;
-
+// エントリ判定ロジックIF&実装
 GetEntryCommand __getEntryCommand__;
 IGetEntryCommand *__getEntryCommand = &__getEntryCommand__;
 
+// 決済判定ロジック&実装
 ClosePositions __closePositions__(CLOSE_TIMEFRAME);
 IClosePositions *__closePositions = &__closePositions__;
 
+// ボリューム計算ロジック&実装
+IVolumeCalculator *__volumeCalculator;
+
+// 監視リスト
 CArrayList<IObserver*> observerList;
 Observe __observe__(&observerList);
 IObserve *__observe = &__observe__;
@@ -174,17 +180,27 @@ private:
       //  1LOT = 100,000、最小ロット = 0.01LOT = 1000通貨
 
       switch(VOLUME_SETTINGS) {
+         case VOLUME_SETTINGS_STANDARD_MIN:
+            __volumeCalculator = new FixedVolumeCalculator(0.01, 0.01);
+            break;
+         case VOLUME_SETTINGS_STANDARD_INCREASE:
+            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 1);
+            break;
+         case VOLUME_SETTINGS_STANDARD_INCREASE_X2:
+            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 2);
+            break;
+         case VOLUME_SETTINGS_STANDARD_INCREASE_X3:
+            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 3);
+            break;
          case VOLUME_SETTINGS_MICRO_MIN:
             __volumeCalculator = new FixedVolumeCalculator(0.1, 0.1);
             break;
          case VOLUME_SETTINGS_MICRO_INCREASE:
             __volumeCalculator = new IncreaseVolumeCalculator(500000, 0.1, 70000, 0.01, 2);
             break;
-         case VOLUME_SETTINGS_STANDARD_MIN:
-            __volumeCalculator = new FixedVolumeCalculator(0.01, 0.01);
-            break;
-         case VOLUME_SETTINGS_STANDARD_INCREASE:
-            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 1);
+         case VOLUME_SETTINGS_MICRO_INCREASE_MID:
+            //__volumeCalculator = new IncreaseVolumeCalculator(2000000, 4.0, 200000, 0.25, 1);
+            __volumeCalculator = new IncreaseVolumeCalculator(2000000, 0.1, 200000, 0.25, 1);
             break;
          default:
             ExpertRemove();
@@ -202,7 +218,7 @@ private:
       TimeParamSet *hedgeTimeParamSet;
       switch(HEDGE_TIME_PARAM_SET) {
          case HEDGE_TIME_PARAM_SET_W1_MID:
-            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 50);
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 20);
             break;
          case HEDGE_TIME_PARAM_SET_W1_LONG:
             hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 100);
@@ -238,6 +254,14 @@ private:
          isIncludeSwap = false;
       }
 
+      ISpreadCalculator *spreadCalculator;
+      if (SPREAD_SETTINGS == SPREAD_SETTINGS_NOOP) {
+         spreadCalculator = new NoopSpreadCalculator();
+      } else if (SPREAD_SETTINGS == SPREAD_SETTINGS_USDJPY_STD) {
+         spreadCalculator = new FixedSpreadCalculator(50);
+      }
+      int maxSpread = spreadCalculator.getMaxSpread();
+
       __config = new Config(
          TP
          , TOTAL_HEDGE_TP
@@ -258,11 +282,12 @@ private:
          , sellable
          , isIncludeSwap
          , VOLUME_SETTINGS
-         , ACCEPTABLE_SPREAD
+         , maxSpread
       );
 
       delete orderTimeParamSet;
       delete hedgeTimeParamSet;
+      delete spreadCalculator;
    }
 
    void initLogSettings() {
@@ -295,7 +320,11 @@ private:
       // $TERMINAL_IDは複数のMT5がインストールされている場合はそれぞれを識別するID
       // (MT5が利用できる複数の業者を利用する場合にMT5が複数インストールされる可能性がある)
       // セキュリティ上の理由から上記ディレクトリ以外の場所にファイルを出力することや読み込むことはできない模様
-      this.testResultFile = FileOpen(Util::createUniqueFileName(TRADE_LOG_FILE, "csv"), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      this.testResultFile = FileOpen(
+         StringFormat("%s\\%s",
+            MT5Lib::DateUtil::GetCurrentDate(),
+            Util::createUniqueFileName(TRADE_LOG_FILE, "csv")
+         ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
    }
 
    void closeFileHandles() {

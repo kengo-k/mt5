@@ -109,8 +109,8 @@ public:
 
          // スプレッドが閾値を超えた場合は発注せずに終了する
          long spread = SymbolInfoInteger(Symbol(), SYMBOL_SPREAD);
-         if (spread > __config.acceptableSpread) {
-            LOG_INFO("spread=%d, return");
+         if (__config.maxSpread > 0 && spread > __config.maxSpread) {
+            orderQueue.remove(i);
             continue;
          }
 

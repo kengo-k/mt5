@@ -24,7 +24,7 @@ public:
       ,bool _sellable
       ,bool _isIncludeSwap
       ,ENUM_VOLUME_SETTINGS _volumeSettings
-      ,long _acceptableSpread
+      ,int _maxSpread
    ):
       tp(_tp)
       , totalHedgeTp(_totalHedgeTp)
@@ -45,7 +45,7 @@ public:
       , sellable(_sellable)
       , isIncludeSwap(_isIncludeSwap)
       , volumeSettings(_volumeSettings)
-      , acceptableSpread(_acceptableSpread)
+      , maxSpread(_maxSpread)
    {}
 
    double tp;
@@ -69,5 +69,5 @@ public:
    double gridVolume;
    double hedgeVolume;
    ENUM_VOLUME_SETTINGS volumeSettings;
-   long acceptableSpread;
+   int maxSpread;
 };
