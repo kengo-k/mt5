@@ -1,7 +1,11 @@
+#import "MT5Lib.dll"
+#import
+
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/Util.mqh>
 #include <Custom/v2/Common/Request.mqh>
+#include <Custom/v2/Common/DateWrapper.mqh>
 
 class Logger {
 public:
@@ -10,10 +14,15 @@ public:
    bool info;
    bool notice;
    bool error;
+   int handle;
 
    Logger(string _eaName, ENUM_LOG_LEVEL level)
       : eaName(_eaName) {
       this.setLogLevel(level);
+   }
+
+   void setHandle(int _handle) {
+      this.handle = _handle;
    }
 
    void setLogLevel(ENUM_LOG_LEVEL level) {
@@ -121,7 +130,10 @@ public:
          message = "★★★★★ [ERROR] %s";
       }
       message = StringFormat(message, text);
-      printf(message);
+      DateWrapper date;
+      string terminalDate = MT5Lib::DateUtil::GetCurrentDate("yyyy.MM.dd HH:mm:ss");
+      string serverDate = date.getYYYYMMDDHHMMSS("%d.%02d.%02d %02d:%02d:%02d");
+      FileWrite(this.handle, StringFormat("[%s] %s %s", terminalDate, serverDate, message));
    }
 
    void logAccount() {
