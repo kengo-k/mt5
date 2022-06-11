@@ -1,0 +1,7 @@
+{
+  "TerminalPath": "MT5 executable file path",
+  "TerminalOutputDir": "ex) C:\\Users\\$USERNAME\\AppData\\Roaming\\MetaQuotes\\Terminal\\$TERMINAL_ID\\Reports",
+  "CommonTerminalOutputDir": "ex) C:\\Users\\$USERNAME\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files",
+  "TestResultDir": "test result output directory path",
+  "LoginIds": ["user1:desc1", "user2:desc2"]
+}

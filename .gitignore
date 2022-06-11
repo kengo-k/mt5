@@ -13,3 +13,8 @@ report.xml
 DllSources/MT5Lib/source/bin
 DllSources/MT5Lib/source/obj
 DllSources/MT5Lib/.vs
+Tests/TestRunner/bin
+Tests/TestRunner/obj
+Tests/TestRunner/.vs
+Tests/TestRunner/Resources/config.json
+
