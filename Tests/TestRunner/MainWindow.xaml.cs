@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Runtime.InteropServices;
@@ -26,17 +25,37 @@ namespace TestRunner
         public MainWindow()
         {
             InitializeComponent();
+            InitializeAccountPulldown();
             EnableDragDrop();
+
+            // setup mt5 config file path
+            string? tempDir = Environment.GetEnvironmentVariable("TEMP");
+            if (tempDir != null)
+            {
+                this.mt5ConfigPath = $"{tempDir}\\config.ini";
+            }
+
         }
 
-        private TextBox GetTextControl()
+        public void InitializeAccountPulldown()
         {
-            return (TextBox)FindName("text1");
+            ApplicationConfig? configObj = LoadApplicationConfig();
+            if (configObj == null)
+            {
+                return;
+            }
+            string[] loginIds = configObj.LoginIds;
+            ComboBox pulldown1 = this.GetPulldownControl();
+            foreach (string loginId in loginIds)
+            {
+                pulldown1.Items.Add(loginId);
+            }
+            pulldown1.SelectedIndex = 0;
         }
 
         private void EnableDragDrop()
         {
-            TextBox control = GetTextControl();
+            TextBox control = GetTextControl("text1");
             control.AllowDrop = true;
             control.PreviewDragOver += (s, e) =>
             {
@@ -47,36 +66,34 @@ namespace TestRunner
             {
                 if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 {
+                    // set dropped file content text control
                     string[] paths = ((string[])e.Data.GetData(DataFormats.FileDrop));
-                    using StreamReader sr = new StreamReader(paths[0], Encoding.GetEncoding("UTF-8"));
-                    control.Text = sr.ReadToEnd();
+                    using StreamReader sr = new(paths[0], Encoding.GetEncoding("UTF-8"));
+                    string content = sr.ReadToEnd();
+                    sr.Close();
+
+                    // publish dropped file content in .ini file
+                    control.Text = content;
+                    PublishMT5Config(content);
+
+                    // set description text
+                    TextBox descText = GetTextControl("text2");
+                    string currency = GetMT5ConfigValue("Tester", "Symbol");
+                    string from = GetMT5ConfigValue("Tester", "FromDate");
+                    string to = GetMT5ConfigValue("Tester", "ToDate");
+                    descText.Text = $"{currency}_{from.Replace(".", "")}_{to.Replace(".", "")}";
                 }
             };
         }
 
-        string getMT5ConfigValue(string section, string key, string defaultValue = "")
+        private void PublishMT5Config(string content)
         {
-            StringBuilder sb = new(256);
-            GetPrivateProfileString(section, key, "0", sb, Convert.ToUInt32(sb.Capacity), mt5ConfigPath);
-            return sb.ToString();
+            using StreamWriter sw = new(this.mt5ConfigPath, false, Encoding.GetEncoding("UTF-8"));
+            sw.Write(content);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            TextBox control = GetTextControl();
-            string content = control.Text;
-            string? tempDir = Environment.GetEnvironmentVariable("TEMP");
-            if (tempDir == null)
-            {
-                return;
-            }
-
-            // output text content in temp dir
-            this.mt5ConfigPath = $"{tempDir}\\config.ini";
-            using StreamWriter sw = new(this.mt5ConfigPath, false, Encoding.GetEncoding("UTF-8"));
-            sw.Write(content);
-            sw.Close();
-
             // load application config
             ApplicationConfig? configObj = LoadApplicationConfig();
             if (configObj == null)
@@ -84,16 +101,19 @@ namespace TestRunner
                 return;
             }
 
+            // publish latest content in .ini file
+            TextBox control = GetTextControl("text1");
+            PublishMT5Config(control.Text);
+
             // run mt5 back test
-            RunTest(configObj, mt5ConfigPath);
+            RunTest(configObj, this.mt5ConfigPath);
 
             // move test result to dest dir
             DateTime dt = DateTime.Now;
-            string optimized = getMT5ConfigValue("Tester", "Optimization");
-            string currency = getMT5ConfigValue("Tester", "Symbol");
-            string from = getMT5ConfigValue("Tester", "FromDate");
-            string to = getMT5ConfigValue("Tester", "ToDate");
-            string movedDir = $"{dt.ToString("yyyy-MM-dd_HH-mm-ss")}_{currency}_{from.Replace(".", "")}_{to.Replace(".", "")}";
+            string optimized = GetMT5ConfigValue("Tester", "Optimization");
+            TextBox descText = GetTextControl("text2");
+            string desc = descText.Text;
+            string movedDir = $"{dt.ToString("yyyy-MM-dd_HH-mm-ss")}_{desc}";
             if (optimized == "1")
             {
                 movedDir = $"{movedDir}_optimize";
@@ -117,6 +137,35 @@ namespace TestRunner
             }
         }
 
+        private void RunTest(ApplicationConfig appConfig, string mt5ConfigPath)
+        {
+            ComboBox pulldown = this.GetPulldownControl();
+            string? pulldownItem = pulldown.SelectedValue as string;
+            if (pulldownItem == null || pulldownItem is not string)
+            {
+                return;
+            }
+
+            ProcessStartInfo pInfo = new()
+            {
+                FileName = appConfig.TerminalPath,
+                Arguments = $"/config:{mt5ConfigPath} /login:{pulldownItem.Split(":")[1]}"
+            };
+            Process? p = Process.Start(pInfo);
+            if (p == null)
+            {
+                return;
+            }
+            p.WaitForExit();
+        }
+
+        string GetMT5ConfigValue(string section, string key, string defaultValue = "")
+        {
+            StringBuilder sb = new(256);
+            GetPrivateProfileString(section, key, "0", sb, Convert.ToUInt32(sb.Capacity), this.mt5ConfigPath);
+            return sb.ToString();
+        }
+
         private static ApplicationConfig? LoadApplicationConfig()
         {
             byte[] config = Properties.Resources.config;
@@ -125,19 +174,14 @@ namespace TestRunner
             return configObj;
         }
 
-        private static void RunTest(ApplicationConfig appConfig, string mt5ConfigPath)
+        private TextBox GetTextControl(string name)
         {
-            ProcessStartInfo pInfo = new()
-            {
-                FileName = appConfig.TerminalPath,
-                Arguments = $"/config:{mt5ConfigPath} /login:70276582"
-            };
-            Process? p = Process.Start(pInfo);
-            if (p == null)
-            {
-                return;
-            }
-            p.WaitForExit();
+            return (TextBox)FindName(name);
+        }
+
+        private ComboBox GetPulldownControl()
+        {
+            return (ComboBox)FindName("pulldown1");
         }
     }
 
