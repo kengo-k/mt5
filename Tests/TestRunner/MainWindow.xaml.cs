@@ -105,6 +105,12 @@ namespace TestRunner
             TextBox control = GetTextControl("text1");
             PublishMT5Config(control.Text);
 
+            // delete all files in TerminalOutputDir
+            foreach(string f in Directory.GetFiles(configObj.TerminalOutputDir))
+            {
+                FileSystem.DeleteFile(f);
+            }
+
             // run mt5 back test
             RunTest(configObj, this.mt5ConfigPath);
 
