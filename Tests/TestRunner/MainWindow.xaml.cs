@@ -18,6 +18,7 @@ namespace TestRunner
     {
 
         private string mt5ConfigPath = "";
+        private bool isSaveResultRequired = true;
 
         [DllImport("kernel32.dll", EntryPoint = "GetPrivateProfileStringW", CharSet = CharSet.Unicode, SetLastError = true)]
         static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, uint nSize, string lpFileName);
@@ -113,6 +114,10 @@ namespace TestRunner
 
             // run mt5 back test
             RunTest(configObj, this.mt5ConfigPath);
+            if (!isSaveResultRequired)
+            {
+                return;
+            }
 
             // move test result to dest dir
             DateTime dt = DateTime.Now;
@@ -147,7 +152,7 @@ namespace TestRunner
         {
             ComboBox pulldown = this.GetPulldownControl();
             string? pulldownItem = pulldown.SelectedValue as string;
-            if (pulldownItem == null || pulldownItem is not string)
+            if (pulldownItem is null)
             {
                 return;
             }
@@ -188,6 +193,23 @@ namespace TestRunner
         private ComboBox GetPulldownControl()
         {
             return (ComboBox)FindName("pulldown1");
+        }
+
+        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            CheckBox? checkBox = sender as CheckBox;
+            if (checkBox == null)
+            {
+                return;
+            }
+            bool? isChecked = checkBox.IsChecked;
+            if (isChecked == null)
+            {
+                isSaveResultRequired = false;
+            } else
+            {
+                isSaveResultRequired = (bool)isChecked;
+            }
         }
     }
 

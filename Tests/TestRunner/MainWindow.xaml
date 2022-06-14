@@ -14,17 +14,18 @@
         </Grid.ColumnDefinitions>
         <TextBox
             AcceptsReturn="True"
-            Margin="16,86,0,0"
+            Margin="16,118,0,0"
             TextWrapping="Wrap"
             Text="テスト設定ファイルをドロップしてください"
             VerticalAlignment="Top"
             Name="text1"
-            Height="543" Grid.ColumnSpan="3" HorizontalAlignment="Left" Width="481"
+            Height="511" Grid.ColumnSpan="3" HorizontalAlignment="Left" Width="481"
         />
         <Button Content="  Run Test  " HorizontalAlignment="Left" Margin="12,644,0,0" VerticalAlignment="Top" Click="Button_Click" RenderTransformOrigin="0.614,0.172"/>
         <TextBox HorizontalAlignment="Left" Margin="92,46,0,0" TextWrapping="Wrap" Text="テスト内容の概要を入力します。入力した内容は出力フォルダ名に使用されます" VerticalAlignment="Top" Width="405" Height="26" Grid.ColumnSpan="3" Name="text2"/>
         <ComboBox HorizontalAlignment="Left" Margin="92,10,0,0" VerticalAlignment="Top" Width="405" Grid.ColumnSpan="3" Name="pulldown1"/>
         <Label Content="アカウント" HorizontalAlignment="Left" Margin="16,8,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.202,-0.156"/>
         <Label Content="テスト概要" HorizontalAlignment="Left" Margin="16,46,0,0" VerticalAlignment="Top"/>
+        <CheckBox Content="テスト結果を保存する ※とりあえずのお試しでテスト実行する場合はチェックを外してください" HorizontalAlignment="Left" Margin="16,85,0,0" VerticalAlignment="Top" Grid.ColumnSpan="3" Width="481" IsChecked="True" Checked="CheckBox_Checked" Unchecked="CheckBox_Checked" />
     </Grid>
 </Window>
