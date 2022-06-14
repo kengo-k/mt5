@@ -102,8 +102,18 @@ public:
       // 新しい通貨ペアを取り扱う場合はここに追記すること
       map.Add("USDJPY", 0.01);
       map.Add("USDJPYmicro", 0.01);
+      map.Add("AUDJPY", 0.01);
+      map.Add("AUDJPYmicro", 0.01);
+      map.Add("NZDJPY", 0.01);
+      map.Add("NZDJPYmicro", 0.01);
       map.Add("EURGBP", 0.0001);
+      map.Add("EURGBPmicro", 0.0001);
+      map.Add("EURCHF", 0.0001);
+      map.Add("EURCHFmicro", 0.0001);
       map.Add("AUDNZD", 0.0001);
+      map.Add("AUDNZDmicro", 0.0001);
+      map.Add("AUDUSD", 0.0001);
+      map.Add("AUDUSDmicro", 0.0001);
       if (map.ContainsKey(symbol)) {
          map.TryGetValue(symbol, unit);
       }

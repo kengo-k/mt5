@@ -33,55 +33,44 @@
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/TestResultRecorder.mqh>
 #include <Custom/v2/Strategy/GridStrategy/Logic/Observe/HealthCheckNotifier.mqh>
 
-enum ENUM_ORDER_TIME_PARAM_SET {
-   ORDER_TIME_PARAM_SET_M15_SHORT
-};
-
-enum ENUM_HEDGE_TIME_PARAM_SET {
-   HEDGE_TIME_PARAM_SET_W1_MID
-   , HEDGE_TIME_PARAM_SET_W1_LONG
-   , HEDGE_TIME_PARAM_SET_MN1_SHORT
-};
-
 input group "利益・数量"
 
-// 利益目標
-input double TP = 20;
+input int TP = 20; /* TP: グリッドトレードの利益目標 */
 
-// ヘッジ決済目標利益学
-input ENUM_HEDGE_TP_SETTINGS HEDGE_TP_SETTINGS = HEDGE_TP_SETTINGS_FIXED_1000;
+input int HEDGE_TP = 10000; /* HEDGE_TP: ヘッジポジション決済時の合計利益目標を決定する際の基準値 */
 
-input ENUM_VOLUME_SETTINGS VOLUME_SETTINGS = VOLUME_SETTINGS_MICRO_MIN;
+input ENUM_HEDGE_TP_MODE HEDGE_TP_MODE = HEDGE_TP_MODE_FIXED; /* HEDGE_TP_MODE: ヘッジ決済額決定モード 0=固定値 1=増減あり(STD) 2=増減あり(MICRO) */
 
-input ENUM_SPREAD_SETTINGS SPREAD_SETTINGS = SPREAD_SETTINGS_NOOP; /* SPREAD_SETTINGS: 許容できる最大のスプレッド */
+input ENUM_VOLUME_SETTINGS VOLUME_SETTINGS = VOLUME_SETTINGS_MICRO_MIN; /* VOLUME_SETTINGS: 数量 0-2=STD,※2=増減あり,3-5=MICRO,※5=増減あり */
+
+input ENUM_SPREAD_SETTINGS SPREAD_SETTINGS = SPREAD_SETTINGS_NOOP; /* SPREAD_SETTINGS: 許容最大スプレッド 0=無制限,N-N+2(通貨別に厳しい,通常,緩め) */
 
 input group "トレード間隔"
 
-// グリッドトレード用グリッドサイズ(要最適化)
-input int ORDER_GRID_SIZE = 30;
+input int ORDER_GRID_SIZE = 30; /* ORDER_GRID_SIZE: グリッドトレード用グリッドサイズ */
 
 // エントリ時間のパラメータセット
-input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_SHORT;
+input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_SHORT; /* ORDER_TIME_PARAM_SET: グリッドトレード用トレード間隔 0=15分足短期*/
 
 // ヘッジ用グリッドサイズ(要最適化)
-input int HEDGE_GRID_SIZE = 30;
+input int HEDGE_GRID_SIZE = 30; /* HEDGE_GRID_SIZE: ヘッジトレード用グリッドサイズ */
 
 // トレンド判定時間のパラメータセット
-input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MID;
+input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MIDDLE; /* HEDGE_TIME_PARAM_SET: ヘッジトレード用トレード間隔 0-2=週足(短,中,長) 3=月足(短)*/
 
 input group "トレード方式"
 
 // 買/売を制限するかどうか
-input ENUM_ENTRY_MODE ENTRY_MODE = ENTRY_MODE_BOTH;
+input ENUM_ENTRY_MODE ENTRY_MODE = ENTRY_MODE_BOTH; /* ENTRY_MODE: エントリ方向の制限 0=買のみ 1=売のみ 2=両方*/
 
 // トレード方式(グリッドのみ/ヘッジのみ/両方)
-input ENUM_TRADE_MODE TRADE_MODE = TRADE_MODE_GRID_AND_HEDGE;
+input ENUM_TRADE_MODE TRADE_MODE = TRADE_MODE_GRID_AND_HEDGE; /* TRADE_MODE: トレード方式  0=トレードなし 1=グリッドトレード 2=ヘッジトレード 3=両方 */
 
 // グリッドトレードのヘッジを行う場合の動作方式
-input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE;
+input ENUM_GRID_HEDGE_MODE GRID_HEDGE_MODE = GRID_HEDGE_MODE_ONESIDE_CLOSE; /* GRID_HEDGE_MODE: ヘッジポジション決済方式 0=決済なし 1=同方向のみで決済 2=両方向で決済 */
 
 // 損益計算時にスワップを考慮に含めるかどうか
-input ENUM_SWAP_INCLUDE SWAP_INCLUDE = SWAP_INCLUDE_OFF;
+input ENUM_SWAP_INCLUDE SWAP_INCLUDE = SWAP_INCLUDE_OFF; /* SWAP_INCLUDE: 決済するかどうかの判定の利益計算にスワップを含めるかどうか 0=含めない 1=含める */
 
 input group "その他"
 
@@ -193,24 +182,20 @@ private:
          case VOLUME_SETTINGS_STANDARD_MIN:
             __volumeCalculator = new FixedVolumeCalculator(0.01, 0.01);
             break;
-         case VOLUME_SETTINGS_STANDARD_INCREASE:
-            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 1);
+         case VOLUME_SETTINGS_STANDARD_SMALL:
+            __volumeCalculator = new FixedVolumeCalculator(0.1, 0.1);
             break;
-         case VOLUME_SETTINGS_STANDARD_INCREASE_X2:
-            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 2);
-            break;
-         case VOLUME_SETTINGS_STANDARD_INCREASE_X3:
-            __volumeCalculator = new IncreaseVolumeCalculator(5000000, 0.01, 5000000, 0.01, 3);
+         case VOLUME_SETTINGS_STANDARD_INCREASE_SAFETY:
+            __volumeCalculator = new IncreaseVolumeCalculator(50000000, 0.1, 5600000, 0.01, 1);
             break;
          case VOLUME_SETTINGS_MICRO_MIN:
             __volumeCalculator = new FixedVolumeCalculator(0.1, 0.1);
             break;
-         case VOLUME_SETTINGS_MICRO_INCREASE:
-            __volumeCalculator = new IncreaseVolumeCalculator(500000, 0.1, 70000, 0.01, 2);
+         case VOLUME_SETTINGS_MICRO_DEFAULT:
+            __volumeCalculator = new FixedVolumeCalculator(1, 1);
             break;
-         case VOLUME_SETTINGS_MICRO_INCREASE_MID:
-            //__volumeCalculator = new IncreaseVolumeCalculator(2000000, 4.0, 200000, 0.25, 1);
-            __volumeCalculator = new IncreaseVolumeCalculator(2000000, 1.5, 300000, 0.15, 1);
+         case VOLUME_SETTINGS_MICRO_INCREASE_SAFETY:
+            __volumeCalculator = new IncreaseVolumeCalculator(300000, 0.1, 45000, 0.01, 1);
             break;
          default:
             ExpertRemove();
@@ -227,8 +212,11 @@ private:
 
       TimeParamSet *hedgeTimeParamSet;
       switch(HEDGE_TIME_PARAM_SET) {
-         case HEDGE_TIME_PARAM_SET_W1_MID:
-            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 20);
+         case HEDGE_TIME_PARAM_SET_W1_SHORT:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 25);
+            break;
+         case HEDGE_TIME_PARAM_SET_W1_MIDDLE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 50);
             break;
          case HEDGE_TIME_PARAM_SET_W1_LONG:
             hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 100);
@@ -267,28 +255,27 @@ private:
       ISpreadCalculator *spreadCalculator;
       if (SPREAD_SETTINGS == SPREAD_SETTINGS_NOOP) {
          spreadCalculator = new NoopSpreadCalculator();
-      } else if (SPREAD_SETTINGS == SPREAD_SETTINGS_USDJPY_STD) {
-         spreadCalculator = new FixedSpreadCalculator(50);
+      } else if (SPREAD_SETTINGS == SPREAD_SETTINGS_USDJPY_STRICT) {
+         spreadCalculator = new FixedSpreadCalculator(35);
+      } else if (SPREAD_SETTINGS == SPREAD_SETTINGS_USDJPY_DEFAULT) {
+         spreadCalculator = new FixedSpreadCalculator(60);
+      } else if (SPREAD_SETTINGS == SPREAD_SETTINGS_USDJPY_LAX) {
+         spreadCalculator = new FixedSpreadCalculator(100);
       }
       int maxSpread = spreadCalculator.getMaxSpread();
 
-      if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_FIXED_1000) {
-         __hedgeTpCalculator = new FixedHedgeTpCalculator(1000);
-      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_FIXED_5000) {
-         __hedgeTpCalculator = new FixedHedgeTpCalculator(5000);
-      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_FIXED_10000) {
-         __hedgeTpCalculator = new FixedHedgeTpCalculator(10000);
-      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_MICRO_INCREASE_1000) {
-         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(1000, 0.1);
-      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_MICRO_INCREASE_5000) {
-         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(5000, 0.1);
-      } else if (HEDGE_TP_SETTINGS == HEDGE_TP_SETTINGS_MICRO_INCREASE_10000) {
-         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(10000, 0.1);
+      if (HEDGE_TP_MODE == HEDGE_TP_MODE_FIXED) {
+         __hedgeTpCalculator = new FixedHedgeTpCalculator(HEDGE_TP);
+      } else if (HEDGE_TP_MODE == HEDGE_TP_MODE_STANDARD_INCREASE) {
+         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(HEDGE_TP, 0.01);
+      } else if (HEDGE_TP_MODE == HEDGE_TP_MODE_MICRO_INCREASE) {
+         __hedgeTpCalculator = new IncreaseHedgeTpCalculator(HEDGE_TP, 0.1);
       }
 
       __config = new Config(
          TP
-         , HEDGE_TP_SETTINGS
+         , HEDGE_TP
+         , HEDGE_TP_MODE
          , orderTimeParamSet.timeFrame
          , PERIOD_M1
          , hedgeTimeParamSet.timeFrame
@@ -340,23 +327,36 @@ private:
    }
 
    void openFileHandles() {
-      string currentDate = MT5Lib::DateUtil::GetCurrentDate();
-      // ファイルは次のような場所に出力される C:\Users\$USERNAME\AppData\Roaming\MetaQuotes\Tester\$TERMINAL_ID\Agent-127.0.0.1-3000
-      // $TERMINAL_IDは複数のMT5がインストールされている場合はそれぞれを識別するID
-      // (MT5が利用できる複数の業者を利用する場合にMT5が複数インストールされる可能性がある)
-      // セキュリティ上の理由から上記ディレクトリ以外の場所にファイルを出力することや読み込むことはできない模様
-      this.tradeLogFile = FileOpen(
-         StringFormat("%s\\trade_log\\%s",
-            currentDate,
-            Util::createUniqueFileName(TRADE_LOG_FILE, "csv")
-         ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      bool isOptimize = MQLInfoInteger(MQL_OPTIMIZATION);
+      if (isOptimize) {
+         string prefix = "OptimizeResult";
+         FolderDelete(prefix, FILE_COMMON);
+         this.tradeLogFile = FileOpen(
+            StringFormat("%s\\trade_log\\%s",
+               prefix,
+               Util::createUniqueFileName(TRADE_LOG_FILE, "csv")
+            ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
 
-      this.appLogFile = FileOpen(
-         StringFormat("%s\\app_log\\%s",
-            currentDate,
-            Util::createUniqueFileName(APP_LOG_FILE, "log")
-         ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+         this.appLogFile = FileOpen(
+            StringFormat("%s\\app_log\\%s",
+               prefix,
+               Util::createUniqueFileName(APP_LOG_FILE, "log")
+            ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      } else {
+         string prefix = "TestResult";
+         FolderDelete(prefix, FILE_COMMON);
+         this.tradeLogFile = FileOpen(
+            StringFormat("%s\\trade_log\\%s.csv",
+               prefix,
+               TRADE_LOG_FILE
+            ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
 
+         this.appLogFile = FileOpen(
+            StringFormat("%s\\app_log\\%s.log",
+               prefix,
+               APP_LOG_FILE
+            ), FILE_WRITE|FILE_TXT|FILE_ANSI|FILE_COMMON);
+      }
       __LOGGER__.setHandle(this.appLogFile);
    }
 

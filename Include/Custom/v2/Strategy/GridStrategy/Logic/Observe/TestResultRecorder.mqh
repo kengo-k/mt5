@@ -28,8 +28,9 @@ public:
       this.handler.set(PERIOD_MN1);
       // 一行目をコメント行とする。コメント行はパラメータを記録するために使用する
       CArrayList<string> commentList;
-      commentList.Add(StringFormat("GRID_TP=%d", (int)__config.tp));
-      commentList.Add(StringFormat("HEDGE_TP=%d/%s(%s)", __config.hedgeTpSettings, EnumToString(__config.hedgeTpSettings), __hedgeTpCalculator.toString()));
+      commentList.Add(StringFormat("GRID_TP=%d", __config.tp));
+      commentList.Add(StringFormat("HEDGE_TP=%d", __config.hedgeTp));
+      commentList.Add(StringFormat("HEDGE_TP_MODE=%s", EnumToString(__config.hedgeTpMode)));
       commentList.Add(StringFormat("VOLUME=%d/%s(%s)", __config.volumeSettings, EnumToString(__config.volumeSettings), __volumeCalculator.toString()));
       commentList.Add(StringFormat("SPREAD=%d", __config.maxSpread));
       commentList.Add(StringFormat("INCLUDE_SWAP=%d", __config.isIncludeSwap));
