@@ -8,9 +8,6 @@
  *
  * ・グリッドトレードで短期に利益を積み上げつつ発生した赤字ポジションをヘッジで決済する
  */
-#import "MT5Lib.dll"
-#import
-
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/VolumeCalculator.mqh>
@@ -50,13 +47,13 @@ input group "トレード間隔"
 input int ORDER_GRID_SIZE = 30; /* ORDER_GRID_SIZE: グリッドトレード用グリッドサイズ */
 
 // エントリ時間のパラメータセット
-input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_SHORT; /* ORDER_TIME_PARAM_SET: グリッドトレード用トレード間隔 0=15分足短期*/
+input ENUM_ORDER_TIME_PARAM_SET ORDER_TIME_PARAM_SET = ORDER_TIME_PARAM_SET_M15_SMALL; /* ORDER_TIME_PARAM_SET: グリッドトレード用トレード間隔 0-5=SMALL, 6-11=MIDDLE, 12-17=LONG */
 
 // ヘッジ用グリッドサイズ(要最適化)
 input int HEDGE_GRID_SIZE = 30; /* HEDGE_GRID_SIZE: ヘッジトレード用グリッドサイズ */
 
 // トレンド判定時間のパラメータセット
-input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MIDDLE; /* HEDGE_TIME_PARAM_SET: ヘッジトレード用トレード間隔 0-2=週足(短,中,長) 3=月足(短)*/
+input ENUM_HEDGE_TIME_PARAM_SET HEDGE_TIME_PARAM_SET = HEDGE_TIME_PARAM_SET_W1_MIDDLE; /* HEDGE_TIME_PARAM_SET: ヘッジトレード用トレード間隔 0-5=SMALL, 6-11=MIDDLE, 12-17=LONG */
 
 input group "トレード方式"
 
@@ -202,9 +199,72 @@ private:
       }
 
       TimeParamSet *orderTimeParamSet;
+
+      const int short_small = 5;
+      const int long_small = 15;
+
+      const int short_middle = 15;
+      const int long_middle = 50;
+
+      const int short_large = 15;
+      const int long_large = 100;
+
       switch(ORDER_TIME_PARAM_SET) {
-         case ORDER_TIME_PARAM_SET_M15_SHORT:
-            orderTimeParamSet = new TimeParamSet(PERIOD_M15, 5, 15);
+         case ORDER_TIME_PARAM_SET_M15_SMALL:
+            orderTimeParamSet = new TimeParamSet(PERIOD_M15, short_small, long_small);
+            break;
+         case ORDER_TIME_PARAM_SET_H1_SMALL:
+            orderTimeParamSet = new TimeParamSet(PERIOD_H1, short_small, long_small);
+            break;
+         case ORDER_TIME_PARAM_SET_H4_SMALL:
+            orderTimeParamSet = new TimeParamSet(PERIOD_H4, short_small, long_small);
+            break;
+         case ORDER_TIME_PARAM_SET_D1_SMALL:
+            orderTimeParamSet = new TimeParamSet(PERIOD_D1, short_small, long_small);
+            break;
+         case ORDER_TIME_PARAM_SET_W1_SMALL:
+            orderTimeParamSet = new TimeParamSet(PERIOD_W1, short_small, long_small);
+            break;
+         case ORDER_TIME_PARAM_SET_MN1_SMALL:
+            orderTimeParamSet = new TimeParamSet(PERIOD_MN1, short_small, long_small);
+            break;
+
+         case ORDER_TIME_PARAM_SET_M15_MIDDLE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_M15, short_middle, long_middle);
+            break;
+         case ORDER_TIME_PARAM_SET_H1_MIDDLE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_H1, short_middle, long_middle);
+            break;
+         case ORDER_TIME_PARAM_SET_H4_MIDDLE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_H4, short_middle, long_middle);
+            break;
+         case ORDER_TIME_PARAM_SET_D1_MIDDLE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_D1, short_middle, long_middle);
+            break;
+         case ORDER_TIME_PARAM_SET_W1_MIDDLE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_W1, short_middle, long_middle);
+            break;
+         case ORDER_TIME_PARAM_SET_MN1_MIDDLE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_MN1, short_middle, long_middle);
+            break;
+
+         case ORDER_TIME_PARAM_SET_M15_LARGE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_M15, short_large, long_large);
+            break;
+         case ORDER_TIME_PARAM_SET_H1_LARGE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_H1, short_large, long_large);
+            break;
+         case ORDER_TIME_PARAM_SET_H4_LARGE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_H4, short_large, long_large);
+            break;
+         case ORDER_TIME_PARAM_SET_D1_LARGE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_D1, short_large, long_large);
+            break;
+         case ORDER_TIME_PARAM_SET_W1_LARGE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_W1, short_large, long_large);
+            break;
+         case ORDER_TIME_PARAM_SET_MN1_LARGE:
+            orderTimeParamSet = new TimeParamSet(PERIOD_MN1, short_large, long_large);
             break;
          default:
             ExpertRemove();
@@ -212,17 +272,61 @@ private:
 
       TimeParamSet *hedgeTimeParamSet;
       switch(HEDGE_TIME_PARAM_SET) {
-         case HEDGE_TIME_PARAM_SET_W1_SHORT:
-            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 25);
+         case HEDGE_TIME_PARAM_SET_M15_SMALL:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_M15, short_small, long_small);
+            break;
+         case HEDGE_TIME_PARAM_SET_H1_SMALL:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_H1, short_small, long_small);
+            break;
+         case HEDGE_TIME_PARAM_SET_H4_SMALL:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_H4, short_small, long_small);
+            break;
+         case HEDGE_TIME_PARAM_SET_D1_SMALL:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_D1, short_small, long_small);
+            break;
+         case HEDGE_TIME_PARAM_SET_W1_SMALL:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, short_small, long_small);
+            break;
+         case HEDGE_TIME_PARAM_SET_MN1_SMALL:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_MN1, short_small, long_small);
+            break;
+
+         case HEDGE_TIME_PARAM_SET_M15_MIDDLE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_M15, short_middle, long_middle);
+            break;
+         case HEDGE_TIME_PARAM_SET_H1_MIDDLE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_H1, short_middle, long_middle);
+            break;
+         case HEDGE_TIME_PARAM_SET_H4_MIDDLE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_H4, short_middle, long_middle);
+            break;
+         case HEDGE_TIME_PARAM_SET_D1_MIDDLE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_D1, short_middle, long_middle);
             break;
          case HEDGE_TIME_PARAM_SET_W1_MIDDLE:
-            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 50);
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, short_middle, long_middle);
             break;
-         case HEDGE_TIME_PARAM_SET_W1_LONG:
-            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, 5, 100);
+         case HEDGE_TIME_PARAM_SET_MN1_MIDDLE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_MN1, short_middle, long_middle);
             break;
-         case HEDGE_TIME_PARAM_SET_MN1_SHORT:
-            hedgeTimeParamSet = new TimeParamSet(PERIOD_MN1, 5, 15);
+
+         case HEDGE_TIME_PARAM_SET_M15_LARGE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_M15, short_large, long_large);
+            break;
+         case HEDGE_TIME_PARAM_SET_H1_LARGE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_H1, short_large, long_large);
+            break;
+         case HEDGE_TIME_PARAM_SET_H4_LARGE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_H4, short_large, long_large);
+            break;
+         case HEDGE_TIME_PARAM_SET_D1_LARGE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_D1, short_large, long_large);
+            break;
+         case HEDGE_TIME_PARAM_SET_W1_LARGE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_W1, short_large, long_large);
+            break;
+         case HEDGE_TIME_PARAM_SET_MN1_LARGE:
+            hedgeTimeParamSet = new TimeParamSet(PERIOD_MN1, short_large, long_large);
             break;
          default:
             ExpertRemove();
