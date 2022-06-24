@@ -28,6 +28,7 @@ public:
       this.handler.set(PERIOD_MN1);
       // 一行目をコメント行とする。コメント行はパラメータを記録するために使用する
       CArrayList<string> commentList;
+      commentList.Add(StringFormat("CURRENCY=%s", Symbol()));
       commentList.Add(StringFormat("GRID_TP=%d", __config.tp));
       commentList.Add(StringFormat("HEDGE_TP=%d", __config.hedgeTp));
       commentList.Add(StringFormat("HEDGE_TP_MODE=%d/%s", __config.hedgeTpMode, EnumToString(__config.hedgeTpMode)));
