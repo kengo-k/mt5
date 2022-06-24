@@ -1,6 +1,3 @@
-#import "MT5Lib.dll"
-#import
-
 #include <Custom/v2/Common/Constant.mqh>
 #include <Custom/v2/Common/LogId.mqh>
 #include <Custom/v2/Common/Util.mqh>
@@ -131,9 +128,8 @@ public:
       }
       message = StringFormat(message, text);
       DateWrapper date;
-      string terminalDate = MT5Lib::DateUtil::GetCurrentDate("yyyy.MM.dd HH:mm:ss");
       string serverDate = date.getYYYYMMDDHHMMSS("%d.%02d.%02d %02d:%02d:%02d");
-      FileWrite(this.handle, StringFormat("[%s] %s %s", terminalDate, serverDate, message));
+      FileWrite(this.handle, StringFormat("[%s] %s", serverDate, message));
    }
 
    void logAccount() {
