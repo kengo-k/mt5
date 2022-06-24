@@ -106,6 +106,8 @@ public:
       map.Add("AUDJPYmicro", 0.01);
       map.Add("NZDJPY", 0.01);
       map.Add("NZDJPYmicro", 0.01);
+      map.Add("GBPJPY", 0.01);
+      map.Add("GBPJPYmicro", 0.01);
       map.Add("EURGBP", 0.0001);
       map.Add("EURGBPmicro", 0.0001);
       map.Add("EURCHF", 0.0001);
@@ -114,6 +116,8 @@ public:
       map.Add("AUDNZDmicro", 0.0001);
       map.Add("AUDUSD", 0.0001);
       map.Add("AUDUSDmicro", 0.0001);
+      map.Add("USDCAD", 0.0001);
+      map.Add("USDCADmicro", 0.0001);
       if (map.ContainsKey(symbol)) {
          map.TryGetValue(symbol, unit);
       }
