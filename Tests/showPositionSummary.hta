@@ -29,7 +29,7 @@
       }
 
       #left-area {
-        width: 800px;
+        width: 400px;
         height: 100%;
         margin-right: 50px;
       }
@@ -75,6 +75,7 @@
 
       #chart {
         flex: 1;
+        margin-top: 30px;
       }
 
       h1 {
@@ -87,7 +88,6 @@
       }
 
       .area {
-        border: 1px solid #cccccc;
         padding: 15px;
         margin: 15px;
       }
@@ -131,7 +131,7 @@
       ReactDOM.render(<RootComponent />, root[0]);
     });
 
-    const showChart = (chartData) => {
+    const showChart = (chartData, fileName) => {
       // extract values from chartData
       const extract = (label) => {
         const values = [];
@@ -263,9 +263,9 @@
         chart: {
           zoomType: "xy",
         },
-        // title: {
-        //   text: csvInfo.paramString,
-        // },
+        title: {
+          text: fileName,
+        },
         xAxis: [
           {
             categories: extract(CSV_KEY_DATE),
@@ -507,9 +507,6 @@
       return (
         <div id="result-list">
           <h1>テスト結果一覧</h1>
-          <span>
-            selected: {props.fileName == null ? "none" : props.fileName}
-          </span>
           <table>
             <tr>
               {header.map((item) => {
@@ -547,7 +544,7 @@
           return;
         }
         const chartData = loadCsv(props.fileName);
-        showChart(chartData);
+        showChart(chartData, props.fileName);
       }, props.fileName);
       return <div id="chart"></div>;
     };
@@ -652,7 +649,9 @@
               break;
             }
             const keyValue = line.substr(1).split("=");
-            header.push(keyValue[0]);
+            if (keyValue[0] != "CURRENCY") {
+              header.push(keyValue[0]);
+            }
           }
           header.push(CSV_KEY_GRID_BUY_COUNT);
           header.push(CSV_KEY_GRID_BUY_PROFIT);
@@ -675,7 +674,9 @@
             break;
           }
           const keyValue = line.substr(1).split("=");
-          columns.push(keyValue[1]);
+          if (keyValue[0] != "CURRENCY") {
+            columns.push(keyValue[1]);
+          }
           paramMap[keyValue[0]] = keyValue[1];
         }
         const values = lastLine.split(",");
